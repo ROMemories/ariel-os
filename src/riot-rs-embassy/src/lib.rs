@@ -2,12 +2,15 @@
 #![feature(type_alias_impl_trait)]
 #![feature(used_with_arg)]
 
+use core::cell::OnceCell;
+
 use linkme::distributed_slice;
+use static_cell::make_static;
 
 use embassy_executor::{InterruptExecutor, Spawner};
 
 #[cfg(feature = "usb")]
-use embassy_usb::{Builder, UsbDevice};
+use embassy_usb::{Builder as UsbBuilder, UsbDevice};
 
 pub mod blocker;
 
@@ -16,8 +19,10 @@ pub type Task = fn(Spawner, TaskArgs);
 #[derive(Copy, Clone)]
 pub struct TaskArgs {
     #[cfg(feature = "usb_ethernet")]
-    pub stack: &'static Stack<Device<'static, ETHERNET_MTU>>,
+    pub stack: &'static OnceCell<&'static UsbEthernetStack>,
 }
+
+pub type UsbEthernetStack = Stack<UsbEthernetDevice<'static, ETHERNET_MTU>>;
 
 pub static EXECUTOR: InterruptExecutor = InterruptExecutor::new();
 
@@ -28,10 +33,10 @@ pub static EMBASSY_TASKS: [Task] = [..];
 mod nrf52 {
     pub use embassy_nrf::interrupt;
     pub use embassy_nrf::interrupt::SWI0_EGU0 as SWI;
-    pub use embassy_nrf::{init, Peripherals};
+    pub use embassy_nrf::{init, peripherals, OptionalPeripherals};
 
     #[cfg(feature = "usb")]
-    use embassy_nrf::{bind_interrupts, peripherals, rng, usb as nrf_usb};
+    use embassy_nrf::{bind_interrupts, rng, usb as nrf_usb};
 
     #[cfg(feature = "usb")]
     bind_interrupts!(struct Irqs {
@@ -61,7 +66,7 @@ mod nrf52 {
 mod rp2040 {
     pub use embassy_rp::interrupt;
     pub use embassy_rp::interrupt::SWI_IRQ_1 as SWI;
-    pub use embassy_rp::{init, Peripherals};
+    pub use embassy_rp::{init, peripherals, OptionalPeripherals};
 
     #[cfg(feature = "usb")]
     use embassy_rp::{bind_interrupts, peripherals::USB, usb::InterruptHandler};
@@ -121,17 +126,19 @@ use embassy_net::{Stack, StackResources};
 //
 // usb net begin
 #[cfg(feature = "usb_ethernet")]
-use embassy_usb::class::cdc_ncm::embassy_net::{Device, Runner};
+use embassy_usb::class::cdc_ncm::embassy_net::{
+    Device as UsbEthernetDevice, Runner as UsbEthernetRunner,
+};
 
 #[cfg(feature = "usb_ethernet")]
 #[embassy_executor::task]
-async fn usb_ncm_task(class: Runner<'static, UsbDriver, ETHERNET_MTU>) -> ! {
+async fn usb_ncm_task(class: UsbEthernetRunner<'static, UsbDriver, ETHERNET_MTU>) -> ! {
     class.run().await
 }
 
 #[cfg(feature = "usb_ethernet")]
 #[embassy_executor::task]
-async fn net_task(stack: &'static Stack<Device<'static, ETHERNET_MTU>>) -> ! {
+async fn usb_ethernet_task(stack: &'static UsbEthernetStack) -> ! {
     stack.run().await
 }
 // usb net end
@@ -158,17 +165,14 @@ const fn usb_default_config() -> embassy_usb::Config<'static> {
 #[distributed_slice(riot_rs_rt::INIT_FUNCS)]
 pub(crate) fn init() {
     riot_rs_rt::debug::println!("riot-rs-embassy::init()");
-    let p = arch::init(Default::default());
+    let p = arch::OptionalPeripherals::from(arch::init(Default::default()));
     EXECUTOR.start(SWI);
     EXECUTOR.spawner().spawn(init_task(p)).unwrap();
     riot_rs_rt::debug::println!("riot-rs-embassy::init() done");
 }
 
 #[embassy_executor::task]
-async fn init_task(peripherals: arch::Peripherals) {
-    #[cfg(feature = "usb")]
-    use static_cell::make_static;
-
+async fn init_task(mut peripherals: arch::OptionalPeripherals) {
     riot_rs_rt::debug::println!("riot-rs-embassy::init_task()");
 
     #[cfg(all(context = "nrf52", feature = "usb"))]
@@ -181,18 +185,45 @@ async fn init_task(peripherals: arch::Peripherals) {
         while clock.events_hfclkstarted.read().bits() != 1 {}
     }
 
+    let spawner = Spawner::for_current_executor().await;
+
+    let args = TaskArgs {
+        #[cfg(feature = "usb_ethernet")]
+        stack: make_static!(OnceCell::new()),
+    };
+
+    for task in EMBASSY_TASKS {
+        task(spawner, args);
+    }
+
+    #[cfg(feature = "usb_ethernet")]
+    let usb_ethernet_stack = init_usb_ethernet_stack(&mut peripherals).await;
+    let _ = args.stack.set(usb_ethernet_stack);
+
+    // mark used
+    let _ = peripherals;
+
+    riot_rs_rt::debug::println!("riot-rs-embassy::init_task() done");
+}
+
+#[cfg(feature = "usb_ethernet")]
+async fn init_usb_ethernet_stack(
+    peripherals: &mut arch::OptionalPeripherals,
+) -> &'static UsbEthernetStack {
     #[cfg(feature = "usb")]
     let mut usb_builder = {
         let usb_config = usb_default_config();
 
+        let usbd = peripherals.USBD.take().unwrap();
+
         #[cfg(context = "nrf52")]
-        let usb_driver = nrf52::usb::driver(peripherals.USBD);
+        let usb_driver = nrf52::usb::driver(usbd);
 
         #[cfg(context = "rp2040")]
-        let usb_driver = rp2040::usb::driver(peripherals.USB);
+        let usb_driver = rp2040::usb::driver(usbd);
 
         // Create embassy-usb DeviceBuilder using the driver and config.
-        let builder = Builder::new(
+        let builder = UsbBuilder::new(
             usb_driver,
             usb_config,
             &mut make_static!([0; 256])[..],
@@ -227,14 +258,8 @@ async fn init_task(peripherals: arch::Peripherals) {
 
     let spawner = Spawner::for_current_executor().await;
 
-    #[cfg(feature = "usb")]
-    {
-        let usb = usb_builder.build();
-        spawner.spawn(usb_task(usb)).unwrap();
-    }
-
     #[cfg(feature = "usb_ethernet")]
-    let device = {
+    let usb_ethernet_device = {
         use embassy_usb::class::cdc_ncm::embassy_net::State as NetState;
         let (runner, device) = usb_cdc_ecm.into_embassy_net_device::<ETHERNET_MTU, 4, 4>(
             make_static!(NetState::new()),
@@ -265,29 +290,23 @@ async fn init_task(peripherals: arch::Peripherals) {
         let seed = 1234u64;
 
         // Init network stack
-        let stack = &*make_static!(Stack::new(
-            device,
+        let stack = &*make_static!(UsbEthernetStack::new(
+            usb_ethernet_device,
             config,
             make_static!(StackResources::<2>::new()),
             seed
         ));
 
-        spawner.spawn(net_task(stack)).unwrap();
+        spawner.spawn(usb_ethernet_task(stack)).unwrap();
 
         stack
     };
 
-    let args = TaskArgs {
-        #[cfg(feature = "usb_ethernet")]
-        stack,
-    };
-
-    for task in EMBASSY_TASKS {
-        task(spawner, args);
+    #[cfg(feature = "usb")]
+    {
+        let usb = usb_builder.build();
+        spawner.spawn(usb_task(usb)).unwrap();
     }
 
-    // mark used
-    let _ = peripherals;
-
-    riot_rs_rt::debug::println!("riot-rs-embassy::init_task() done");
+    stack
 }

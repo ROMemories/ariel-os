@@ -8,6 +8,7 @@ subdirs:
   - bottles
   - core-sizes
   - embassy
+  - embassy-http-server
   - embassy-net-tcp
   - embassy-net-udp
     #  - embassy-gpio
