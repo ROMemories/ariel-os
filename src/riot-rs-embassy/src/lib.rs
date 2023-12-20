@@ -203,98 +203,100 @@ async fn init_task(peripherals: arch::OptionalPeripherals) {
 }
 
 #[cfg(feature = "usb_ethernet")]
-pub async fn init_usb_ethernet_stack(
-    peripherals: &mut arch::OptionalPeripherals,
-    config: embassy_net::Config,
-) -> &'static UsbEthernetStack {
-    #[cfg(feature = "usb")]
-    let mut usb_builder = {
-        let usb_config = usb_default_config();
+impl TaskArgs {
+    pub async fn set_up_usb_ethernet_stack(
+        &self,
+        config: embassy_net::Config,
+    ) -> &'static UsbEthernetStack {
+        // If a stack has already been initialized, return it early
+        if let Some(stack) = self.stack.get() {
+            return stack;
+        }
 
-        let usbd = peripherals.USBD.take().unwrap();
+        let mut usb_builder = {
+            let usb_config = usb_default_config();
 
-        #[cfg(context = "nrf52")]
-        let usb_driver = nrf52::usb::driver(usbd);
+            let usbd = self.peripherals.lock().await.USBD.take().unwrap();
 
-        #[cfg(context = "rp2040")]
-        let usb_driver = rp2040::usb::driver(usbd);
+            #[cfg(context = "nrf52")]
+            let usb_driver = nrf52::usb::driver(usbd);
 
-        // Create embassy-usb DeviceBuilder using the driver and config.
-        let builder = UsbBuilder::new(
-            usb_driver,
-            usb_config,
-            &mut make_static!([0; 256])[..],
-            &mut make_static!([0; 256])[..],
-            &mut make_static!([0; 256])[..],
-            &mut make_static!([0; 128])[..],
-            &mut make_static!([0; 128])[..],
-        );
+            #[cfg(context = "rp2040")]
+            let usb_driver = rp2040::usb::driver(usbd);
 
-        builder
-    };
+            // Create embassy-usb DeviceBuilder using the driver and config.
+            let builder = UsbBuilder::new(
+                usb_driver,
+                usb_config,
+                &mut make_static!([0; 256])[..],
+                &mut make_static!([0; 256])[..],
+                &mut make_static!([0; 256])[..],
+                &mut make_static!([0; 128])[..],
+                &mut make_static!([0; 128])[..],
+            );
 
-    // Our MAC addr.
-    #[cfg(feature = "usb_ethernet")]
-    let our_mac_addr = [0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC];
+            builder
+        };
 
-    #[cfg(feature = "usb_ethernet")]
-    let usb_cdc_ecm = {
-        // Host's MAC addr. This is the MAC the host "thinks" its USB-to-ethernet adapter has.
-        let host_mac_addr = [0x88, 0x88, 0x88, 0x88, 0x88, 0x88];
+        // Our MAC addr.
+        let our_mac_addr = [0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC];
 
-        use embassy_usb::class::cdc_ncm::{CdcNcmClass, State};
+        let usb_cdc_ecm = {
+            // Host's MAC addr. This is the MAC the host "thinks" its USB-to-ethernet adapter has.
+            let host_mac_addr = [0x88, 0x88, 0x88, 0x88, 0x88, 0x88];
 
-        // Create classes on the builder.
-        CdcNcmClass::new(
-            &mut usb_builder,
-            make_static!(State::new()),
-            host_mac_addr,
-            64,
-        )
-    };
+            use embassy_usb::class::cdc_ncm::{CdcNcmClass, State};
 
-    let spawner = Spawner::for_current_executor().await;
+            // Create classes on the builder.
+            CdcNcmClass::new(
+                &mut usb_builder,
+                make_static!(State::new()),
+                host_mac_addr,
+                64,
+            )
+        };
 
-    #[cfg(feature = "usb_ethernet")]
-    let usb_ethernet_device = {
-        use embassy_usb::class::cdc_ncm::embassy_net::State as NetState;
-        let (runner, device) = usb_cdc_ecm.into_embassy_net_device::<ETHERNET_MTU, 4, 4>(
-            make_static!(NetState::new()),
-            our_mac_addr,
-        );
+        let spawner = Spawner::for_current_executor().await;
 
-        spawner.spawn(usb_ncm_task(runner)).unwrap();
+        let usb_ethernet_device = {
+            use embassy_usb::class::cdc_ncm::embassy_net::State as NetState;
+            let (runner, device) = usb_cdc_ecm.into_embassy_net_device::<ETHERNET_MTU, 4, 4>(
+                make_static!(NetState::new()),
+                our_mac_addr,
+            );
 
-        device
-    };
+            spawner.spawn(usb_ncm_task(runner)).unwrap();
 
-    #[cfg(feature = "usb_ethernet")]
-    let stack = {
-        // Generate random seed
-        // let mut rng = Rng::new(p.RNG, Irqs);
-        // let mut seed = [0; 8];
-        // rng.blocking_fill_bytes(&mut seed);
-        // let seed = u64::from_le_bytes(seed);
-        let seed = 1234u64;
+            device
+        };
 
-        // Init network stack
-        let stack = &*make_static!(UsbEthernetStack::new(
-            usb_ethernet_device,
-            config,
-            make_static!(StackResources::<2>::new()),
-            seed
-        ));
+        let stack = {
+            // Generate random seed
+            // let mut rng = Rng::new(p.RNG, Irqs);
+            // let mut seed = [0; 8];
+            // rng.blocking_fill_bytes(&mut seed);
+            // let seed = u64::from_le_bytes(seed);
+            let seed = 1234u64;
 
-        spawner.spawn(usb_ethernet_task(stack)).unwrap();
+            // Init network stack
+            let stack = &*make_static!(UsbEthernetStack::new(
+                usb_ethernet_device,
+                config,
+                make_static!(StackResources::<2>::new()),
+                seed
+            ));
 
-        stack
-    };
+            spawner.spawn(usb_ethernet_task(stack)).unwrap();
 
-    #[cfg(feature = "usb")]
-    {
+            stack
+        };
+
         let usb = usb_builder.build();
         spawner.spawn(usb_task(usb)).unwrap();
-    }
 
-    stack
+        // Do nothing if a stack is already initialized, as this should not happen anyway
+        let _ = self.stack.set(stack);
+
+        stack
+    }
 }
