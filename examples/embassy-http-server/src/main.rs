@@ -95,7 +95,12 @@ async fn index() -> impl IntoResponse {
 
 #[embassy_executor::task]
 async fn tcp_echo(spawner: embassy_executor::Spawner, args: TaskArgs) {
-    let stack = args.stack.get().unwrap();
+    let stack = {
+        let mut peripherals = args.peripherals.lock().await;
+        let stack = riot_rs::embassy::init_usb_ethernet_stack(&mut peripherals).await;
+        let _ = args.stack.set(stack); // Do nothing if a stack is already initialized
+        stack
+    };
 
     fn make_app() -> picoserve::Router<AppRouter, AppState> {
         picoserve::Router::new().route("/", get(index))

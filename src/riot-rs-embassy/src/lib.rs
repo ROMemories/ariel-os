@@ -8,6 +8,7 @@ use linkme::distributed_slice;
 use static_cell::make_static;
 
 use embassy_executor::{InterruptExecutor, Spawner};
+use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, mutex::Mutex};
 
 #[cfg(feature = "usb")]
 use embassy_usb::{Builder as UsbBuilder, UsbDevice};
@@ -18,6 +19,7 @@ pub type Task = fn(Spawner, TaskArgs);
 
 #[derive(Copy, Clone)]
 pub struct TaskArgs {
+    pub peripherals: &'static Mutex<CriticalSectionRawMutex, arch::OptionalPeripherals>,
     #[cfg(feature = "usb_ethernet")]
     pub stack: &'static OnceCell<&'static UsbEthernetStack>,
 }
@@ -172,7 +174,7 @@ pub(crate) fn init() {
 }
 
 #[embassy_executor::task]
-async fn init_task(mut peripherals: arch::OptionalPeripherals) {
+async fn init_task(peripherals: arch::OptionalPeripherals) {
     riot_rs_rt::debug::println!("riot-rs-embassy::init_task()");
 
     #[cfg(all(context = "nrf52", feature = "usb"))]
@@ -188,6 +190,7 @@ async fn init_task(mut peripherals: arch::OptionalPeripherals) {
     let spawner = Spawner::for_current_executor().await;
 
     let args = TaskArgs {
+        peripherals: make_static!(Mutex::new(peripherals)),
         #[cfg(feature = "usb_ethernet")]
         stack: make_static!(OnceCell::new()),
     };
@@ -196,18 +199,11 @@ async fn init_task(mut peripherals: arch::OptionalPeripherals) {
         task(spawner, args);
     }
 
-    #[cfg(feature = "usb_ethernet")]
-    let usb_ethernet_stack = init_usb_ethernet_stack(&mut peripherals).await;
-    let _ = args.stack.set(usb_ethernet_stack);
-
-    // mark used
-    let _ = peripherals;
-
     riot_rs_rt::debug::println!("riot-rs-embassy::init_task() done");
 }
 
 #[cfg(feature = "usb_ethernet")]
-async fn init_usb_ethernet_stack(
+pub async fn init_usb_ethernet_stack(
     peripherals: &mut arch::OptionalPeripherals,
 ) -> &'static UsbEthernetStack {
     #[cfg(feature = "usb")]
