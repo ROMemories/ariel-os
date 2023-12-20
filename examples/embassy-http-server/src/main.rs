@@ -8,7 +8,6 @@ use riot_rs as _;
 use riot_rs::embassy::{TaskArgs, UsbEthernetStack};
 use riot_rs::rt::debug::println;
 
-use embassy_net::tcp::TcpSocket;
 use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, mutex::Mutex};
 use embassy_time::Duration;
 use picoserve::{
@@ -40,8 +39,8 @@ const WEB_TASK_POOL_SIZE: usize = 2;
 
 #[embassy_executor::task(pool_size = WEB_TASK_POOL_SIZE)]
 async fn web_task(
+    args: TaskArgs,
     id: usize,
-    stack: &'static UsbEthernetStack,
     app: &'static picoserve::Router<AppRouter, AppState>,
     config: &'static picoserve::Config<Duration>,
     state: AppState,
@@ -50,7 +49,7 @@ async fn web_task(
     let mut tx_buffer = [0; 1024];
 
     loop {
-        let mut socket = TcpSocket::new(stack, &mut rx_buffer, &mut tx_buffer);
+        let mut socket = args.get_tcp_socket(&mut rx_buffer, &mut tx_buffer);
 
         println!("{}: Listening on TCP:80...", id);
         if let Err(e) = socket.accept(80).await {
@@ -102,7 +101,7 @@ async fn tcp_echo(spawner: embassy_executor::Spawner, args: TaskArgs) {
         dns_servers: heapless::Vec::new(),
         gateway: Some(Ipv4Address::new(10, 42, 0, 1)),
     });
-    let stack = args.set_up_usb_ethernet_stack(config).await;
+    args.set_up_usb_ethernet(config).await;
 
     fn make_app() -> picoserve::Router<AppRouter, AppState> {
         picoserve::Router::new().route("/", get(index))
@@ -120,7 +119,7 @@ async fn tcp_echo(spawner: embassy_executor::Spawner, args: TaskArgs) {
 
     for id in 0..WEB_TASK_POOL_SIZE {
         spawner
-            .spawn(web_task(id, stack, app, config, AppState {}))
+            .spawn(web_task(args, id, app, config, AppState {}))
             .unwrap();
     }
 }

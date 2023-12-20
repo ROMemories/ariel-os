@@ -204,15 +204,7 @@ async fn init_task(peripherals: arch::OptionalPeripherals) {
 
 #[cfg(feature = "usb_ethernet")]
 impl TaskArgs {
-    pub async fn set_up_usb_ethernet_stack(
-        &self,
-        config: embassy_net::Config,
-    ) -> &'static UsbEthernetStack {
-        // If a stack has already been initialized, return it early
-        if let Some(stack) = self.stack.get() {
-            return stack;
-        }
-
+    pub async fn set_up_usb_ethernet(&self, config: embassy_net::Config) {
         let mut usb_builder = {
             let usb_config = usb_default_config();
 
@@ -295,8 +287,27 @@ impl TaskArgs {
         spawner.spawn(usb_task(usb)).unwrap();
 
         // Do nothing if a stack is already initialized, as this should not happen anyway
+        // TODO: should we panic instead?
         let _ = self.stack.set(stack);
+    }
+}
 
-        stack
+#[cfg(feature = "net")]
+use embassy_net::tcp::TcpSocket;
+
+#[cfg(feature = "net")]
+impl TaskArgs {
+    /// Returns a TCP socket.
+    ///
+    /// # Panics
+    ///
+    /// Panics if called before the network stack is initialized.
+    pub fn get_tcp_socket<'a>(
+        &'a self,
+        rx_buffer: &'a mut [u8],
+        tx_buffer: &'a mut [u8],
+    ) -> TcpSocket {
+        let stack = self.stack.get().unwrap();
+        TcpSocket::new(stack, rx_buffer, tx_buffer)
     }
 }
