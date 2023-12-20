@@ -205,6 +205,7 @@ async fn init_task(peripherals: arch::OptionalPeripherals) {
 #[cfg(feature = "usb_ethernet")]
 pub async fn init_usb_ethernet_stack(
     peripherals: &mut arch::OptionalPeripherals,
+    config: embassy_net::Config,
 ) -> &'static UsbEthernetStack {
     #[cfg(feature = "usb")]
     let mut usb_builder = {
@@ -269,15 +270,6 @@ pub async fn init_usb_ethernet_stack(
 
     #[cfg(feature = "usb_ethernet")]
     let stack = {
-        // network stack
-        //let config = embassy_net::Config::dhcpv4(Default::default());
-        use embassy_net::{Ipv4Address, Ipv4Cidr};
-        let config = embassy_net::Config::ipv4_static(embassy_net::StaticConfigV4 {
-            address: Ipv4Cidr::new(Ipv4Address::new(10, 42, 0, 61), 24),
-            dns_servers: heapless::Vec::new(),
-            gateway: Some(Ipv4Address::new(10, 42, 0, 1)),
-        });
-
         // Generate random seed
         // let mut rng = Rng::new(p.RNG, Irqs);
         // let mut seed = [0; 8];

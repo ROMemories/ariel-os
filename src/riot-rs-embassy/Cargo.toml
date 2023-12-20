@@ -17,7 +17,6 @@ embassy-time = { workspace = true, optional = true }
 
 embassy-usb = { workspace = true, optional = true }
 embassy-net = { workspace = true, optional = true, features = [ "dhcpv4", "medium-ethernet" ] }
-heapless = "0.8.0"
 
 [target.'cfg(context = "cortex-m")'.dependencies]
 embassy-executor = { workspace = true, features = [
