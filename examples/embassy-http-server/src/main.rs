@@ -5,13 +5,15 @@
 
 use riot_rs as _;
 
-use riot_rs::embassy::{TaskArgs, UsbEthernetStack};
+use riot_rs::embassy::TaskArgs;
 use riot_rs::rt::debug::println;
 
+use embassy_nrf::gpio::{AnyPin, Input, Pin, Pull};
 use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, mutex::Mutex};
 use embassy_time::Duration;
 use picoserve::{
-    response::{DebugValue, IntoResponse},
+    extract::State,
+    response::{DebugValue, IntoResponse, Json},
     routing::{get, parse_path_segment},
 };
 use static_cell::make_static;
@@ -31,7 +33,28 @@ impl picoserve::Timer for EmbassyTimer {
     }
 }
 
-struct AppState {}
+struct AppState {
+    button: ButtonInput,
+}
+
+#[derive(Copy, Clone)]
+struct ButtonInput(&'static Mutex<CriticalSectionRawMutex, Input<'static, AnyPin>>);
+
+impl ButtonInput {
+    pub async fn is_high(&self) -> bool {
+        self.0.lock().await.is_high()
+    }
+
+    pub async fn is_low(&self) -> bool {
+        self.0.lock().await.is_low()
+    }
+}
+
+impl picoserve::extract::FromRef<AppState> for ButtonInput {
+    fn from_ref(state: &AppState) -> Self {
+        state.button
+    }
+}
 
 type AppRouter = impl picoserve::routing::PathRouter<AppState>;
 
@@ -92,12 +115,26 @@ async fn index() -> impl IntoResponse {
     picoserve::response::File::html(include_str!("../static/index.html"))
 }
 
+async fn read_button(State(button): State<ButtonInput>) -> impl IntoResponse {
+    #[derive(serde::Serialize)]
+    struct Buttons {
+        button1: bool,
+    }
+
+    let button_pressed = button.is_low().await;
+    if button_pressed {
+        Json(Buttons { button1: true })
+    } else {
+        Json(Buttons { button1: false })
+    }
+}
+
 #[embassy_executor::task]
 async fn tcp_echo(spawner: embassy_executor::Spawner, args: TaskArgs) {
     fn make_app() -> picoserve::Router<AppRouter, AppState> {
-        picoserve::Router::new().route("/", get(index))
-        // TODO: add another route that shows the state of a button
-        // .route(("/set", parse_path_segment()), get())
+        picoserve::Router::new()
+            .route("/", get(index))
+            .route("/button", get(read_button))
     }
 
     let app = make_static!(make_app());
@@ -108,9 +145,25 @@ async fn tcp_echo(spawner: embassy_executor::Spawner, args: TaskArgs) {
         write_timeout: Some(Duration::from_secs(1)),
     });
 
+    let button = Input::new(
+        args.peripherals
+            .lock()
+            .await
+            .P0_11
+            .take()
+            .unwrap()
+            .degrade(),
+        Pull::Up,
+    );
+
+    let button_input = ButtonInput(make_static!(Mutex::new(button)));
+
     for id in 0..WEB_TASK_POOL_SIZE {
+        let app_state = AppState {
+            button: button_input,
+        };
         spawner
-            .spawn(web_task(args, id, app, config, AppState {}))
+            .spawn(web_task(args, id, app, config, app_state))
             .unwrap();
     }
 }
