@@ -94,15 +94,6 @@ async fn index() -> impl IntoResponse {
 
 #[embassy_executor::task]
 async fn tcp_echo(spawner: embassy_executor::Spawner, args: TaskArgs) {
-    use embassy_net::{Ipv4Address, Ipv4Cidr, StaticConfigV4};
-
-    let config = embassy_net::Config::ipv4_static(StaticConfigV4 {
-        address: Ipv4Cidr::new(Ipv4Address::new(10, 42, 0, 61), 24),
-        dns_servers: heapless::Vec::new(),
-        gateway: Some(Ipv4Address::new(10, 42, 0, 1)),
-    });
-    args.set_up_usb_ethernet(config).await;
-
     fn make_app() -> picoserve::Router<AppRouter, AppState> {
         picoserve::Router::new().route("/", get(index))
         // TODO: add another route that shows the state of a button
@@ -122,6 +113,16 @@ async fn tcp_echo(spawner: embassy_executor::Spawner, args: TaskArgs) {
             .spawn(web_task(args, id, app, config, AppState {}))
             .unwrap();
     }
+}
+
+#[no_mangle]
+fn riot_rs_network_config() -> embassy_net::Config {
+    use embassy_net::{Ipv4Address, Ipv4Cidr, StaticConfigV4};
+    embassy_net::Config::ipv4_static(StaticConfigV4 {
+        address: Ipv4Cidr::new(Ipv4Address::new(10, 42, 0, 62), 24),
+        dns_servers: heapless::Vec::new(),
+        gateway: Some(Ipv4Address::new(10, 42, 0, 1)),
+    })
 }
 
 #[linkme::distributed_slice(riot_rs::embassy::EMBASSY_TASKS)]

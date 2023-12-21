@@ -195,6 +195,8 @@ async fn init_task(peripherals: arch::OptionalPeripherals) {
         stack: make_static!(OnceCell::new()),
     };
 
+    args.set_up_usb_ethernet().await;
+
     for task in EMBASSY_TASKS {
         task(spawner, args);
     }
@@ -204,7 +206,7 @@ async fn init_task(peripherals: arch::OptionalPeripherals) {
 
 #[cfg(feature = "usb_ethernet")]
 impl TaskArgs {
-    pub async fn set_up_usb_ethernet(&self, config: embassy_net::Config) {
+    pub async fn set_up_usb_ethernet(&self) {
         let mut usb_builder = {
             let usb_config = usb_default_config();
 
@@ -270,6 +272,8 @@ impl TaskArgs {
             // let seed = u64::from_le_bytes(seed);
             let seed = 1234u64;
 
+            let config = network_config();
+
             // Init network stack
             let stack = &*make_static!(UsbEthernetStack::new(
                 usb_ethernet_device,
@@ -289,6 +293,26 @@ impl TaskArgs {
         // Do nothing if a stack is already initialized, as this should not happen anyway
         // TODO: should we panic instead?
         let _ = self.stack.set(stack);
+    }
+}
+
+#[cfg(feature = "net")]
+fn network_config() -> embassy_net::Config {
+    #[cfg(not(feature = "override_network_config"))]
+    {
+        use embassy_net::{Ipv4Address, Ipv4Cidr, StaticConfigV4};
+        embassy_net::Config::ipv4_static(StaticConfigV4 {
+            address: Ipv4Cidr::new(Ipv4Address::new(10, 42, 0, 61), 24),
+            dns_servers: heapless::Vec::new(),
+            gateway: Some(Ipv4Address::new(10, 42, 0, 1)),
+        })
+    }
+    #[cfg(feature = "override_network_config")]
+    {
+        extern "Rust" {
+            fn riot_rs_network_config() -> embassy_net::Config;
+        }
+        unsafe { riot_rs_network_config() }
     }
 }
 
