@@ -2,7 +2,7 @@
 #![feature(type_alias_impl_trait)]
 #![feature(used_with_arg)]
 
-use core::cell::OnceCell;
+use core::{cell::OnceCell, ops::DerefMut};
 
 use linkme::distributed_slice;
 use static_cell::make_static;
@@ -15,7 +15,8 @@ use embassy_usb::{Builder as UsbBuilder, UsbDevice};
 
 pub mod blocker;
 
-pub type Task = fn(Spawner, TaskArgs);
+pub type Task =
+    fn(&mut arch::OptionalPeripherals, TaskArgs) -> Result<&'static dyn UserProgram, ()>;
 
 #[derive(Copy, Clone)]
 pub struct TaskArgs {
@@ -187,8 +188,6 @@ async fn init_task(peripherals: arch::OptionalPeripherals) {
         while clock.events_hfclkstarted.read().bits() != 1 {}
     }
 
-    let spawner = Spawner::for_current_executor().await;
-
     let args = TaskArgs {
         peripherals: make_static!(Mutex::new(peripherals)),
         #[cfg(feature = "usb_ethernet")]
@@ -197,11 +196,29 @@ async fn init_task(peripherals: arch::OptionalPeripherals) {
 
     args.set_up_usb_ethernet().await;
 
+    let spawner = Spawner::for_current_executor().await;
+
     for task in EMBASSY_TASKS {
-        task(spawner, args);
+        // FIXME: init all tasks before starting them
+        task(args.peripherals.lock().await.deref_mut(), args)
+            .unwrap()
+            .start(spawner, args);
     }
 
     riot_rs_rt::debug::println!("riot-rs-embassy::init_task() done");
+}
+
+pub trait UserProgram {
+    // FIXME: add an associated error type if possible
+    fn initialize(
+        peripherals: &mut embassy_nrf::OptionalPeripherals,
+        args: TaskArgs,
+    ) -> Result<&'static dyn UserProgram, ()>
+    where
+        Self: Sized;
+    // TODO: make it so a user program cannot be started twice
+    // TODO: maybe we should pass TaskArgs here, so that user programs cannot access other peripherals after the initialization
+    fn start(&self, spawner: embassy_executor::Spawner, args: TaskArgs); // TODO: or run?
 }
 
 #[cfg(feature = "usb_ethernet")]
