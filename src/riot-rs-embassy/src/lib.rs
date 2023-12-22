@@ -15,12 +15,20 @@ use embassy_usb::{Builder as UsbBuilder, UsbDevice};
 
 pub mod blocker;
 
-pub type Task =
-    fn(&mut arch::OptionalPeripherals, TaskArgs) -> Result<&'static dyn UserProgram, ()>;
+pub type Task = fn(
+    &mut arch::OptionalPeripherals,
+    InitializationArgs,
+) -> Result<&dyn UserProgram, ProgramInitError>;
 
+// TODO: rename this
 #[derive(Copy, Clone)]
-pub struct TaskArgs {
+pub struct InitializationArgs {
     pub peripherals: &'static Mutex<CriticalSectionRawMutex, arch::OptionalPeripherals>,
+}
+
+// TODO: rename this
+#[derive(Copy, Clone)]
+pub struct Drivers {
     #[cfg(feature = "usb_ethernet")]
     pub stack: &'static OnceCell<&'static UsbEthernetStack>,
 }
@@ -188,46 +196,67 @@ async fn init_task(peripherals: arch::OptionalPeripherals) {
         while clock.events_hfclkstarted.read().bits() != 1 {}
     }
 
-    let args = TaskArgs {
+    let init_args = InitializationArgs {
         peripherals: make_static!(Mutex::new(peripherals)),
+    };
+
+    let mut drivers = Drivers {
         #[cfg(feature = "usb_ethernet")]
         stack: make_static!(OnceCell::new()),
     };
 
-    args.set_up_usb_ethernet().await;
+    drivers.set_up_usb_ethernet(init_args).await;
 
     let spawner = Spawner::for_current_executor().await;
 
     for task in EMBASSY_TASKS {
         // FIXME: init all tasks before starting them
-        task(args.peripherals.lock().await.deref_mut(), args)
-            .unwrap()
-            .start(spawner, args);
+        match task(init_args.peripherals.lock().await.deref_mut(), init_args) {
+            Ok(initialized_program) => initialized_program.start(spawner, drivers),
+            Err(err) => panic!("Error while initializing a program: {err:?}"),
+        }
     }
 
     riot_rs_rt::debug::println!("riot-rs-embassy::init_task() done");
 }
 
 pub trait UserProgram {
-    // FIXME: add an associated error type if possible
     fn initialize(
         peripherals: &mut embassy_nrf::OptionalPeripherals,
-        args: TaskArgs,
-    ) -> Result<&'static dyn UserProgram, ()>
+        init_args: InitializationArgs,
+    ) -> Result<&dyn UserProgram, ProgramInitError>
     where
         Self: Sized;
     // TODO: make it so a user program cannot be started twice
-    // TODO: maybe we should pass TaskArgs here, so that user programs cannot access other peripherals after the initialization
-    fn start(&self, spawner: embassy_executor::Spawner, args: TaskArgs); // TODO: or run?
+    fn start(&self, spawner: embassy_executor::Spawner, drivers: Drivers); // TODO: or run?
+}
+
+#[derive(Debug)]
+pub enum ProgramInitError {
+    CannotObtainPeripheral,
+}
+
+/// Requires the [linkme] crate to be in scope.
+#[macro_export]
+macro_rules! riot_initialize {
+    ($prog_type:ident) => {
+        #[linkme::distributed_slice(riot_rs::embassy::EMBASSY_TASKS)]
+        fn __init_program(
+            peripherals: &mut embassy_nrf::OptionalPeripherals,
+            init_args: InitializationArgs,
+        ) -> Result<&dyn UserProgram, ProgramInitError> {
+            $prog_type::initialize(peripherals, init_args)
+        }
+    };
 }
 
 #[cfg(feature = "usb_ethernet")]
-impl TaskArgs {
-    pub async fn set_up_usb_ethernet(&self) {
+impl Drivers {
+    pub async fn set_up_usb_ethernet(&mut self, init_args: InitializationArgs) {
         let mut usb_builder = {
             let usb_config = usb_default_config();
 
-            let usbd = self.peripherals.lock().await.USBD.take().unwrap();
+            let usbd = init_args.peripherals.lock().await.USBD.take().unwrap();
 
             #[cfg(context = "nrf52")]
             let usb_driver = nrf52::usb::driver(usbd);
@@ -337,7 +366,7 @@ fn network_config() -> embassy_net::Config {
 use embassy_net::tcp::TcpSocket;
 
 #[cfg(feature = "net")]
-impl TaskArgs {
+impl Drivers {
     /// Returns a TCP socket.
     ///
     /// # Panics
