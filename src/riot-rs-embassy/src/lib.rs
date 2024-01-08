@@ -18,7 +18,7 @@ pub mod blocker;
 pub type Task = fn(
     &mut arch::OptionalPeripherals,
     InitializationArgs,
-) -> Result<&dyn UserProgram, ProgramInitError>;
+) -> Result<&dyn Application, ApplicationInitError>;
 
 // TODO: rename this
 #[derive(Copy, Clone)]
@@ -212,27 +212,27 @@ async fn init_task(peripherals: arch::OptionalPeripherals) {
     for task in EMBASSY_TASKS {
         // FIXME: init all tasks before starting them
         match task(init_args.peripherals.lock().await.deref_mut(), init_args) {
-            Ok(initialized_program) => initialized_program.start(spawner, drivers),
-            Err(err) => panic!("Error while initializing a program: {err:?}"),
+            Ok(initialized_application) => initialized_application.start(spawner, drivers),
+            Err(err) => panic!("Error while initializing an application: {err:?}"),
         }
     }
 
     riot_rs_rt::debug::println!("riot-rs-embassy::init_task() done");
 }
 
-pub trait UserProgram {
+pub trait Application {
     fn initialize(
         peripherals: &mut embassy_nrf::OptionalPeripherals,
         init_args: InitializationArgs,
-    ) -> Result<&dyn UserProgram, ProgramInitError>
+    ) -> Result<&dyn Application, ApplicationInitError>
     where
         Self: Sized;
-    // TODO: make it so a user program cannot be started twice
+    // TODO: make it so an application cannot be started twice
     fn start(&self, spawner: embassy_executor::Spawner, drivers: Drivers); // TODO: or run?
 }
 
 #[derive(Debug)]
-pub enum ProgramInitError {
+pub enum ApplicationInitError {
     CannotObtainPeripheral,
 }
 
@@ -241,10 +241,10 @@ pub enum ProgramInitError {
 macro_rules! riot_initialize {
     ($prog_type:ident) => {
         #[linkme::distributed_slice(riot_rs::embassy::EMBASSY_TASKS)]
-        fn __init_program(
+        fn __init_application(
             peripherals: &mut embassy_nrf::OptionalPeripherals,
             init_args: InitializationArgs,
-        ) -> Result<&dyn UserProgram, ProgramInitError> {
+        ) -> Result<&dyn Application, ApplicationInitError> {
             $prog_type::initialize(peripherals, init_args)
         }
     };
@@ -297,7 +297,7 @@ macro_rules! assign_resources {
                     $($group_name: $group_struct {
                         $($resource_name: $p.$resource_field
                           .take()
-                          .ok_or(riot_rs::embassy::ProgramInitError::CannotObtainPeripheral)?),*
+                          .ok_or(riot_rs::embassy::ApplicationInitError::CannotObtainPeripheral)?),*
                     }),*
                 }
             }

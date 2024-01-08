@@ -5,7 +5,7 @@
 
 mod pins;
 
-use riot_rs::embassy::{ProgramInitError, UserProgram};
+use riot_rs::embassy::{Application, ApplicationInitError};
 
 use riot_rs::embassy::{Drivers, InitializationArgs};
 use riot_rs::rt::debug::println;
@@ -148,12 +148,12 @@ struct HttpServer {
     button_input: ButtonInput,
 }
 
-impl UserProgram for HttpServer {
+impl Application for HttpServer {
     // TODO: should we only receive our peripherals? is this even doable?
     fn initialize(
         peripherals: &mut embassy_nrf::OptionalPeripherals,
         init_args: InitializationArgs,
-    ) -> Result<&dyn UserProgram, ProgramInitError> {
+    ) -> Result<&dyn Application, ApplicationInitError> {
         let our_peripherals = {
             use pins::*;
             split_resources!(peripherals)
