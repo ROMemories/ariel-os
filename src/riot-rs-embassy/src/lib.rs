@@ -234,6 +234,18 @@ pub trait Application {
 #[derive(Debug)]
 pub enum ApplicationInitError {
     CannotObtainPeripheral,
+    Unknown,
+}
+
+// The `split_resources` macro may return an integer instead of this error enum because we cannot
+// be sure that that macro would have access to this error type at the location where it is used.
+impl From<u8> for ApplicationInitError {
+    fn from(i: u8) -> Self {
+        match i {
+            1 => Self::CannotObtainPeripheral,
+            _ => Self::Unknown,
+        }
+    }
 }
 
 /// Requires the [linkme] crate to be in scope.
@@ -295,9 +307,7 @@ macro_rules! assign_resources {
             ($p:ident) => {
                 $resources {
                     $($group_name: $group_struct {
-                        $($resource_name: $p.$resource_field
-                          .take()
-                          .ok_or(riot_rs::embassy::ApplicationInitError::CannotObtainPeripheral)?),*
+                        $($resource_name: $p.$resource_field.take().ok_or(1)?),*
                     }),*
                 }
             }
