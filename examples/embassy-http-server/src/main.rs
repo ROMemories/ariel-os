@@ -3,6 +3,8 @@
 #![feature(type_alias_impl_trait)]
 #![feature(used_with_arg)]
 
+mod pins;
+
 use riot_rs::{
     self as _,
     embassy::{riot_initialize, ProgramInitError, UserProgram},
@@ -149,10 +151,16 @@ struct HttpServer {
 }
 
 impl UserProgram for HttpServer {
+    // TODO: should we only receive our peripherals? is this even doable?
     fn initialize(
         peripherals: &mut embassy_nrf::OptionalPeripherals,
         init_args: InitializationArgs,
     ) -> Result<&dyn UserProgram, ProgramInitError> {
+        let our_peripherals = {
+            use pins::*;
+            split_resources!(peripherals)
+        };
+
         fn make_app() -> picoserve::Router<AppRouter, AppState> {
             picoserve::Router::new()
                 .route("/", get(index))
@@ -167,10 +175,7 @@ impl UserProgram for HttpServer {
             write_timeout: Some(Duration::from_secs(1)),
         });
 
-        let button_pin = peripherals
-            .P0_11
-            .take()
-            .ok_or(ProgramInitError::CannotObtainPeripheral)?;
+        let button_pin = our_peripherals.button.button;
         let button = Input::new(button_pin.degrade(), Pull::Up);
 
         let button_input = ButtonInput(make_static!(Mutex::new(button)));
