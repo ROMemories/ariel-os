@@ -5,10 +5,7 @@
 
 mod pins;
 
-use riot_rs::{
-    self as _,
-    embassy::{riot_initialize, ProgramInitError, UserProgram},
-};
+use riot_rs::embassy::{ProgramInitError, UserProgram};
 
 use riot_rs::embassy::{Drivers, InitializationArgs};
 use riot_rs::rt::debug::println;
@@ -144,6 +141,7 @@ fn riot_rs_network_config() -> embassy_net::Config {
     })
 }
 
+#[riot_rs::run]
 struct HttpServer {
     app: &'static picoserve::Router<AppRouter, AppState>,
     config: &'static picoserve::Config<Duration>,
@@ -198,9 +196,6 @@ impl UserProgram for HttpServer {
         }
     }
 }
-
-// TODO: this could be replaced by an attribute proc-macro on HttpServer::initialize()
-riot_initialize!(HttpServer);
 
 #[no_mangle]
 fn riot_main() {
