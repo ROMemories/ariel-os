@@ -12,4 +12,5 @@ embassy-executor = { workspace = true, default-features = false }
 embassy-nrf = { workspace = true, default-features = false }
 embassy-sync = { workspace = true }
 embassy-time = { workspace = true, default-features = false }
+embassy-usb = { workspace = true }
 static_cell = { workspace = true }

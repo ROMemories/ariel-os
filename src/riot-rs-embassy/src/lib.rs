@@ -13,8 +13,6 @@ pub mod define_peripherals;
 #[cfg_attr(context = "rp2040", path = "arch/rp2040.rs")]
 pub mod arch;
 
-use core::cell::OnceCell;
-
 pub use linkme::{self, distributed_slice};
 
 use embassy_executor::{InterruptExecutor, Spawner};
@@ -23,7 +21,7 @@ use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, mutex::Mutex};
 use crate::define_peripherals::DefinePeripheralsError;
 
 #[cfg(feature = "usb")]
-use embassy_usb::{Builder, UsbDevice};
+pub use embassy_usb::{Builder as UsbBuilder, UsbDevice};
 
 #[cfg(feature = "threading")]
 pub mod blocker;
@@ -31,7 +29,7 @@ pub mod blocker;
 pub type Task = fn(
     &mut arch::OptionalPeripherals,
     InitializationArgs,
-) -> Result<&dyn Application, ApplicationInitError>;
+) -> Result<&'static dyn Application, ApplicationInitError>;
 
 // Allows us to pass extra initialization arguments in the future
 #[derive(Copy, Clone)]
@@ -44,8 +42,6 @@ pub struct InitializationArgs {
 pub struct Drivers {
     #[cfg(feature = "usb_ethernet")]
     pub stack: &'static OnceCell<&'static Stack<Device<'static, ETHERNET_MTU>>>,
-    #[cfg(feature = "usb_hid")]
-    pub usb_hid: &'static OnceCell<UsbHid>,
 }
 
 #[cfg(feature = "usb_ethernet")]
@@ -173,8 +169,6 @@ async fn init_task(mut peripherals: arch::OptionalPeripherals) {
     let drivers = Drivers {
         #[cfg(feature = "usb_ethernet")]
         stack: make_static!(OnceCell::new()),
-        #[cfg(feature = "usb_hid")]
-        usb_hid: make_static!(OnceCell::new()),
     };
 
     #[cfg(all(context = "nrf52", feature = "usb"))]
@@ -198,7 +192,7 @@ async fn init_task(mut peripherals: arch::OptionalPeripherals) {
         let usb_driver = arch::usb::driver(peripherals.USB.take().unwrap());
 
         // Create embassy-usb DeviceBuilder using the driver and config.
-        let builder = Builder::new(
+        let builder = UsbBuilder::new(
             usb_driver,
             usb_config,
             &mut make_static!([0; 256])[..],
@@ -211,60 +205,25 @@ async fn init_task(mut peripherals: arch::OptionalPeripherals) {
         builder
     };
 
-    // Our MAC addr.
-    #[cfg(feature = "usb_ethernet")]
-    let our_mac_addr = [0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC];
+    let spawner = Spawner::for_current_executor().await;
 
     #[cfg(feature = "usb_ethernet")]
-    let usb_cdc_ecm = {
+    let device = {
         // Host's MAC addr. This is the MAC the host "thinks" its USB-to-ethernet adapter has.
         let host_mac_addr = [0x88, 0x88, 0x88, 0x88, 0x88, 0x88];
 
-        use embassy_usb::class::cdc_ncm::{CdcNcmClass, State};
+        use embassy_usb::class::cdc_ncm::{embassy_net::State as NetState, CdcNcmClass, State};
 
         // Create classes on the builder.
-        CdcNcmClass::new(
+        let usb_cdc_ecm = CdcNcmClass::new(
             &mut usb_builder,
             make_static!(State::new()),
             host_mac_addr,
             64,
-        )
-    };
+        );
 
-    let spawner = Spawner::for_current_executor().await;
-
-    #[cfg(feature = "usb_hid")]
-    {
-        let config = embassy_usb::class::hid::Config {
-            report_descriptor: <usbd_hid::descriptor::KeyboardReport as usbd_hid::descriptor::SerializedDescriptor>::desc(),
-            request_handler: None,
-            poll_ms: 60,
-            max_packet_size: 64,
-        };
-        // FIXME: use a proper USB HID configuration for the USB Builder
-        let hid_rw =
-            hid::HidReaderWriter::new(&mut usb_builder, make_static!(hid::State::new()), config);
-        let (hid_reader, hid_writer) = hid_rw.split();
-
-        let usb_hid = UsbHid {
-            reader: make_static!(Mutex::new(hid_reader)),
-            writer: make_static!(Mutex::new(hid_writer)),
-        };
-
-        // Do nothing if an HID writer is already initialized, as this should not happen anyway
-        // TODO: should we panic instead?
-        let _ = drivers.usb_hid.set(usb_hid);
-    };
-
-    #[cfg(feature = "usb")]
-    {
-        let usb = usb_builder.build();
-        spawner.spawn(usb_task(usb)).unwrap();
-    }
-
-    #[cfg(feature = "usb_ethernet")]
-    let device = {
-        use embassy_usb::class::cdc_ncm::embassy_net::State as NetState;
+        // Our MAC addr.
+        let our_mac_addr = [0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC];
         let (runner, device) = usb_cdc_ecm.into_embassy_net_device::<ETHERNET_MTU, 4, 4>(
             make_static!(NetState::new()),
             our_mac_addr,
@@ -306,11 +265,32 @@ async fn init_task(mut peripherals: arch::OptionalPeripherals) {
         peripherals: make_static!(Mutex::new(peripherals)),
     };
 
+    // FIXME: this limits the number of applications to 4
+    let mut initialized_applications = [None; 4];
+
     for task in EMBASSY_TASKS {
-        // TODO: should all tasks be initialized before starting the first one?
-        match task(&mut *init_args.peripherals.lock().await, init_args) {
-            Ok(initialized_application) => initialized_application.start(spawner, drivers),
+        let mut peripherals = init_args.peripherals.lock().await;
+        match task(&mut peripherals, init_args) {
+            Ok(initialized_application) => {
+                initialized_application.usb_builder_hook(&mut usb_builder);
+
+                if let Some(slot) = initialized_applications.iter_mut().find(|s| s.is_none()) {
+                    *slot = Some(initialized_application);
+                }
+            }
             Err(err) => panic!("Error while initializing an application: {err:?}"),
+        }
+    }
+
+    #[cfg(feature = "usb")]
+    {
+        let usb = usb_builder.build();
+        spawner.spawn(usb_task(usb)).unwrap();
+    }
+
+    for initialized_application in initialized_applications {
+        if let Some(initialized_application) = initialized_application {
+            initialized_application.start(spawner, drivers);
         }
     }
 
@@ -333,9 +313,11 @@ pub trait Application {
     fn initialize(
         peripherals: &mut arch::OptionalPeripherals,
         init_args: InitializationArgs,
-    ) -> Result<&dyn Application, ApplicationInitError>
+    ) -> Result<&'static dyn Application, ApplicationInitError>
     where
         Self: Sized;
+
+    fn usb_builder_hook(&self, usb_builder: &mut UsbBuilder<'static, UsbDriver>);
 
     /// After an application has been initialized, this method is called by the system to start the
     /// application.
@@ -372,7 +354,7 @@ macro_rules! riot_initialize {
         fn __init_application(
             peripherals: &mut $crate::arch::OptionalPeripherals,
             init_args: $crate::InitializationArgs,
-        ) -> Result<&dyn $crate::Application, $crate::ApplicationInitError> {
+        ) -> Result<&'static dyn $crate::Application, $crate::ApplicationInitError> {
             <$prog_type as Application>::initialize(peripherals, init_args)
         }
     };

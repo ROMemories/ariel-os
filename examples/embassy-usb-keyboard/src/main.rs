@@ -8,13 +8,15 @@ mod pins;
 use core::cell::Cell;
 
 use riot_rs::embassy::{
-    arch, usbd_hid::descriptor::KeyboardReport, Application, ApplicationInitError, Drivers,
-    InitializationArgs, UsbHidWriter,
+    arch::{usb::UsbDriver, OptionalPeripherals},
+    usbd_hid::descriptor::{KeyboardReport, SerializedDescriptor},
+    Application, ApplicationInitError, Drivers, InitializationArgs, UsbBuilder, UsbHidReader,
+    UsbHidWriter,
 };
 use riot_rs::rt::debug::println;
 
-use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, mutex::Mutex};
 use embassy_time::Duration;
+use embassy_usb::class::hid;
 use static_cell::make_static;
 
 use crate::buttons::{Buttons, KEY_COUNT};
@@ -41,21 +43,18 @@ fn keyboard_report(keycode: u8) -> KeyboardReport {
 const KEYCODE_MAPPING: [u8; KEY_COUNT as usize] = [KC_A, KC_C, KC_G, KC_T];
 
 #[embassy_executor::task]
-async fn usb_keyboard(
-    mut buttons: Buttons,
-    hid_writer: &'static Mutex<CriticalSectionRawMutex, UsbHidWriter>,
-) {
+async fn usb_keyboard(mut buttons: Buttons, mut hid_writer: UsbHidWriter) {
     loop {
         for (i, button) in buttons.get_mut().iter_mut().enumerate() {
             if button.is_pressed() {
                 println!("Button #{} pressed", i + 1);
 
                 let report = keyboard_report(KEYCODE_MAPPING[i]);
-                if let Err(e) = hid_writer.lock().await.write_serialize(&report).await {
+                if let Err(e) = hid_writer.write_serialize(&report).await {
                     println!("Failed to send report: {:?}", e);
                 }
                 let report = keyboard_report(KEY_RELEASED);
-                if let Err(e) = hid_writer.lock().await.write_serialize(&report).await {
+                if let Err(e) = hid_writer.write_serialize(&report).await {
                     println!("Failed to send report: {:?}", e);
                 }
             }
@@ -68,24 +67,41 @@ async fn usb_keyboard(
 
 struct UsbKeyboard {
     buttons: Cell<Option<Buttons>>,
+    hid_writer: Cell<Option<UsbHidWriter>>,
 }
 
 impl Application for UsbKeyboard {
     fn initialize(
-        peripherals: &mut arch::OptionalPeripherals,
+        peripherals: &mut OptionalPeripherals,
         _init_args: InitializationArgs,
-    ) -> Result<&dyn Application, ApplicationInitError> {
+    ) -> Result<&'static dyn Application, ApplicationInitError> {
         let our_peripherals = pins::OurPeripherals::take_from(peripherals)?;
 
         let buttons = Buttons::new(our_peripherals.buttons);
 
         Ok(make_static!(Self {
             buttons: Cell::new(Some(buttons)),
+            hid_writer: Cell::new(None),
         }))
     }
 
+    fn usb_builder_hook(&self, usb_builder: &mut UsbBuilder<'static, UsbDriver>) {
+        let config = hid::Config {
+            report_descriptor: <KeyboardReport as SerializedDescriptor>::desc(),
+            request_handler: None,
+            poll_ms: 60,
+            max_packet_size: 64,
+        };
+
+        let hid_state = make_static!(hid::State::new());
+        let hid_rw = hid::HidReaderWriter::new(usb_builder, hid_state, config);
+        let (_hid_reader, hid_writer): (UsbHidReader, _) = hid_rw.split();
+
+        self.hid_writer.set(Some(hid_writer));
+    }
+
     fn start(&self, spawner: embassy_executor::Spawner, drivers: Drivers) {
-        let hid_writer = drivers.usb_hid.get().unwrap().writer;
+        let hid_writer = self.hid_writer.take().unwrap();
         spawner
             .spawn(usb_keyboard(self.buttons.take().unwrap(), hid_writer))
             .unwrap();
