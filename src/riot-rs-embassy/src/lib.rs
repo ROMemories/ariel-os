@@ -53,10 +53,30 @@ pub struct UsbHid {
     pub writer: &'static Mutex<CriticalSectionRawMutex, UsbHidWriter>,
 }
 
+macro_rules! usize_env_or {
+    ($env_var:literal, $default:expr) => {
+        if let Some(str_value) = option_env!($env_var) {
+            match konst::primitive::parse_usize(str_value) {
+                Ok(value) => value,
+                Err(_err) => panic!(concat!(
+                    "Error parsing environment variable `",
+                    $env_var,
+                    "`",
+                    // TODO: can we print the actual error?
+                )),
+            }
+        } else {
+            $default
+        }
+    };
+}
+
 #[cfg(feature = "usb_hid")]
-pub type UsbHidReader = hid::HidReader<'static, UsbDriver, 1>;
+pub type UsbHidReader =
+    hid::HidReader<'static, UsbDriver, { usize_env_or!("RIOT_RS_USB_HID_READER_N", 1) }>;
 #[cfg(feature = "usb_hid")]
-pub type UsbHidWriter = hid::HidWriter<'static, UsbDriver, 8>;
+pub type UsbHidWriter =
+    hid::HidWriter<'static, UsbDriver, { usize_env_or!("RIOT_RS_USB_HID_WRITER_N", 8) }>;
 
 pub static EXECUTOR: InterruptExecutor = InterruptExecutor::new();
 

@@ -19,6 +19,7 @@ embassy-usb = { workspace = true, optional = true }
 embassy-net = { workspace = true, optional = true, features = [ "dhcpv4", "medium-ethernet" ] }
 heapless = "0.8.0"
 usbd-hid = { version = "0.6.1", optional = true }
+konst = { version = "0.3.8" }
 
 [target.'cfg(context = "cortex-m")'.dependencies]
 embassy-executor = { workspace = true, features = [
