@@ -3,3 +3,7 @@ apps:
     context: nrf52840dk
     selects:
       - ?release
+    env:
+      global:
+        CARGO_ENV:
+          - RIOT_RS_MAX_APP_COUNT=1

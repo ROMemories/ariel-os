@@ -285,8 +285,8 @@ async fn init_task(mut peripherals: arch::OptionalPeripherals) {
         peripherals: make_static!(Mutex::new(peripherals)),
     };
 
-    // FIXME: this limits the number of applications to 4
-    let mut initialized_applications = [None; 4];
+    // TODO: enforce that RIOT_RS_MAX_APP_COUNT cannot be null
+    let mut initialized_applications = [None; { usize_env_or!("RIOT_RS_MAX_APP_COUNT", 1) }];
 
     for task in EMBASSY_TASKS {
         let mut peripherals = init_args.peripherals.lock().await;
