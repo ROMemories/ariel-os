@@ -119,7 +119,7 @@ impl Application for WebServer {
     fn initialize(
         peripherals: &mut OptionalPeripherals,
         _init_args: InitializationArgs,
-    ) -> Result<&dyn Application, ApplicationInitError> {
+    ) -> Result<&'static dyn Application, ApplicationInitError> {
         let our_peripherals = pins::OurPeripherals::take_from(peripherals)?;
 
         let buttons = Buttons {

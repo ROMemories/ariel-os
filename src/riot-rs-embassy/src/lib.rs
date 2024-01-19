@@ -25,7 +25,6 @@ use core::cell::OnceCell;
 pub use linkme::{self, distributed_slice};
 
 use embassy_executor::{InterruptExecutor, Spawner};
-use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, mutex::Mutex};
 
 use crate::define_peripherals::DefinePeripheralsError;
 
@@ -38,14 +37,12 @@ pub mod blocker;
 pub type Task = fn(
     &mut arch::OptionalPeripherals,
     InitializationArgs,
-) -> Result<&dyn Application, ApplicationInitError>;
+) -> Result<&'static dyn Application, ApplicationInitError>;
 
 // Allows us to pass extra initialization arguments in the future
 #[derive(Copy, Clone)]
 #[non_exhaustive]
-pub struct InitializationArgs {
-    pub peripherals: &'static Mutex<CriticalSectionRawMutex, arch::OptionalPeripherals>,
-}
+pub struct InitializationArgs {}
 
 #[derive(Copy, Clone)]
 pub struct Drivers {
@@ -162,134 +159,146 @@ pub(crate) fn init() {
 }
 
 #[embassy_executor::task]
-async fn init_task(mut peripherals: arch::OptionalPeripherals) {
-    use static_cell::make_static;
+async fn init_task(peripherals: arch::OptionalPeripherals) {
+    fn inner(spawner: Spawner, mut peripherals: arch::OptionalPeripherals) {
+        use static_cell::make_static;
 
-    riot_rs_rt::debug::println!("riot-rs-embassy::init_task()");
+        riot_rs_rt::debug::println!("riot-rs-embassy::init_task()");
 
-    let drivers = Drivers {
+        let drivers = Drivers {
+            #[cfg(feature = "usb_ethernet")]
+            stack: make_static!(OnceCell::new()),
+        };
+
+        #[cfg(all(context = "nrf52", feature = "usb"))]
+        {
+            // nrf52840
+            let clock: embassy_nrf::pac::CLOCK = unsafe { core::mem::transmute(()) };
+
+            riot_rs_rt::debug::println!("nrf: enabling ext hfosc...");
+            clock.tasks_hfclkstart.write(|w| unsafe { w.bits(1) });
+            while clock.events_hfclkstarted.read().bits() != 1 {}
+        }
+
+        #[cfg(feature = "usb")]
+        let mut usb_builder = {
+            let usb_config = usb_config();
+
+            #[cfg(context = "nrf52")]
+            let usb_driver = arch::usb::driver(peripherals.USBD.take().unwrap());
+
+            #[cfg(context = "rp2040")]
+            let usb_driver = arch::usb::driver(peripherals.USB.take().unwrap());
+
+            // Create embassy-usb DeviceBuilder using the driver and config.
+            let builder = Builder::new(
+                usb_driver,
+                usb_config,
+                &mut make_static!([0; 256])[..],
+                &mut make_static!([0; 256])[..],
+                &mut make_static!([0; 256])[..],
+                &mut make_static!([0; 128])[..],
+                &mut make_static!([0; 128])[..],
+            );
+
+            builder
+        };
+
+        // Our MAC addr.
         #[cfg(feature = "usb_ethernet")]
-        stack: make_static!(OnceCell::new()),
-    };
+        let our_mac_addr = [0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC];
 
-    #[cfg(all(context = "nrf52", feature = "usb"))]
-    {
-        // nrf52840
-        let clock: embassy_nrf::pac::CLOCK = unsafe { core::mem::transmute(()) };
+        #[cfg(feature = "usb_ethernet")]
+        let usb_cdc_ecm = {
+            // Host's MAC addr. This is the MAC the host "thinks" its USB-to-ethernet adapter has.
+            let host_mac_addr = [0x88, 0x88, 0x88, 0x88, 0x88, 0x88];
 
-        riot_rs_rt::debug::println!("nrf: enabling ext hfosc...");
-        clock.tasks_hfclkstart.write(|w| unsafe { w.bits(1) });
-        while clock.events_hfclkstarted.read().bits() != 1 {}
+            use embassy_usb::class::cdc_ncm::{CdcNcmClass, State};
+
+            // Create classes on the builder.
+            CdcNcmClass::new(
+                &mut usb_builder,
+                make_static!(State::new()),
+                host_mac_addr,
+                64,
+            )
+        };
+
+        #[cfg(feature = "usb")]
+        {
+            let usb = usb_builder.build();
+            spawner.spawn(usb_task(usb)).unwrap();
+        }
+
+        #[cfg(feature = "usb_ethernet")]
+        let device = {
+            use embassy_usb::class::cdc_ncm::embassy_net::State as NetState;
+            let (runner, device) = usb_cdc_ecm.into_embassy_net_device::<ETHERNET_MTU, 4, 4>(
+                make_static!(NetState::new()),
+                our_mac_addr,
+            );
+
+            spawner.spawn(usb_ncm_task(runner)).unwrap();
+
+            device
+        };
+
+        #[cfg(feature = "usb_ethernet")]
+        {
+            // network stack
+            let config = network_config();
+
+            // Generate random seed
+            // let mut rng = Rng::new(p.RNG, Irqs);
+            // let mut seed = [0; 8];
+            // rng.blocking_fill_bytes(&mut seed);
+            // let seed = u64::from_le_bytes(seed);
+            let seed = 1234u64;
+
+            // Init network stack
+            let stack = &*make_static!(Stack::new(
+                device,
+                config,
+                make_static!(StackResources::<2>::new()),
+                seed
+            ));
+
+            spawner.spawn(net_task(stack)).unwrap();
+
+            // Do nothing if a stack is already initialized, as this should not happen anyway
+            // TODO: should we panic instead?
+            let _ = drivers.stack.set(stack);
+        }
+
+        let init_args = InitializationArgs {};
+
+        // TODO: enforce that RIOT_RS_MAX_APP_COUNT cannot be null
+        let mut initialized_applications = [None; { usize_env_or!("RIOT_RS_MAX_APP_COUNT", 1) }];
+
+        for task in EMBASSY_TASKS {
+            match task(&mut peripherals, init_args) {
+                Ok(initialized_application) => {
+                    if let Some(slot) = initialized_applications.iter_mut().find(|s| s.is_none()) {
+                        *slot = Some(initialized_application);
+                    } else {
+                        // FIXME: make sure there no more EMBASSY_TASKS than RIOT_RS_MAX_APP_COUNT
+                    }
+                }
+                Err(err) => panic!("Error while initializing an application: {err:?}"),
+            }
+        }
+
+        for initialized_application in initialized_applications {
+            if let Some(initialized_application) = initialized_application {
+                initialized_application.start(spawner, drivers);
+            }
+        }
+
+        riot_rs_rt::debug::println!("riot-rs-embassy::init_task() done");
     }
-
-    #[cfg(feature = "usb")]
-    let mut usb_builder = {
-        let usb_config = usb_config();
-
-        #[cfg(context = "nrf52")]
-        let usb_driver = arch::usb::driver(peripherals.USBD.take().unwrap());
-
-        #[cfg(context = "rp2040")]
-        let usb_driver = arch::usb::driver(peripherals.USB.take().unwrap());
-
-        // Create embassy-usb DeviceBuilder using the driver and config.
-        let builder = Builder::new(
-            usb_driver,
-            usb_config,
-            &mut make_static!([0; 256])[..],
-            &mut make_static!([0; 256])[..],
-            &mut make_static!([0; 256])[..],
-            &mut make_static!([0; 128])[..],
-            &mut make_static!([0; 128])[..],
-        );
-
-        builder
-    };
-
-    // Our MAC addr.
-    #[cfg(feature = "usb_ethernet")]
-    let our_mac_addr = [0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC];
-
-    #[cfg(feature = "usb_ethernet")]
-    let usb_cdc_ecm = {
-        // Host's MAC addr. This is the MAC the host "thinks" its USB-to-ethernet adapter has.
-        let host_mac_addr = [0x88, 0x88, 0x88, 0x88, 0x88, 0x88];
-
-        use embassy_usb::class::cdc_ncm::{CdcNcmClass, State};
-
-        // Create classes on the builder.
-        CdcNcmClass::new(
-            &mut usb_builder,
-            make_static!(State::new()),
-            host_mac_addr,
-            64,
-        )
-    };
 
     let spawner = Spawner::for_current_executor().await;
-
-    #[cfg(feature = "usb")]
-    {
-        let usb = usb_builder.build();
-        spawner.spawn(usb_task(usb)).unwrap();
-    }
-
-    #[cfg(feature = "usb_ethernet")]
-    let device = {
-        use embassy_usb::class::cdc_ncm::embassy_net::State as NetState;
-        let (runner, device) = usb_cdc_ecm.into_embassy_net_device::<ETHERNET_MTU, 4, 4>(
-            make_static!(NetState::new()),
-            our_mac_addr,
-        );
-
-        spawner.spawn(usb_ncm_task(runner)).unwrap();
-
-        device
-    };
-
-    #[cfg(feature = "usb_ethernet")]
-    {
-        // network stack
-        let config = network_config();
-
-        // Generate random seed
-        // let mut rng = Rng::new(p.RNG, Irqs);
-        // let mut seed = [0; 8];
-        // rng.blocking_fill_bytes(&mut seed);
-        // let seed = u64::from_le_bytes(seed);
-        let seed = 1234u64;
-
-        // Init network stack
-        let stack = &*make_static!(Stack::new(
-            device,
-            config,
-            make_static!(StackResources::<2>::new()),
-            seed
-        ));
-
-        spawner.spawn(net_task(stack)).unwrap();
-
-        // Do nothing if a stack is already initialized, as this should not happen anyway
-        // TODO: should we panic instead?
-        let _ = drivers.stack.set(stack);
-    }
-
-    let init_args = InitializationArgs {
-        peripherals: make_static!(Mutex::new(peripherals)),
-    };
-
-    for task in EMBASSY_TASKS {
-        // TODO: should all tasks be initialized before starting the first one?
-        match task(&mut *init_args.peripherals.lock().await, init_args) {
-            Ok(initialized_application) => initialized_application.start(spawner, drivers),
-            Err(err) => panic!("Error while initializing an application: {err:?}"),
-        }
-    }
-
-    // mark used
-    let _ = peripherals;
-
-    riot_rs_rt::debug::println!("riot-rs-embassy::init_task() done");
+    inner(spawner, peripherals)
 }
 
 /// Defines an application.
@@ -305,7 +314,7 @@ pub trait Application {
     fn initialize(
         peripherals: &mut arch::OptionalPeripherals,
         init_args: InitializationArgs,
-    ) -> Result<&dyn Application, ApplicationInitError>
+    ) -> Result<&'static dyn Application, ApplicationInitError>
     where
         Self: Sized;
 
@@ -344,7 +353,7 @@ macro_rules! riot_initialize {
         fn __init_application(
             peripherals: &mut $crate::arch::OptionalPeripherals,
             init_args: $crate::InitializationArgs,
-        ) -> Result<&dyn $crate::Application, $crate::ApplicationInitError> {
+        ) -> Result<&'static dyn $crate::Application, $crate::ApplicationInitError> {
             <$prog_type as Application>::initialize(peripherals, init_args)
         }
     };

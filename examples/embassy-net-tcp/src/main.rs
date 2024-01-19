@@ -62,7 +62,7 @@ impl Application for TcpEcho {
     fn initialize(
         _peripherals: &mut arch::OptionalPeripherals,
         _init_args: InitializationArgs,
-    ) -> Result<&dyn Application, ApplicationInitError> {
+    ) -> Result<&'static dyn Application, ApplicationInitError> {
         Ok(&Self {})
     }
 
