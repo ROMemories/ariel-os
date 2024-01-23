@@ -160,6 +160,9 @@ pub(crate) fn init() {
 
 #[embassy_executor::task]
 async fn init_task(peripherals: arch::OptionalPeripherals) {
+    // Disable inlining for this function, so that local variables defined within it are not
+    // statically allocated as part of the surrounding task
+    #[inline(never)]
     fn inner(spawner: Spawner, mut peripherals: arch::OptionalPeripherals) {
         use static_cell::make_static;
 
