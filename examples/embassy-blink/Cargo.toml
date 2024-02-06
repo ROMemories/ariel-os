@@ -1,0 +1,14 @@
+[package]
+name = "embassy-blink"
+version = "0.1.0"
+authors.workspace = true
+edition.workspace = true
+publish = false
+
+[dependencies]
+riot-rs = { path = "../../src/riot-rs", features = [] }
+riot-rs-boards = { path = "../../src/riot-rs-boards" }
+embassy-executor = { workspace = true, default-features = false, features = ["integrated-timers"] }
+embassy-nrf = { workspace = true, default-features = false }
+embassy-time = { workspace = true, default-features = false }
+static_cell = { workspace = true }

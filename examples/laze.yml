@@ -9,6 +9,7 @@ subdirs:
   - bottles
   - core-sizes
   - embassy
+  - embassy-blink
   - embassy-http-server
   - embassy-net-tcp
   - embassy-net-udp

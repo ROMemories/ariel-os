@@ -1,0 +1,5 @@
+apps:
+  - name: embassy-blink
+    context: nrf52840dk
+    selects:
+      - ?release

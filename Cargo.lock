@@ -703,6 +703,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "embassy-blink"
+version = "0.1.0"
+dependencies = [
+ "embassy-executor",
+ "embassy-nrf",
+ "embassy-time",
+ "riot-rs",
+ "riot-rs-boards",
+ "static_cell",
+]
+
+[[package]]
 name = "embassy-embedded-hal"
 version = "0.1.0"
 source = "git+https://github.com/kaspar030/embassy?branch=for-riot-rs-230124#b8426e1919e066d819ebc0ac16be50c3a04504cc"
