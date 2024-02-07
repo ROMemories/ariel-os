@@ -10,23 +10,31 @@ use arch::usb::UsbDriver;
 ///
 /// Allows to separate its fallible initialization from its infallible running phase.
 pub trait Application {
+    /// Creates the trait object so that we can then call methods on it.
+    ///
+    /// # Note
+    ///
+    /// This function must be callable multiple times.
     fn init() -> &'static dyn Application
     where
         Self: Sized;
 
+    // FIXME: return a Result
+    /// Allows to mutate the [USB builder](UsbBuilder) to configure USB on the device.
     #[cfg(feature = "usb")]
     fn usb_builder_hook(&self, _usb_builder: &mut UsbBuilder<'static, UsbDriver>) {}
 
-    /// Applications must implement this to obtain the peripherals they require.
-    ///
-    /// This function is only run once at startup and instantiates the application.
-    /// No guarantee is provided regarding the order in which different applications are
-    /// initialized.
+    /// This method is run once at startup and is intended to start the application.
+    /// It must not block but may spawn [Embassy tasks](embassy_executor::task) using the provided
+    /// [`Spawner`](embassy_executor::Spawner).
     /// The [`define_peripherals!`](crate::define_peripherals!) macro can be leveraged to extract
     /// the required peripherals.
-    /// This function must not block but may spawn [Embassy tasks](embassy_executor::task) using
-    /// the provided [`Spawner`](embassy_executor::Spawner).
-    /// In addition, it is provided with the drivers initialized by the system.
+    /// In addition, this method is provided with the drivers initialized by the system, which
+    /// can be configured using the hook methods on this trait.
+    ///
+    /// # Note
+    ///
+    /// No guarantee is provided regarding the order in which different applications are started.
     fn start(
         &self,
         peripherals: &mut arch::OptionalPeripherals,
@@ -51,7 +59,7 @@ impl From<DefinePeripheralsError> for ApplicationError {
     }
 }
 
-/// Sets the [`Application::initialize()`] function implemented on the provided type to be run at
+/// Sets the [`Application::init()`] function implemented on the provided type to be run at
 /// startup.
 #[macro_export]
 macro_rules! riot_initialize {
