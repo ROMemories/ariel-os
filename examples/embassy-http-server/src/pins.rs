@@ -10,3 +10,11 @@ define_peripherals!(Buttons {
     btn3: P0_24,
     btn4: P0_25,
 });
+
+#[cfg(all(feature = "leds", builder = "nrf52840dk"))]
+define_peripherals!(Leds {
+    led1: P0_13,
+    led2: P0_14,
+    led3: P0_15,
+    led4: P0_16,
+});

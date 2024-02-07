@@ -9,10 +9,10 @@ pub async fn buttons(State(ButtonInputs(button_inputs)): State<ButtonInputs>) ->
     let buttons = button_inputs.lock().await;
 
     Json(JsonButtons {
-        button1: buttons.button1.is_low(),
-        button2: buttons.button2.is_low(),
-        button3: buttons.button3.is_low(),
-        button4: buttons.button4.is_low(),
+        button1: buttons.0.get(0).unwrap().is_low(),
+        button2: buttons.0.get(1).unwrap().is_low(),
+        button3: buttons.0.get(2).unwrap().is_low(),
+        button4: buttons.0.get(3).unwrap().is_low(),
     })
 }
 

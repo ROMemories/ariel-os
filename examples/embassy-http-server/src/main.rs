@@ -20,6 +20,9 @@ use static_cell::make_static;
 #[cfg(feature = "button-readings")]
 use embassy_nrf::gpio::{Input, Pin, Pull};
 
+#[cfg(feature = "leds")]
+use embassy_nrf::gpio::{Level, Output, OutputDrive};
+
 struct AppState {
     #[cfg(feature = "button-readings")]
     buttons: ButtonInputs,
@@ -29,13 +32,15 @@ struct AppState {
 #[derive(Copy, Clone)]
 struct ButtonInputs(&'static Mutex<CriticalSectionRawMutex, Buttons>);
 
+#[cfg(all(feature = "button-readings", builder = "nrf52840dk"))]
+const BUTTON_COUNT: usize = 4;
 #[cfg(feature = "button-readings")]
-struct Buttons {
-    button1: Input<'static>,
-    button2: Input<'static>,
-    button3: Input<'static>,
-    button4: Input<'static>,
-}
+struct Buttons([Input<'static>; BUTTON_COUNT]);
+
+#[cfg(all(feature = "leds", builder = "nrf52840dk"))]
+const LED_COUNT: usize = 4;
+#[cfg(feature = "leds")]
+struct Leds([Output<'static>; LED_COUNT]);
 
 #[cfg(feature = "button-readings")]
 impl picoserve::extract::FromRef<AppState> for ButtonInputs {
@@ -86,17 +91,40 @@ async fn web_task(
 }
 
 #[riot_rs::main]
-async fn main(#[cfg(feature = "button-readings")] buttons: pins::Buttons) {
+async fn main(
+    #[cfg(feature = "button-readings")] buttons: pins::Buttons,
+    #[cfg(feature = "leds")] leds: pins::Leds,
+) {
+    let spawner = Spawner::for_current_executor().await;
+
     #[cfg(feature = "button-readings")]
-    let button_inputs = {
-        let buttons = Buttons {
-            button1: Input::new(buttons.btn1.degrade(), Pull::Up),
-            button2: Input::new(buttons.btn2.degrade(), Pull::Up),
-            button3: Input::new(buttons.btn3.degrade(), Pull::Up),
-            button4: Input::new(buttons.btn4.degrade(), Pull::Up),
+    let buttons = {
+        let button_inputs = {
+            let buttons = Buttons([
+                Input::new(buttons.btn1.degrade(), Pull::Up),
+                Input::new(buttons.btn2.degrade(), Pull::Up),
+                Input::new(buttons.btn3.degrade(), Pull::Up),
+                Input::new(buttons.btn4.degrade(), Pull::Up),
+            ]);
+            let buttons = make_static!(Mutex::new(buttons));
+
+            #[cfg(feature = "leds")]
+            let leds = {
+                Leds([
+                    Output::new(leds.led1.degrade(), Level::Low, OutputDrive::Standard),
+                    Output::new(leds.led2.degrade(), Level::Low, OutputDrive::Standard),
+                    Output::new(leds.led3.degrade(), Level::Low, OutputDrive::Standard),
+                    Output::new(leds.led4.degrade(), Level::Low, OutputDrive::Standard),
+                ])
+            };
+
+            #[cfg(feature = "leds-sync-buttons")]
+            spawner.spawn(led_task(leds, buttons)).unwrap();
+
+            ButtonInputs(buttons)
         };
 
-        ButtonInputs(make_static!(Mutex::new(buttons)))
+        button_inputs
     };
 
     fn make_app() -> picoserve::Router<AppRouter, AppState> {
@@ -114,14 +142,31 @@ async fn main(#[cfg(feature = "button-readings")] buttons: pins::Buttons) {
         write: Some(Duration::from_secs(1)),
     }));
 
-    let spawner = Spawner::for_current_executor().await;
-
     for id in 0..WEB_TASK_POOL_SIZE {
         let app_state = AppState {
             #[cfg(feature = "button-readings")]
-            buttons: button_inputs,
+            buttons,
         };
         spawner.spawn(web_task(id, app, config, app_state)).unwrap();
+    }
+}
+
+#[cfg(feature = "leds-sync-buttons")]
+#[embassy_executor::task]
+async fn led_task(mut leds: Leds, buttons: &'static Mutex<CriticalSectionRawMutex, Buttons>) {
+    use embassy_time::Timer;
+
+    loop {
+        for (button, led) in buttons.lock().await.0.iter().zip(leds.0.iter_mut()) {
+            if button.is_low() {
+                led.set_low();
+            } else {
+                led.set_high();
+            }
+        }
+
+        // Avoid keeping the mutex locked all the time
+        Timer::after(Duration::from_millis(50)).await;
     }
 }
 

@@ -23,3 +23,5 @@ embassy-nrf = { workspace = true, optional = true }
 
 [features]
 button-readings = ["dep:embassy-nrf"]
+leds = ["dep:embassy-nrf"]
+leds-sync-buttons = ["button-readings", "leds"]
