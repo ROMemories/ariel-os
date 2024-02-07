@@ -251,12 +251,6 @@ async fn init_task(mut peripherals: arch::OptionalPeripherals) {
 
     let spawner = Spawner::for_current_executor().await;
 
-    #[cfg(feature = "usb")]
-    {
-        let usb = usb_builder.build();
-        spawner.spawn(usb_task(usb)).unwrap();
-    }
-
     #[cfg(feature = "usb_ethernet")]
     let device = {
         use embassy_usb::class::cdc_ncm::embassy_net::State as NetState;
@@ -307,6 +301,17 @@ async fn init_task(mut peripherals: arch::OptionalPeripherals) {
     {
         wifi::join(control).await;
     };
+
+    for task in EMBASSY_TASKS {
+        #[cfg(feature = "usb")]
+        task().usb_builder_hook(&mut usb_builder);
+    }
+
+    #[cfg(feature = "usb")]
+    {
+        let usb = usb_builder.build();
+        spawner.spawn(usb_task(usb)).unwrap();
+    }
 
     for task in EMBASSY_TASKS {
         if let Err(err) = task().start(&mut peripherals, spawner, drivers) {

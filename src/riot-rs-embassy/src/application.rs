@@ -1,5 +1,11 @@
 use crate::{arch, DefinePeripheralsError, Drivers};
 
+#[cfg(feature = "usb")]
+use embassy_usb::Builder as UsbBuilder;
+
+#[cfg(feature = "usb")]
+use arch::usb::UsbDriver;
+
 /// Defines an application.
 ///
 /// Allows to separate its fallible initialization from its infallible running phase.
@@ -7,6 +13,9 @@ pub trait Application {
     fn init() -> &'static dyn Application
     where
         Self: Sized;
+
+    #[cfg(feature = "usb")]
+    fn usb_builder_hook(&self, _usb_builder: &mut UsbBuilder<'static, UsbDriver>) {}
 
     /// Applications must implement this to obtain the peripherals they require.
     ///
