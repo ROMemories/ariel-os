@@ -8,8 +8,11 @@ pub use riot_rs_buildinfo as buildinfo;
 pub use riot_rs_embassy::{self as embassy, define_peripherals};
 pub use riot_rs_rt as rt;
 
+// Attribute macros
+pub use riot_rs_macros::main;
 #[cfg(feature = "threading")]
 pub use riot_rs_macros::thread;
+
 #[cfg(feature = "threading")]
 pub use riot_rs_threads as thread;
 

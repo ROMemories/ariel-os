@@ -3,13 +3,15 @@
 #![feature(type_alias_impl_trait)]
 #![feature(used_with_arg)]
 
-use riot_rs::embassy::network;
+use riot_rs::embassy::{network, Spawner};
 use riot_rs::rt::debug::println;
 
 use embedded_io_async::Write;
 
-#[embassy_executor::task]
-async fn tcp_echo() {
+riot_rs::define_peripherals!(Peripherals {});
+
+#[riot_rs::main]
+async fn main(_peripherals: Peripherals) {
     use embassy_net::tcp::TcpSocket;
     let stack = network::network_stack().await.unwrap();
 
@@ -53,14 +55,6 @@ async fn tcp_echo() {
             };
         }
     }
-}
-
-// TODO: macro up this
-use riot_rs::embassy::{arch::OptionalPeripherals, Spawner};
-#[riot_rs::embassy::distributed_slice(riot_rs::embassy::EMBASSY_TASKS)]
-#[linkme(crate = riot_rs::embassy::linkme)]
-fn __init_tcp_echo(spawner: &Spawner, _peripherals: &mut OptionalPeripherals) {
-    spawner.spawn(tcp_echo()).unwrap();
 }
 
 #[no_mangle]
