@@ -3,11 +3,11 @@
 #![feature(type_alias_impl_trait)]
 #![feature(used_with_arg)]
 
-use riot_rs::embassy::network;
+use riot_rs::embassy::{arch, network, Spawner};
 use riot_rs::rt::debug::println;
 
-#[embassy_executor::task]
-async fn udp_echo() {
+#[riot_rs::main]
+async fn main() {
     use embassy_net::udp::{PacketMetadata, UdpSocket};
     let stack = network::network_stack().await.unwrap();
 
@@ -58,14 +58,6 @@ async fn udp_echo() {
             };
         }
     }
-}
-
-// TODO: macro up this
-use riot_rs::embassy::{arch::OptionalPeripherals, Spawner};
-#[riot_rs::embassy::distributed_slice(riot_rs::embassy::EMBASSY_TASKS)]
-#[linkme(crate = riot_rs::embassy::linkme)]
-fn __init_udp_echo(spawner: &Spawner, _peripherals: &mut OptionalPeripherals) {
-    spawner.spawn(udp_echo()).unwrap();
 }
 
 #[no_mangle]
