@@ -8,7 +8,7 @@ mod routes;
 
 use riot_rs as _;
 
-use riot_rs::embassy::{arch, network, Spawner};
+use riot_rs::embassy::{network, Spawner};
 use riot_rs::rt::debug::println;
 
 use embassy_net::tcp::TcpSocket;
@@ -86,11 +86,9 @@ async fn web_task(
 }
 
 #[riot_rs::main]
-fn main(spawner: &Spawner, peripherals: &mut arch::OptionalPeripherals) {
+async fn main(#[cfg(feature = "button-readings")] buttons: pins::Buttons) {
     #[cfg(feature = "button-readings")]
     let button_inputs = {
-        let buttons = pins::Buttons::take_from(peripherals).unwrap();
-
         let buttons = Buttons {
             button1: Input::new(buttons.btn1.degrade(), Pull::Up),
             button2: Input::new(buttons.btn2.degrade(), Pull::Up),
@@ -115,6 +113,8 @@ fn main(spawner: &Spawner, peripherals: &mut arch::OptionalPeripherals) {
         read_request: Some(Duration::from_secs(1)),
         write: Some(Duration::from_secs(1)),
     }));
+
+    let spawner = Spawner::for_current_executor().await;
 
     for id in 0..WEB_TASK_POOL_SIZE {
         let app_state = AppState {

@@ -6,8 +6,8 @@
 use riot_rs::embassy::{arch, network, Spawner};
 use riot_rs::rt::debug::println;
 
-#[embassy_executor::task]
-async fn udp_echo() {
+#[riot_rs::main]
+async fn main() {
     use embassy_net::udp::{PacketMetadata, UdpSocket};
     let stack = network::network_stack().await.unwrap();
 
@@ -58,11 +58,6 @@ async fn udp_echo() {
             };
         }
     }
-}
-
-#[riot_rs::main]
-fn main(spawner: &Spawner, _peripherals: &mut arch::OptionalPeripherals) {
-    spawner.spawn(udp_echo()).unwrap();
 }
 
 #[no_mangle]

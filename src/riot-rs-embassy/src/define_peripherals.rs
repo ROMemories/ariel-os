@@ -51,7 +51,24 @@ macro_rules! define_peripherals {
                 })
             }
         }
+
+        impl $crate::define_peripherals::FromOptionalPeripherals<$peripherals> for &mut $crate::arch::OptionalPeripherals {
+            fn into_peripherals(&mut self) -> $peripherals {
+                $peripherals {
+                    $($peripheral_name: self.$peripheral_field
+                        .take()
+                        .ok_or($crate::define_peripherals::DefinePeripheralsError::TakingPeripheral)
+                        .unwrap()
+                    ),*
+                }
+            }
+        }
     }
+}
+
+#[doc(hidden)]
+pub trait FromOptionalPeripherals<T> {
+    fn into_peripherals(&mut self) -> T;
 }
 
 #[derive(Debug)]
