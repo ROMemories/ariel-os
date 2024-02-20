@@ -3,7 +3,7 @@
 #![feature(type_alias_impl_trait)]
 #![feature(used_with_arg)]
 
-use riot_rs::embassy::network;
+use riot_rs::embassy::{arch, network, Spawner};
 use riot_rs::rt::debug::println;
 
 use embedded_io_async::Write;
@@ -55,11 +55,8 @@ async fn tcp_echo() {
     }
 }
 
-// TODO: macro up this
-use riot_rs::embassy::{arch::OptionalPeripherals, Spawner};
-#[riot_rs::embassy::distributed_slice(riot_rs::embassy::EMBASSY_TASKS)]
-#[linkme(crate = riot_rs::embassy::linkme)]
-fn __init_tcp_echo(spawner: &Spawner, _peripherals: &mut OptionalPeripherals) {
+#[riot_rs::main]
+fn main(spawner: &Spawner, _peripherals: &mut arch::OptionalPeripherals) {
     spawner.spawn(tcp_echo()).unwrap();
 }
 

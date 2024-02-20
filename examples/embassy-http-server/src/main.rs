@@ -8,7 +8,7 @@ mod routes;
 
 use riot_rs as _;
 
-use riot_rs::embassy::network;
+use riot_rs::embassy::{arch, network, Spawner};
 use riot_rs::rt::debug::println;
 
 use embassy_net::tcp::TcpSocket;
@@ -85,11 +85,8 @@ async fn web_task(
     }
 }
 
-// TODO: macro up this up
-use riot_rs::embassy::{arch::OptionalPeripherals, Spawner};
-#[riot_rs::embassy::distributed_slice(riot_rs::embassy::EMBASSY_TASKS)]
-#[linkme(crate = riot_rs::embassy::linkme)]
-fn web_server_init(spawner: &Spawner, peripherals: &mut OptionalPeripherals) {
+#[riot_rs::main]
+fn main(spawner: &Spawner, peripherals: &mut arch::OptionalPeripherals) {
     #[cfg(feature = "button-readings")]
     let button_inputs = {
         let buttons = pins::Buttons::take_from(peripherals).unwrap();
