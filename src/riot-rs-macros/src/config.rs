@@ -1,4 +1,4 @@
-/// Register the function this attribute macro is applied on to provide the configuration for the
+/// Registers the function this attribute macro is applied on to provide the configuration for the
 /// associated driver during initial system configuration.
 ///
 /// The name of the function does not matter as it will be renamed by the macro.
