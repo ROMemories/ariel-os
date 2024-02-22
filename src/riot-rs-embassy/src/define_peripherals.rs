@@ -27,7 +27,7 @@ macro_rules! define_peripherals {
                     $(,)?
                 }
                 $(,)?
-            )+
+            )*
         }
     ) => {
         #[allow(dead_code,non_snake_case,missing_docs)]
@@ -45,7 +45,7 @@ macro_rules! define_peripherals {
                     pub $peripheral_name: peripherals::$peripheral_field
                 ),*
             }
-        )+
+        )*
 
         $($($(
             #[allow(missing_docs, non_camel_case_types)]
