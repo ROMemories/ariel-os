@@ -1,7 +1,7 @@
 /// Registers a function acting as an entrypoint for an application.
 ///
-/// Peripheral groups defined with the `define_peripherals!` macro can be obtained in that function
-/// by taking them as parameters.
+/// The function is provided with peripherals, which can obtained by taking a peripheral struct
+/// defined with `assign_peripherals!` as the first parameter.
 ///
 /// # Parameters
 ///
