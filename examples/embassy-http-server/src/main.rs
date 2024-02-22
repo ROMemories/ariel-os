@@ -86,7 +86,12 @@ async fn web_task(
 }
 
 #[riot_rs::main]
-async fn main(#[cfg(feature = "button-readings")] buttons: pins::Buttons) {
+async fn main(peripherals: pins::Peripherals) {
+    let pins::Peripherals {
+        #[cfg(feature = "button-readings")]
+        buttons,
+    } = peripherals;
+
     #[cfg(feature = "button-readings")]
     let button_inputs = {
         let buttons = Buttons {

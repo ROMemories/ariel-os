@@ -38,7 +38,7 @@ pub async fn device<'a, 'b: 'a>(
     p: &'a mut OptionalPeripherals,
     spawner: &crate::Spawner,
 ) -> (embassy_net_driver_channel::Device<'b, 1514>, Control<'b>) {
-    let p = Cyw43Periphs::take_from(p).unwrap();
+    let p = Cyw43Periphs::take_from(p).unwrap().pins;
 
     let fw = include_bytes!("../../firmware/cyw43/43439A0.bin");
     let clm = include_bytes!("../../firmware/cyw43/43439A0_clm.bin");

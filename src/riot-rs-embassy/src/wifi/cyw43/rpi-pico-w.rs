@@ -6,12 +6,14 @@ use embassy_rp::{bind_interrupts, pio::InterruptHandler};
 use crate::{arch::peripherals, define_peripherals};
 
 define_peripherals!(Cyw43Periphs {
-    pwr: PIN_23 = CYW43_PWR,
-    cs: PIN_25 = CYW43_CS,
-    pio: PIO0 = CYW43_PIO,
-    dma: DMA_CH0 = CYW43_DMA_CH,
-    dio: PIN_24,
-    clk: PIN_29,
+    pins: Pins {
+        pwr: PIN_23 = CYW43_PWR,
+        cs: PIN_25 = CYW43_CS,
+        pio: PIO0 = CYW43_PIO,
+        dma: DMA_CH0 = CYW43_DMA_CH,
+        dio: PIN_24,
+        clk: PIN_29,
+    }
 });
 
 bind_interrupts!(pub struct Irqs {
