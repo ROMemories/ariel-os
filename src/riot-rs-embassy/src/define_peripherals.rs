@@ -17,36 +17,54 @@
 #[macro_export]
 macro_rules! define_peripherals {
     (
-        $(#[$outer:meta])*
-        $peripherals:ident {
+        $peripherals: ident {
             $(
-                $(#[$inner:meta])*
-                $peripheral_name:ident : $peripheral_field:ident $(=$peripheral_alias:ident)?),*
-            $(,)?
+                $(#[$outer:meta])*
+                $group_name:ident : $group_struct:ident {
+                    $(
+                        $(#[$inner:meta])*
+                        $peripheral_name:ident : $peripheral_field:ident $(=$peripheral_alias:ident)?),*
+                    $(,)?
+                }
+                $(,)?
+            )+
         }
     ) => {
         #[allow(dead_code,non_snake_case,missing_docs)]
-        $(#[$outer])*
         pub struct $peripherals {
-            $(
-                $(#[$inner])*
-                pub $peripheral_name: peripherals::$peripheral_field
-            ),*
+            $($(#[$outer])* pub $group_name : $group_struct),*
+
         }
 
-        $($(
+        $(
+            $(#[$outer])*
+            #[allow(dead_code,non_snake_case)]
+            pub struct $group_struct {
+                $(
+                    $(#[$inner])*
+                    pub $peripheral_name: peripherals::$peripheral_field
+                ),*
+            }
+        )+
+
+        $($($(
             #[allow(missing_docs, non_camel_case_types)]
             pub type $peripheral_alias = peripherals::$peripheral_field;
-        )?)*
+        )?)*)*
 
         impl $peripherals {
             pub fn take_from(
                 opt_peripherals: &mut $crate::arch::OptionalPeripherals
             ) -> Result<Self, $crate::define_peripherals::DefinePeripheralsError> {
                 Ok(Self {
-                    $($peripheral_name: opt_peripherals.$peripheral_field
-                        .take()
-                        .ok_or($crate::define_peripherals::DefinePeripheralsError::TakingPeripheral)?
+                    $(
+                        $(#[$outer])*
+                        $group_name: $group_struct {
+                            $($peripheral_name: opt_peripherals.$peripheral_field
+                                .take()
+                                .ok_or($crate::define_peripherals::DefinePeripheralsError::TakingPeripheral)?
+                            ),*
+                        }
                     ),*
                 })
             }
@@ -55,10 +73,15 @@ macro_rules! define_peripherals {
         impl $crate::define_peripherals::IntoPeripherals<$peripherals> for &mut $crate::arch::OptionalPeripherals {
             fn into_peripherals(&mut self) -> $peripherals {
                 $peripherals {
-                    $($peripheral_name: self.$peripheral_field
-                        .take()
-                        .ok_or($crate::define_peripherals::DefinePeripheralsError::TakingPeripheral)
-                        .unwrap()
+                    $(
+                        $(#[$outer])*
+                        $group_name: $group_struct {
+                            $($peripheral_name: self.$peripheral_field
+                                .take()
+                                .ok_or($crate::define_peripherals::DefinePeripheralsError::TakingPeripheral)
+                                .unwrap()
+                            ),*
+                        }
                     ),*
                 }
             }
