@@ -38,7 +38,7 @@ pub use embassy_net;
 #[cfg(feature = "usb")]
 pub use embassy_usb;
 
-#[cfg(feature = "usb")]
+#[cfg(feature = "usb_ethernet")]
 use usb::ethernet::NetworkDevice;
 
 #[cfg(feature = "wifi_cyw43")]
