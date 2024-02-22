@@ -3,11 +3,13 @@
 #![feature(type_alias_impl_trait)]
 #![feature(used_with_arg)]
 
-use riot_rs::embassy::{arch, network, Spawner};
+use riot_rs::embassy::{network, Spawner};
 use riot_rs::rt::debug::println;
 
+riot_rs::define_peripherals!(Peripherals {});
+
 #[riot_rs::main]
-async fn main() {
+async fn main(_peripherals: Peripherals) {
     use embassy_net::udp::{PacketMetadata, UdpSocket};
     let stack = network::network_stack().await.unwrap();
 

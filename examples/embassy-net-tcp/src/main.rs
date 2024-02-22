@@ -8,8 +8,10 @@ use riot_rs::rt::debug::println;
 
 use embedded_io_async::Write;
 
+riot_rs::define_peripherals!(Peripherals {});
+
 #[riot_rs::main]
-async fn main() {
+async fn main(_peripherals: Peripherals) {
     use embassy_net::tcp::TcpSocket;
     let stack = network::network_stack().await.unwrap();
 
