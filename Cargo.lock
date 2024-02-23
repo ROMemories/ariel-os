@@ -107,6 +107,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f8fe8f5a8a398345e52358e18ff07cc17a568fbca5c6f73873d3a62056309603"
 
 [[package]]
+name = "basic-toml"
+version = "0.1.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2db21524cad41c5591204d22d75e1970a2d1f71060214ca931dc7d5afe2c14e5"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "benchmark"
 version = "0.1.0"
 dependencies = [
@@ -1048,6 +1057,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "glob"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d2fabcfbdc87f4758337ca535fb41a6d701b65693ce38287d856d1674551ec9b"
+
+[[package]]
 name = "half"
 version = "2.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1987,10 +2002,14 @@ dependencies = [
 name = "riot-rs-macros"
 version = "0.1.0"
 dependencies = [
+ "embassy-net",
  "enum-iterator",
+ "heapless 0.8.0",
  "proc-macro-crate",
  "quote",
+ "riot-rs",
  "syn 2.0.50",
+ "trybuild",
 ]
 
 [[package]]
@@ -2427,6 +2446,21 @@ dependencies = [
  "indexmap 2.2.3",
  "toml_datetime",
  "winnow",
+]
+
+[[package]]
+name = "trybuild"
+version = "1.0.89"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9a9d3ba662913483d6722303f619e75ea10b7855b0f8e0d72799cf8621bb488f"
+dependencies = [
+ "basic-toml",
+ "glob",
+ "once_cell",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "termcolor",
 ]
 
 [[package]]
