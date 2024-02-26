@@ -21,4 +21,4 @@ pub use linkme;
 pub use static_cell;
 
 // ensure this gets linked
-use riot_rs_boards as _;
+// use riot_rs_boards as _;

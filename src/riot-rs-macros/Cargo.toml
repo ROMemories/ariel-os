@@ -14,9 +14,8 @@ quote = "1.0.35"
 syn = { version = "2.0.47", features = ["full"] }
 
 [dev-dependencies]
-embassy-net = { workspace = true } # FIXME: use the re-export from riot-rs when we rebase this
 heapless = { workspace = true }
-riot-rs = { workspace = true, features = ["usb_ethernet", "override-network-config"] }
+riot-rs = { workspace = true, features = ["std", "usb_ethernet", "override-network-config"] }
 trybuild = "1.0.89"
 
 [lib]

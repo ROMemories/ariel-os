@@ -8,7 +8,7 @@ edition.workspace = true
 linkme = { workspace = true }
 riot-rs-rt = { path = "../riot-rs-rt" }
 riot-rs-threads = { path = "../riot-rs-threads", optional = true }
-riot-rs-boards = { path = "../riot-rs-boards" }
+# riot-rs-boards = { path = "../riot-rs-boards" }
 riot-rs-buildinfo = { path = "../riot-rs-buildinfo" }
 riot-rs-embassy = { path = "../riot-rs-embassy" }
 riot-rs-macros = { path = "../riot-rs-macros" }
@@ -17,6 +17,7 @@ static_cell = { workspace = true }
 [features]
 debug-console = [ "riot-rs-rt/debug-console" ]
 silent-panic = [ "riot-rs-rt/silent-panic" ]
+std = ["riot-rs-rt/std"]
 threading = ["dep:riot-rs-threads", "riot-rs-rt/threading", "riot-rs-embassy/threading" ]
 time = [ "riot-rs-embassy/time" ]
 usb = [ "riot-rs-embassy/usb" ]
