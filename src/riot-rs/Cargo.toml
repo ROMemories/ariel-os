@@ -8,7 +8,7 @@ edition.workspace = true
 linkme = { workspace = true }
 riot-rs-rt = { path = "../riot-rs-rt" }
 riot-rs-threads = { path = "../riot-rs-threads", optional = true }
-# riot-rs-boards = { path = "../riot-rs-boards" }
+riot-rs-boards = { path = "../riot-rs-boards" }
 riot-rs-buildinfo = { path = "../riot-rs-buildinfo" }
 riot-rs-embassy = { path = "../riot-rs-embassy" }
 riot-rs-macros = { path = "../riot-rs-macros" }
@@ -22,6 +22,7 @@ threading = ["dep:riot-rs-threads", "riot-rs-rt/threading", "riot-rs-embassy/thr
 time = [ "riot-rs-embassy/time" ]
 usb = [ "riot-rs-embassy/usb" ]
 net = [ "riot-rs-embassy/net" ]
+no-board = ["riot-rs-boards/no-board"]
 usb_ethernet = [ "riot-rs-embassy/usb_ethernet" ]
 wifi_cyw43 = [ "riot-rs-embassy/wifi_cyw43" ]
 override-network-config = ["riot-rs-embassy/override-network-config"]

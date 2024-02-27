@@ -1924,6 +1924,7 @@ name = "riot-rs"
 version = "0.1.0"
 dependencies = [
  "linkme",
+ "riot-rs-boards",
  "riot-rs-buildinfo",
  "riot-rs-embassy",
  "riot-rs-macros",
