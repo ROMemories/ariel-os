@@ -46,6 +46,7 @@ const ISR_STACKSIZE: usize = riot_rs_utils::usize_from_env_or!("CONFIG_ISR_STACK
 #[used(linker)]
 static ISR_STACK: [u8; ISR_STACKSIZE] = [0u8; ISR_STACKSIZE];
 
+#[cfg(not(feature = "std"))]
 #[panic_handler]
 fn panic(_info: &PanicInfo) -> ! {
     #[cfg(not(feature = "silent-panic"))]
