@@ -59,6 +59,7 @@ fn panic(_info: &PanicInfo) -> ! {
 
 use linkme::distributed_slice;
 
+#[cfg_attr(not(feature = "dev-doc"), doc(hidden))]
 #[distributed_slice]
 pub static INIT_FUNCS: [fn()] = [..];
 

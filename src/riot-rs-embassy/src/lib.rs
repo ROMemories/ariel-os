@@ -23,14 +23,15 @@ pub mod network;
 #[cfg(feature = "wifi_cyw43")]
 mod wifi;
 
+use static_cell::make_static;
+
 #[cfg(feature = "net")]
 use core::cell::OnceCell;
 
 // re-exports
-pub use linkme::{self, distributed_slice};
-pub use static_cell::make_static;
-
 pub use embassy_executor::Spawner;
+#[cfg_attr(not(feature = "dev-doc"), doc(hidden))]
+pub use linkme::{self, distributed_slice};
 
 #[cfg(feature = "usb_ethernet")]
 use usb::ethernet::NetworkDevice;
@@ -43,13 +44,18 @@ pub use network::NetworkStack;
 
 #[cfg(feature = "threading")]
 pub mod blocker;
+#[cfg_attr(not(feature = "dev-doc"), doc(hidden))]
 pub mod delegate;
+#[cfg_attr(not(feature = "dev-doc"), doc(hidden))]
 pub mod sendcell;
 
+#[cfg_attr(not(feature = "dev-doc"), doc(hidden))]
 pub type Task = fn(&Spawner, &mut arch::OptionalPeripherals);
 
+#[cfg_attr(not(feature = "dev-doc"), doc(hidden))]
 pub static EXECUTOR: arch::Executor = arch::Executor::new();
 
+#[cfg_attr(not(feature = "dev-doc"), doc(hidden))]
 #[distributed_slice]
 pub static EMBASSY_TASKS: [Task] = [..];
 

@@ -16,6 +16,7 @@ static_cell = { workspace = true }
 
 [features]
 debug-console = ["riot-rs-rt/debug-console"]
+dev-doc = ["riot-rs-rt/dev-doc", "riot-rs-embassy/dev-doc"]
 net = ["riot-rs-embassy/net"]
 no-boards = ["riot-rs-boards/no-boards"]
 override-network-config = ["riot-rs-embassy/override-network-config"]
