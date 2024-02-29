@@ -13,17 +13,9 @@ use usbd_hid::descriptor::KeyboardReport;
 
 mod pins;
 
-// TODO: wrap in macro
-use riot_rs::embassy::delegate::Delegate;
-static USB_BUILDER_HOOK: Delegate<riot_rs::embassy::usb::UsbBuilder> = Delegate::new();
-
-#[distributed_slice(riot_rs::embassy::usb::USB_BUILDER_HOOKS)]
-#[linkme(crate=riot_rs::embassy::linkme)]
-static _USB_BUILDER_HOOK: &Delegate<riot_rs::embassy::usb::UsbBuilder> = &USB_BUILDER_HOOK;
-
-#[embassy_executor::task]
-async fn usb_keyboard(button_peripherals: pins::Buttons) {
-    let mut buttons = Buttons::new(button_peripherals);
+#[riot_rs::main(usb_builder)]
+async fn main(peripherals: pins::Peripherals, usb_builder_hook: UsbBuilderHook) {
+    let mut buttons = Buttons::new(peripherals.buttons);
 
     let config = embassy_usb::class::hid::Config {
             report_descriptor: <usbd_hid::descriptor::KeyboardReport as usbd_hid::descriptor::SerializedDescriptor>::desc(),
@@ -33,7 +25,7 @@ async fn usb_keyboard(button_peripherals: pins::Buttons) {
         };
 
     let hid_state = make_static!(hid::State::new());
-    let hid_rw: HidReaderWriter<'static, UsbDriver, 1, 8> = USB_BUILDER_HOOK
+    let hid_rw: HidReaderWriter<'static, UsbDriver, 1, 8> = usb_builder_hook
         .with(|usb_builder| hid::HidReaderWriter::new(usb_builder, hid_state, config))
         .await;
 
@@ -58,16 +50,6 @@ async fn usb_keyboard(button_peripherals: pins::Buttons) {
         // Debounce events
         embassy_time::Timer::after(Duration::from_millis(50)).await;
     }
-}
-
-// TODO: macro up this
-use riot_rs::embassy::{arch::OptionalPeripherals, Spawner};
-#[riot_rs::embassy::distributed_slice(riot_rs::embassy::EMBASSY_TASKS)]
-#[linkme(crate = riot_rs::embassy::linkme)]
-fn __init_usb_keyboard(spawner: &Spawner, peripherals: &mut OptionalPeripherals) {
-    spawner
-        .spawn(usb_keyboard(pins::Buttons::take_from(peripherals).unwrap()))
-        .unwrap();
 }
 
 use crate::buttons::{Buttons, KEY_COUNT};
