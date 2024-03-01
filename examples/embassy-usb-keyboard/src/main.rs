@@ -5,8 +5,10 @@
 
 use embassy_time::Duration;
 use embassy_usb::class::hid::{self, HidReaderWriter};
-use riot_rs::embassy::{make_static, usb::UsbDriver};
-use riot_rs::linkme::distributed_slice;
+use riot_rs::embassy::{
+    make_static,
+    usb::{UsbBuilderHook, UsbDriver},
+};
 use riot_rs::rt::debug::println;
 
 use usbd_hid::descriptor::KeyboardReport;

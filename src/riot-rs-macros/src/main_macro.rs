@@ -1,11 +1,17 @@
 /// Registers a function acting as an entrypoint for an application.
 ///
-/// The function is provided with peripherals, which can obtained by taking a peripheral struct
+/// The function is provided with peripherals, which can be obtained by taking a peripheral struct
 /// defined with `assign_peripherals!` as the first parameter.
 ///
 /// # Parameters
 ///
-/// - `usb_builder`: (*optional*) the macro will provide the function with a `UsbBuilderHook`.
+/// - `usb_builder`: (*optional*) when present, the macro will provide the function with a
+/// `UsbBuilderHook`, allowing access and modification to the system-provided
+/// `embassy_usb::Builder` through `Delegate::with()`, *before* it is built by the system.
+///
+/// # Examples
+///
+/// See RIOT-rs examples.
 ///
 /// # Panics
 ///
@@ -15,58 +21,57 @@
 pub fn main(args: TokenStream, item: TokenStream) -> TokenStream {
     use quote::{format_ident, quote};
 
-    struct HookDefinition {
-        type_name: &'static str,
-        delegate_ident: &'static str,
-        delegate_inner_type: proc_macro2::TokenStream,
-        distributed_slice_type: proc_macro2::TokenStream,
-    }
+    #[allow(clippy::wildcard_imports)]
+    use main_macro::*;
 
     let mut attrs = MainAttributes::default();
-    let thread_parser = syn::meta::parser(|meta| attrs.parse(&meta));
-    syn::parse_macro_input!(args with thread_parser);
+    let main_attr_parser = syn::meta::parser(|meta| attrs.parse(&meta));
+    syn::parse_macro_input!(args with main_attr_parser);
 
     let task_function = syn::parse_macro_input!(item as syn::ItemFn);
 
     let riot_rs_crate = utils::riot_rs_crate();
 
+    // New hooks need to be defined here, in the order they are run during system initialization
     let hooks = &[HookDefinition {
-        type_name: "UsbBuilderHook",
-        delegate_ident: "USB_BUILDER_HOOK", // TODO: build this from type_name?
-        delegate_inner_type: quote! { #riot_rs_crate::embassy::usb::UsbBuilder },
-        distributed_slice_type: quote! { #riot_rs_crate::embassy::usb::USB_BUILDER_HOOKS },
+        kind: Hook::UsbBuilder,
+        delegate_inner_type: quote! {#riot_rs_crate::embassy::usb::UsbBuilder},
+        distributed_slice_type: quote! {#riot_rs_crate::embassy::usb::USB_BUILDER_HOOKS},
     }];
 
     let delegate_type = quote! {#riot_rs_crate::embassy::delegate::Delegate};
 
+    let enabled_hooks = hooks.iter().filter(|hook| match hook.kind {
+        Hook::UsbBuilder => attrs.usb_builder,
+    });
+
     // Instantiate a Delegate as a static and store a reference to it in the appropriate
     // distributed slice
-    let delegates = hooks.iter().map(|hook| {
-        let HookDefinition { type_name, delegate_ident, delegate_inner_type, distributed_slice_type } = hook;
+    let delegates = enabled_hooks.clone().map(|hook| {
+        let HookDefinition { kind, delegate_inner_type, distributed_slice_type } = hook;
 
-        let type_name = format_ident!("{type_name}");
+        let delegate_ident = kind.delegate_ident();
+
+        let type_name = format_ident!("{}", kind.type_name());
         let delegate_hook_ident = format_ident!("{delegate_ident}");
         let delegate_hook_ref_ident = format_ident!("{delegate_ident}_REF");
 
         // TODO: try to reduce namespace pollution
-        // FIXME: define the type in a way we can use it in the docs?
         quote! {
             static #delegate_hook_ident: #delegate_type<#delegate_inner_type> = #delegate_type::new();
 
-            #[distributed_slice(#distributed_slice_type)]
+            #[#riot_rs_crate::embassy::distributed_slice(#distributed_slice_type)]
             #[linkme(crate=#riot_rs_crate::embassy::linkme)]
-            static #delegate_hook_ref_ident: &#delegate_type<#delegate_inner_type> = &#delegate_hook_ident;
-
-            type #type_name = &'static #delegate_type<#delegate_inner_type>;
+            static #delegate_hook_ref_ident: #type_name = &#delegate_hook_ident;
         }
     });
 
-    let delegates = quote! { #(#delegates)* };
+    let delegates = quote! {#(#delegates)*};
 
-    let hook_args = hooks
-        .iter()
-        .map(|hook| format_ident!("{}_REF", hook.delegate_ident));
-    let has_hook_args = hook_args.clone().count() > 0; // TODO: avoid this clone
+    let hook_args = enabled_hooks
+        .clone()
+        .map(|hook| format_ident!("{}_REF", hook.kind.delegate_ident()));
+    let has_hook_args = hook_args.clone().count() > 0;
 
     let hook_arg_list = if has_hook_args {
         quote! {, #(#hook_args),*}
@@ -95,19 +100,48 @@ pub fn main(args: TokenStream, item: TokenStream) -> TokenStream {
     TokenStream::from(expanded)
 }
 
-#[derive(Default)]
-struct MainAttributes {
-    usb_builder: bool,
-}
+// Define these types in a module to avoid polluting the crate's namespace, as this file is
+// `included!` in the crate's root.
+mod main_macro {
+    #[derive(Default)]
+    pub struct MainAttributes {
+        pub usb_builder: bool,
+    }
 
-impl MainAttributes {
-    // TODO: maybe enforce the order in which parameters are passed?
-    fn parse(&mut self, meta: &syn::meta::ParseNestedMeta) -> syn::Result<()> {
-        if meta.path.is_ident("usb_builder") {
-            self.usb_builder = true;
-            Ok(())
-        } else {
-            Err(meta.error("unsupported parameter"))
+    impl MainAttributes {
+        // TODO: maybe enforce the order in which parameters are passed to this macro?
+        pub fn parse(&mut self, meta: &syn::meta::ParseNestedMeta) -> syn::Result<()> {
+            if meta.path.is_ident("usb_builder") {
+                self.usb_builder = true;
+                Ok(())
+            } else {
+                Err(meta.error("unsupported parameter"))
+            }
         }
     }
+
+    #[derive(Debug)]
+    pub enum Hook {
+        UsbBuilder,
+    }
+
+    impl Hook {
+        pub fn type_name(&self) -> &'static str {
+            match self {
+                Self::UsbBuilder => "UsbBuilderHook",
+            }
+        }
+
+        pub fn delegate_ident(&self) -> String {
+            self.type_name().to_uppercase()
+        }
+    }
+
+    #[derive(Debug)]
+    pub struct HookDefinition {
+        pub kind: Hook,
+        pub delegate_inner_type: proc_macro2::TokenStream,
+        pub distributed_slice_type: proc_macro2::TokenStream,
+    }
+
 }
