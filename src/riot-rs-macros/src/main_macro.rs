@@ -19,7 +19,7 @@
 /// this macro is used.
 #[proc_macro_attribute]
 pub fn main(args: TokenStream, item: TokenStream) -> TokenStream {
-    use quote::{format_ident, quote};
+    use quote::quote;
 
     #[allow(clippy::wildcard_imports)]
     use main_macro::*;
@@ -28,7 +28,9 @@ pub fn main(args: TokenStream, item: TokenStream) -> TokenStream {
     let main_attr_parser = syn::meta::parser(|meta| attrs.parse(&meta));
     syn::parse_macro_input!(args with main_attr_parser);
 
-    let task_function = syn::parse_macro_input!(item as syn::ItemFn);
+    let main_function = syn::parse_macro_input!(item as syn::ItemFn);
+    let main_function_name = &main_function.sig.ident;
+    let is_async = main_function.sig.asyncness.is_some();
 
     let riot_rs_crate = utils::riot_rs_crate();
 
@@ -39,62 +41,41 @@ pub fn main(args: TokenStream, item: TokenStream) -> TokenStream {
         distributed_slice_type: quote! {#riot_rs_crate::embassy::usb::USB_BUILDER_HOOKS},
     }];
 
-    let delegate_type = quote! {#riot_rs_crate::embassy::delegate::Delegate};
+    let expanded = if is_async {
+        let (delegates, hook_arg_list) =
+            main_macro::generate_delegates(&riot_rs_crate, hooks, &attrs);
 
-    let enabled_hooks = hooks.iter().filter(|hook| match hook.kind {
-        Hook::UsbBuilder => attrs.usb_builder,
-    });
-
-    // Instantiate a Delegate as a static and store a reference to it in the appropriate
-    // distributed slice
-    let delegates = enabled_hooks.clone().map(|hook| {
-        let HookDefinition { kind, delegate_inner_type, distributed_slice_type } = hook;
-
-        let delegate_ident = kind.delegate_ident();
-
-        let type_name = format_ident!("{}", kind.type_name());
-        let delegate_hook_ident = format_ident!("{delegate_ident}");
-        let delegate_hook_ref_ident = format_ident!("{delegate_ident}_REF");
-
-        // TODO: try to reduce namespace pollution
         quote! {
-            static #delegate_hook_ident: #delegate_type<#delegate_inner_type> = #delegate_type::new();
+            #delegates
 
-            #[#riot_rs_crate::embassy::distributed_slice(#distributed_slice_type)]
-            #[linkme(crate=#riot_rs_crate::embassy::linkme)]
-            static #delegate_hook_ref_ident: #type_name = &#delegate_hook_ident;
+            #[#riot_rs_crate::embassy::distributed_slice(#riot_rs_crate::embassy::EMBASSY_TASKS)]
+            #[linkme(crate = #riot_rs_crate::embassy::linkme)]
+            fn __main(
+                spawner: #riot_rs_crate::embassy::Spawner,
+                mut peripherals: &mut #riot_rs_crate::embassy::arch::OptionalPeripherals,
+            ) {
+                use #riot_rs_crate::define_peripherals::IntoPeripherals;
+                let task = #main_function_name(peripherals.into_peripherals() #hook_arg_list);
+                spawner.spawn(task).unwrap();
+            }
+
+            #[embassy_executor::task]
+            #main_function
         }
-    });
-
-    let delegates = quote! {#(#delegates)*};
-
-    let hook_args = enabled_hooks
-        .clone()
-        .map(|hook| format_ident!("{}_REF", hook.kind.delegate_ident()));
-    let has_hook_args = hook_args.clone().count() > 0;
-
-    let hook_arg_list = if has_hook_args {
-        quote! {, #(#hook_args),*}
     } else {
-        quote! {}
-    };
+        quote! {
+            #[#riot_rs_crate::embassy::distributed_slice(#riot_rs_crate::embassy::EMBASSY_TASKS)]
+            #[linkme(crate = #riot_rs_crate::embassy::linkme)]
+            fn __main(
+                spawner: #riot_rs_crate::embassy::Spawner,
+                mut peripherals: &mut #riot_rs_crate::embassy::arch::OptionalPeripherals,
+            ) {
+                use #riot_rs_crate::define_peripherals::IntoPeripherals;
+                #main_function_name(spawner, peripherals.into_peripherals());
+            }
 
-    let expanded = quote! {
-        #delegates
-
-        #[#riot_rs_crate::embassy::distributed_slice(#riot_rs_crate::embassy::EMBASSY_TASKS)]
-        #[linkme(crate = #riot_rs_crate::embassy::linkme)]
-        fn __main(
-            spawner: &#riot_rs_crate::embassy::Spawner,
-            mut peripherals: &mut #riot_rs_crate::embassy::arch::OptionalPeripherals,
-        ) {
-            use #riot_rs_crate::define_peripherals::IntoPeripherals;
-            let task = main(peripherals.into_peripherals() #hook_arg_list);
-            spawner.spawn(task).unwrap();
+            #main_function
         }
-
-        #[embassy_executor::task]
-        #task_function
     };
 
     TokenStream::from(expanded)
@@ -144,4 +125,54 @@ mod main_macro {
         pub distributed_slice_type: proc_macro2::TokenStream,
     }
 
+    pub fn generate_delegates(
+        riot_rs_crate: &syn::Ident,
+        hooks: &[HookDefinition],
+        attrs: &MainAttributes,
+    ) -> (proc_macro2::TokenStream, proc_macro2::TokenStream) {
+        use quote::{format_ident, quote};
+
+        let delegate_type = quote! {#riot_rs_crate::embassy::delegate::Delegate};
+
+        let enabled_hooks = hooks.iter().filter(|hook| match hook.kind {
+            Hook::UsbBuilder => attrs.usb_builder,
+        });
+
+        // Instantiate a Delegate as a static and store a reference to it in the appropriate
+        // distributed slice
+        let delegates = enabled_hooks.clone().map(|hook| {
+            let HookDefinition { kind, delegate_inner_type, distributed_slice_type } = hook;
+
+            let delegate_ident = kind.delegate_ident();
+
+            let type_name = format_ident!("{}", kind.type_name());
+            let delegate_hook_ident = format_ident!("{delegate_ident}");
+            let delegate_hook_ref_ident = format_ident!("{delegate_ident}_REF");
+
+            // TODO: try to reduce namespace pollution
+            quote! {
+                static #delegate_hook_ident: #delegate_type<#delegate_inner_type> = #delegate_type::new();
+
+                #[#riot_rs_crate::embassy::distributed_slice(#distributed_slice_type)]
+                #[linkme(crate=#riot_rs_crate::embassy::linkme)]
+                    static #delegate_hook_ref_ident: #type_name = &#delegate_hook_ident;
+                }
+            }
+        );
+
+        let delegates = quote! {#(#delegates)*};
+
+        let hook_args = enabled_hooks
+            .clone()
+            .map(|hook| format_ident!("{}_REF", hook.kind.delegate_ident()));
+        let has_hook_args = hook_args.clone().count() > 0;
+
+        let hook_arg_list = if has_hook_args {
+            quote! {, #(#hook_args),*}
+        } else {
+            quote! {}
+        };
+
+        (delegates, hook_arg_list)
+    }
 }

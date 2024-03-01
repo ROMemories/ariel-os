@@ -46,7 +46,7 @@ pub mod blocker;
 pub mod delegate;
 pub mod sendcell;
 
-pub type Task = fn(&Spawner, &mut arch::OptionalPeripherals);
+pub type Task = fn(Spawner, &mut arch::OptionalPeripherals);
 
 pub static EXECUTOR: arch::Executor = arch::Executor::new();
 
@@ -80,7 +80,7 @@ async fn init_task(mut peripherals: arch::OptionalPeripherals) {
     let spawner = Spawner::for_current_executor().await;
 
     for task in EMBASSY_TASKS {
-        task(&spawner, &mut peripherals);
+        task(spawner, &mut peripherals);
     }
 
     #[cfg(feature = "usb")]

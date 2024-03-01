@@ -86,7 +86,7 @@ async fn web_task(
 }
 
 #[riot_rs::main]
-async fn main(peripherals: pins::Peripherals) {
+fn main(spawner: Spawner, peripherals: pins::Peripherals) {
     let pins::Peripherals {
         #[cfg(feature = "button-readings")]
         buttons,
@@ -118,8 +118,6 @@ async fn main(peripherals: pins::Peripherals) {
         read_request: Some(Duration::from_secs(1)),
         write: Some(Duration::from_secs(1)),
     }));
-
-    let spawner = Spawner::for_current_executor().await;
 
     for id in 0..WEB_TASK_POOL_SIZE {
         let app_state = AppState {
