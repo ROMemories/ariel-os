@@ -70,8 +70,8 @@ macro_rules! define_peripherals {
             }
         }
 
-        impl $crate::define_peripherals::IntoPeripherals<$peripherals> for &mut $crate::arch::OptionalPeripherals {
-            fn into_peripherals(&mut self) -> $peripherals {
+        impl $crate::define_peripherals::TakePeripherals<$peripherals> for &mut $crate::arch::OptionalPeripherals {
+            fn take_peripherals(&mut self) -> $peripherals {
                 $peripherals {
                     $(
                         $(#[$outer])*
@@ -90,8 +90,8 @@ macro_rules! define_peripherals {
 }
 
 #[doc(hidden)]
-pub trait IntoPeripherals<T> {
-    fn into_peripherals(&mut self) -> T;
+pub trait TakePeripherals<T> {
+    fn take_peripherals(&mut self) -> T;
 }
 
 #[derive(Debug)]

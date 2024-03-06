@@ -5,9 +5,12 @@
 ///
 /// # Parameters
 ///
-/// - `usb_builder`: (*optional*) when present, the macro will provide the function with a
-/// `UsbBuilderHook`, allowing access and modification to the system-provided
-/// `embassy_usb::Builder` through `Delegate::with()`, *before* it is built by the system.
+/// - `peripherals`: (*optional*) list of types defined using the `define_peripherals!` macro that
+/// will be provided to the function, in order.
+/// - `hooks`: (*optional*) list of hooks. Available hooks are:
+///     - `usb_builder`: (*optional*) when present, the macro will provide the function with a
+///     `UsbBuilderHook`, allowing access and modification to the system-provided
+///     `embassy_usb::Builder` through `Delegate::with()`, *before* it is built by the system.
 ///
 /// # Examples
 ///
@@ -41,7 +44,15 @@ pub fn main(args: TokenStream, item: TokenStream) -> TokenStream {
         distributed_slice_type: quote! {#riot_rs_crate::embassy::usb::USB_BUILDER_HOOKS},
     }];
 
+    // The actual types do no matter, we only need to know how many peripheral groups are requested
+    let peripheral_params = attrs
+        .peripheral_types
+        .iter()
+        .map(|_| quote! {peripherals.take_peripherals()});
+
     let expanded = if is_async {
+        let peripheral_params = quote! {#(#peripheral_params),*};
+
         let (delegates, hook_arg_list) =
             main_macro::generate_delegates(&riot_rs_crate, hooks, &attrs);
 
@@ -54,8 +65,8 @@ pub fn main(args: TokenStream, item: TokenStream) -> TokenStream {
                 spawner: #riot_rs_crate::embassy::Spawner,
                 mut peripherals: &mut #riot_rs_crate::embassy::arch::OptionalPeripherals,
             ) {
-                use #riot_rs_crate::define_peripherals::IntoPeripherals;
-                let task = #main_function_name(peripherals.into_peripherals() #hook_arg_list);
+                use #riot_rs_crate::define_peripherals::TakePeripherals;
+                let task = #main_function_name(#peripheral_params #hook_arg_list);
                 spawner.spawn(task).unwrap();
             }
 
@@ -63,6 +74,8 @@ pub fn main(args: TokenStream, item: TokenStream) -> TokenStream {
             #main_function
         }
     } else {
+        let peripheral_params = quote! {, #(#peripheral_params),*};
+
         quote! {
             #[#riot_rs_crate::embassy::distributed_slice(#riot_rs_crate::embassy::EMBASSY_TASKS)]
             #[linkme(crate = #riot_rs_crate::embassy::linkme)]
@@ -70,8 +83,8 @@ pub fn main(args: TokenStream, item: TokenStream) -> TokenStream {
                 spawner: #riot_rs_crate::embassy::Spawner,
                 mut peripherals: &mut #riot_rs_crate::embassy::arch::OptionalPeripherals,
             ) {
-                use #riot_rs_crate::define_peripherals::IntoPeripherals;
-                #main_function_name(spawner, peripherals.into_peripherals());
+                use #riot_rs_crate::define_peripherals::TakePeripherals;
+                #main_function_name(spawner #peripheral_params);
             }
 
             #main_function
@@ -84,24 +97,38 @@ pub fn main(args: TokenStream, item: TokenStream) -> TokenStream {
 // Define these types in a module to avoid polluting the crate's namespace, as this file is
 // `included!` in the crate's root.
 mod main_macro {
-    #[derive(Default)]
+    #[derive(Debug, Default)]
     pub struct MainAttributes {
-        pub usb_builder: bool,
+        pub peripheral_types: Vec<syn::Path>,
+        pub hooks: Vec<Hook>,
     }
 
     impl MainAttributes {
         // TODO: maybe enforce the order in which parameters are passed to this macro?
-        pub fn parse(&mut self, meta: &syn::meta::ParseNestedMeta) -> syn::Result<()> {
-            if meta.path.is_ident("usb_builder") {
-                self.usb_builder = true;
-                Ok(())
+        pub fn parse(&mut self, attr: &syn::meta::ParseNestedMeta) -> syn::Result<()> {
+            if attr.path.is_ident("peripherals") {
+                attr.parse_nested_meta(|meta| {
+                    self.peripheral_types.push(meta.path);
+                    Ok(())
+                })
+            } else if attr.path.is_ident("hooks") {
+                attr.parse_nested_meta(|meta| {
+                    if meta.path.is_ident("usb_builder") {
+                        self.hooks.push(Hook::UsbBuilder);
+                        Ok(())
+                    } else {
+                        // FIXME: list valid ones
+                        Err(meta.error("unsupported hook"))
+                    }
+                })
             } else {
-                Err(meta.error("unsupported parameter"))
+                // FIXME: list valid ones
+                Err(attr.error("unsupported parameter"))
             }
         }
     }
 
-    #[derive(Debug)]
+    #[derive(Debug, PartialEq, Eq, Hash)]
     pub enum Hook {
         UsbBuilder,
     }
@@ -135,7 +162,7 @@ mod main_macro {
         let delegate_type = quote! {#riot_rs_crate::embassy::delegate::Delegate};
 
         let enabled_hooks = hooks.iter().filter(|hook| match hook.kind {
-            Hook::UsbBuilder => attrs.usb_builder,
+            Hook::UsbBuilder => attrs.hooks.iter().any(|h| *h == Hook::UsbBuilder),
         });
 
         // Instantiate a Delegate as a static and store a reference to it in the appropriate
