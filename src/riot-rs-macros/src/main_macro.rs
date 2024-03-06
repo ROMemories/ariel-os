@@ -113,27 +113,34 @@ mod main_macro {
                 })
             } else if attr.path.is_ident("hooks") {
                 attr.parse_nested_meta(|meta| {
-                    if meta.path.is_ident("usb_builder") {
+                    if meta.path.is_ident(Hook::UsbBuilder.param_name()) {
                         self.hooks.push(Hook::UsbBuilder);
                         Ok(())
                     } else {
-                        // FIXME: list valid ones
-                        Err(meta.error("unsupported hook"))
+                        let supported_hooks = Hook::format_list();
+                        Err(meta.error(format!(
+                            "unsupported hook ({supported_hooks} are supported)"
+                        )))
                     }
                 })
             } else {
-                // FIXME: list valid ones
-                Err(attr.error("unsupported parameter"))
+                Err(attr.error("unsupported parameter (`peripherals` and `hooks` are supported)"))
             }
         }
     }
 
-    #[derive(Debug, PartialEq, Eq, Hash)]
+    #[derive(Debug, PartialEq, Eq, Hash, enum_iterator::Sequence)]
     pub enum Hook {
         UsbBuilder,
     }
 
     impl Hook {
+        pub fn param_name(&self) -> &'static str {
+            match self {
+                Self::UsbBuilder => "usb_builder",
+            }
+        }
+
         pub fn type_name(&self) -> &'static str {
             match self {
                 Self::UsbBuilder => "UsbBuilderHook",
@@ -142,6 +149,13 @@ mod main_macro {
 
         pub fn delegate_ident(&self) -> String {
             self.type_name().to_uppercase()
+        }
+
+        fn format_list() -> String {
+            enum_iterator::all::<Self>()
+                .map(|h| format!("`{}`", h.param_name()))
+                .collect::<Vec<_>>()
+                .join(", ")
         }
     }
 
