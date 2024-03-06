@@ -62,7 +62,7 @@ pub fn main(args: TokenStream, item: TokenStream) -> TokenStream {
                 spawner.spawn(task).unwrap();
             }
 
-            #[embassy_executor::task]
+            #[#riot_rs_crate::embassy_executor::task]
             #main_function
         }
     } else {

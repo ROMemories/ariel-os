@@ -16,5 +16,11 @@ proc-macro2 = "1.0.78"
 quote = "1.0.35"
 syn = { version = "2.0.47", features = ["full"] }
 
+[dev-dependencies]
+embassy-executor = { workspace = true } # FIXME: embassy-executor "bug" in macro
+heapless = { workspace = true }
+riot-rs = { workspace = true, features = ["no-boards", "usb"] }
+trybuild = "1.0.89"
+
 [lib]
 proc-macro = true

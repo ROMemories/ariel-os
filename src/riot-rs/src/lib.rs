@@ -17,6 +17,7 @@ pub use riot_rs_macros::thread;
 pub use riot_rs_threads as thread;
 
 // These are used by proc-macros we provide
+pub use embassy_executor;
 pub use linkme;
 pub use static_cell;
 
