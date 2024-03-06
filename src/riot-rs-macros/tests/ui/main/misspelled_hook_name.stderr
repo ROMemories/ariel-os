@@ -1,0 +1,5 @@
+error: unsupported hook (`usb_builder` are supported)
+  --> tests/ui/main/misspelled_hook_name.rs:13:23
+   |
+13 | #[riot_rs::main(hooks(usb_buer))]
+   |                       ^^^^^^^^
