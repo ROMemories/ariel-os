@@ -44,15 +44,7 @@ pub fn main(args: TokenStream, item: TokenStream) -> TokenStream {
         distributed_slice_type: quote! {#riot_rs_crate::embassy::usb::USB_BUILDER_HOOKS},
     }];
 
-    // The actual types do no matter, we only need to know how many peripheral groups are requested
-    let peripheral_params = attrs
-        .peripheral_types
-        .iter()
-        .map(|_| quote! {peripherals.take_peripherals()});
-
     let expanded = if is_async {
-        let peripheral_params = quote! {#(#peripheral_params),*};
-
         let (delegates, hook_arg_list) =
             main_macro::generate_delegates(&riot_rs_crate, hooks, &attrs);
 
@@ -66,7 +58,7 @@ pub fn main(args: TokenStream, item: TokenStream) -> TokenStream {
                 mut peripherals: &mut #riot_rs_crate::embassy::arch::OptionalPeripherals,
             ) {
                 use #riot_rs_crate::define_peripherals::TakePeripherals;
-                let task = #main_function_name(#peripheral_params #hook_arg_list);
+                let task = #main_function_name(peripherals.take_peripherals() #hook_arg_list);
                 spawner.spawn(task).unwrap();
             }
 
@@ -74,8 +66,6 @@ pub fn main(args: TokenStream, item: TokenStream) -> TokenStream {
             #main_function
         }
     } else {
-        let peripheral_params = quote! {, #(#peripheral_params),*};
-
         quote! {
             #[#riot_rs_crate::embassy::distributed_slice(#riot_rs_crate::embassy::EMBASSY_TASKS)]
             #[linkme(crate = #riot_rs_crate::embassy::linkme)]
@@ -84,7 +74,7 @@ pub fn main(args: TokenStream, item: TokenStream) -> TokenStream {
                 mut peripherals: &mut #riot_rs_crate::embassy::arch::OptionalPeripherals,
             ) {
                 use #riot_rs_crate::define_peripherals::TakePeripherals;
-                #main_function_name(spawner #peripheral_params);
+                #main_function_name(spawner, peripherals.take_peripherals());
             }
 
             #main_function
@@ -106,12 +96,7 @@ mod main_macro {
     impl MainAttributes {
         // TODO: maybe enforce the order in which parameters are passed to this macro?
         pub fn parse(&mut self, attr: &syn::meta::ParseNestedMeta) -> syn::Result<()> {
-            if attr.path.is_ident("peripherals") {
-                attr.parse_nested_meta(|meta| {
-                    self.peripheral_types.push(meta.path);
-                    Ok(())
-                })
-            } else if attr.path.is_ident("hooks") {
+            if attr.path.is_ident("hooks") {
                 attr.parse_nested_meta(|meta| {
                     if meta.path.is_ident(Hook::UsbBuilder.param_name()) {
                         self.hooks.push(Hook::UsbBuilder);
@@ -124,7 +109,7 @@ mod main_macro {
                     }
                 })
             } else {
-                Err(attr.error("unsupported parameter (`peripherals` and `hooks` are supported)"))
+                Err(attr.error("unsupported parameter (`hooks` is supported)"))
             }
         }
     }

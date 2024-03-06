@@ -15,7 +15,7 @@ use usbd_hid::descriptor::KeyboardReport;
 
 mod pins;
 
-#[riot_rs::main(peripherals(_), hooks(usb_builder))]
+#[riot_rs::main(hooks(usb_builder))]
 async fn main(buttons: pins::Buttons, usb_builder_hook: UsbBuilderHook) {
     let mut buttons = Buttons::new(buttons);
 
