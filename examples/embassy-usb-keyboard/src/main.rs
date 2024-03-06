@@ -16,8 +16,8 @@ use usbd_hid::descriptor::KeyboardReport;
 mod pins;
 
 #[riot_rs::main(hooks(usb_builder))]
-async fn main(buttons: pins::Buttons, usb_builder_hook: UsbBuilderHook) {
-    let mut buttons = Buttons::new(buttons);
+async fn main(peripherals: pins::Peripherals, usb_builder_hook: UsbBuilderHook) {
+    let mut buttons = Buttons::new(peripherals.buttons);
 
     let config = embassy_usb::class::hid::Config {
             report_descriptor: <usbd_hid::descriptor::KeyboardReport as usbd_hid::descriptor::SerializedDescriptor>::desc(),
