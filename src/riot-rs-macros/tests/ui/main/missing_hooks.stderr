@@ -1,0 +1,17 @@
+error[E0061]: this function takes 2 arguments but 1 argument was supplied
+  --> tests/ui/main/missing_hooks.rs:14:10
+   |
+13 | #[riot_rs::main]
+   | ---------------- an argument of type `&'static Delegate<embassy_usb::builder::Builder<'static, UsbDriver>>` is missing
+14 | async fn main(_peripherals: Peripherals, _usb_builder_hook: UsbBuilderHook) {}
+   |          ^^^^
+   |
+note: function defined here
+  --> tests/ui/main/missing_hooks.rs:14:10
+   |
+14 | async fn main(_peripherals: Peripherals, _usb_builder_hook: UsbBuilderHook) {}
+   |          ^^^^ -------------------------  ---------------------------------
+help: provide the argument
+   |
+13 | main(#[riot_rs::main], /* &'static Delegate<embassy_usb::builder::Builder<'static, UsbDriver>> */)
+   |

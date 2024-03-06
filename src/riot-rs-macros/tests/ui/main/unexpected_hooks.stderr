@@ -1,0 +1,13 @@
+error[E0061]: this function takes 1 argument but 2 arguments were supplied
+  --> tests/ui/main/unexpected_hooks.rs:14:10
+   |
+13 | #[riot_rs::main(hooks(usb_builder))]
+   | ------------------------------------ unexpected argument of type `&'static Delegate<embassy_usb::builder::Builder<'static, UsbDriver>>`
+14 | async fn main(_peripherals: Peripherals) {}
+   |          ^^^^
+   |
+note: function defined here
+  --> tests/ui/main/unexpected_hooks.rs:14:10
+   |
+14 | async fn main(_peripherals: Peripherals) {}
+   |          ^^^^ -------------------------
