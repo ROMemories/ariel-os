@@ -10,6 +10,7 @@ use riot_rs::embassy::{
     usb::{UsbBuilderHook, UsbDriver},
 };
 use riot_rs::rt::debug::println;
+use riot_rs::embassy_executor;
 
 use usbd_hid::descriptor::KeyboardReport;
 
