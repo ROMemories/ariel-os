@@ -9,8 +9,8 @@ use riot_rs::embassy::{
     make_static,
     usb::{UsbBuilderHook, UsbDriver},
 };
-use riot_rs::rt::debug::println;
 use riot_rs::embassy_executor;
+use riot_rs::rt::debug::println;
 
 use usbd_hid::descriptor::KeyboardReport;
 
