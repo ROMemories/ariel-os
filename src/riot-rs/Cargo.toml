@@ -14,6 +14,7 @@ riot-rs-buildinfo = { path = "../riot-rs-buildinfo" }
 riot-rs-embassy = { path = "../riot-rs-embassy" }
 riot-rs-macros = { path = "../riot-rs-macros" }
 riot-rs-rt = { path = "../riot-rs-rt" }
+riot-rs-saga = { workspace = true }
 riot-rs-threads = { path = "../riot-rs-threads", optional = true }
 static_cell = { workspace = true }
 

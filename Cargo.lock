@@ -524,7 +524,6 @@ dependencies = [
  "embassy-sync 0.5.0",
  "embassy-time",
  "embedded-io-async",
- "fixed",
  "heapless 0.8.0",
  "httparse",
  "picoserve",
@@ -1919,6 +1918,7 @@ dependencies = [
  "riot-rs-embassy",
  "riot-rs-macros",
  "riot-rs-rt",
+ "riot-rs-saga",
  "riot-rs-threads",
  "static_cell",
 ]
@@ -1980,10 +1980,12 @@ dependencies = [
  "embassy-sync 0.5.0",
  "embassy-time",
  "embassy-usb",
+ "fixed",
  "heapless 0.8.0",
  "linkme",
  "riot-rs-core",
  "riot-rs-rt",
+ "riot-rs-saga",
  "riot-rs-utils",
  "static_cell",
 ]
@@ -2016,6 +2018,10 @@ dependencies = [
 [[package]]
 name = "riot-rs-runqueue"
 version = "0.1.2"
+
+[[package]]
+name = "riot-rs-saga"
+version = "0.1.0"
 
 [[package]]
 name = "riot-rs-threads"

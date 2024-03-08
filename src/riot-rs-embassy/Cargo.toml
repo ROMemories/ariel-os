@@ -21,8 +21,10 @@ embassy-usb = { workspace = true, optional = true }
 # always
 riot-rs-core = { path = "../riot-rs-core", optional = true }
 riot-rs-rt = { path = "../riot-rs-rt" }
+riot-rs-saga = { workspace = true }
 riot-rs-utils = { path = "../riot-rs-utils" }
 
+fixed = "1.24.0"
 heapless = "0.8.0"
 
 # rpi-pico-w cyw43

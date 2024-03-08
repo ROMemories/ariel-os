@@ -10,6 +10,7 @@ members = [
     "src/riot-rs-boards/nrf52840dk",
     "src/riot-rs-boards/nucleo-f401re",
     "src/riot-rs-chips",
+    "src/riot-rs-saga",
     "src/riot-rs-macros"
 ]
 
@@ -45,6 +46,7 @@ linkme = { version = "0.3.21", features = ["used_linker"] }
 riot-rs = { path = "src/riot-rs", default-features = false }
 riot-rs-rt = { path = "src/riot-rs-rt" }
 riot-rs-runqueue = { path = "src/riot-rs-runqueue" }
+riot-rs-saga = { path = "src/riot-rs-saga" }
 
 const_panic = { version = "0.2.8", default_features = false }
 heapless = { version = "0.8.0", default-features = false }

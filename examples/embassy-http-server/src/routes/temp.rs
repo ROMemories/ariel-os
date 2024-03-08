@@ -1,13 +1,14 @@
-use fixed::traits::LossyInto;
 use picoserve::{
     extract::State,
     response::{IntoResponse, Json},
 };
+use riot_rs::saga::Sensor;
 
 use crate::TempInput;
 
 pub async fn temp(State(TempInput(temp)): State<TempInput>) -> impl IntoResponse {
-    let temp = (100 * temp.lock().await.read().await).lossy_into();
+    // FIXME: avoid having to use unwrap to extract values
+    let temp = temp.lock().await.read().await.0.get(0).unwrap().value;
 
     Json(JsonTemp { temp })
 }
@@ -15,5 +16,5 @@ pub async fn temp(State(TempInput(temp)): State<TempInput>) -> impl IntoResponse
 #[derive(serde::Serialize)]
 struct JsonTemp {
     // Temperature in hundredths of degrees Celsius
-    temp: i32,
+    temp: i16,
 }

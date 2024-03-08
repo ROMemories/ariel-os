@@ -42,12 +42,37 @@ pub fn init(config: Config) -> OptionalPeripherals {
 #[cfg(feature = "internal-temp")]
 pub mod internal_temp {
     use embassy_nrf::{peripherals, temp};
+    use riot_rs_saga::{PhysicalUnit, PhysicalValue, Reading, Sensor};
 
-    embassy_nrf::bind_interrupts!(struct TempIrqs {
+    embassy_nrf::bind_interrupts!(struct Irqs {
         TEMP => embassy_nrf::temp::InterruptHandler;
     });
 
-    pub fn sensor(temp: peripherals::TEMP) -> temp::Temp<'static> {
-        temp::Temp::new(temp, TempIrqs)
+    pub struct InternalTemp {
+        temp: temp::Temp<'static>,
+    }
+
+    impl InternalTemp {
+        pub fn new(peripheral: peripherals::TEMP) -> Self {
+            let temp = temp::Temp::new(peripheral, Irqs);
+            Self { temp }
+        }
+    }
+
+    impl Sensor<1> for InternalTemp {
+        fn initialize() {}
+
+        async fn read(&mut self) -> Reading<1> {
+            use fixed::traits::LossyInto;
+
+            let reading = self.temp.read().await;
+            let temp: i32 = (100 * reading).lossy_into();
+
+            Reading([PhysicalValue {
+                value: i16::try_from(temp).unwrap(), // FIXME: remove this unwrap
+                unit: PhysicalUnit::Celsius,
+                scale: -2,
+            }])
+        }
     }
 }

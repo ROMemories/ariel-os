@@ -48,7 +48,7 @@ impl picoserve::extract::FromRef<AppState> for ButtonInputs {
 
 #[cfg(context = "nrf52840")]
 #[derive(Copy, Clone)]
-struct TempInput(&'static Mutex<CriticalSectionRawMutex, embassy_nrf::temp::Temp<'static>>);
+struct TempInput(&'static Mutex<CriticalSectionRawMutex, arch::internal_temp::InternalTemp>);
 
 #[cfg(context = "nrf52840")]
 impl picoserve::extract::FromRef<AppState> for TempInput {
@@ -119,7 +119,8 @@ fn web_server_init(spawner: &Spawner, peripherals: &mut arch::OptionalPeripheral
 
     #[cfg(context = "nrf52840")]
     let temp = {
-        let temp = arch::internal_temp::sensor(peripherals.TEMP.take().unwrap());
+        let temp_peripheral = peripherals.TEMP.take().unwrap();
+        let temp = arch::internal_temp::InternalTemp::new(temp_peripheral);
         TempInput(make_static!(Mutex::new(temp)))
     };
 

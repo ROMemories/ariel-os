@@ -7,6 +7,7 @@
 pub use riot_rs_buildinfo as buildinfo;
 pub use riot_rs_embassy::{self as embassy, define_peripherals};
 pub use riot_rs_rt as rt;
+pub use riot_rs_saga as saga;
 
 #[cfg(feature = "threading")]
 pub use riot_rs_macros::thread;
