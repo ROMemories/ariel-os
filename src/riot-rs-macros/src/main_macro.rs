@@ -5,11 +5,9 @@
 ///
 /// # Parameters
 ///
-/// - `peripherals`: (*optional*) list of types defined using the `define_peripherals!` macro that
-/// will be provided to the function, in order.
-/// - `hooks`: (*optional*) list of hooks. Available hooks are:
-///     - `usb_builder`: (*optional*) when present, the macro will provide the function with a
-///     `UsbBuilderHook`, allowing access and modification to the system-provided
+/// - hooks: (*optional*) list of hooks. Available hooks are:
+///     - `usb_builder_hook`: when present, the macro will define a global `USB_BUILDER_HOOK` of
+///     type `UsbBuilderHook`, allowing access and modification to the system-provided
 ///     `embassy_usb::Builder` through `Delegate::with()`, *before* it is built by the system.
 ///
 /// # Examples
@@ -58,7 +56,7 @@ pub fn main(args: TokenStream, item: TokenStream) -> TokenStream {
                 mut peripherals: &mut #riot_rs_crate::embassy::arch::OptionalPeripherals,
             ) {
                 use #riot_rs_crate::define_peripherals::TakePeripherals;
-                let task = #main_function_name(peripherals.take_peripherals() #hook_arg_list);
+                let task = #main_function_name(peripherals.take_peripherals());
                 spawner.spawn(task).unwrap();
             }
 
@@ -89,28 +87,32 @@ pub fn main(args: TokenStream, item: TokenStream) -> TokenStream {
 mod main_macro {
     #[derive(Debug, Default)]
     pub struct MainAttributes {
-        pub peripheral_types: Vec<syn::Path>,
         pub hooks: Vec<Hook>,
     }
 
     impl MainAttributes {
         // TODO: maybe enforce the order in which parameters are passed to this macro?
         pub fn parse(&mut self, attr: &syn::meta::ParseNestedMeta) -> syn::Result<()> {
-            if attr.path.is_ident("hooks") {
-                attr.parse_nested_meta(|meta| {
-                    if meta.path.is_ident(Hook::UsbBuilder.param_name()) {
-                        self.hooks.push(Hook::UsbBuilder);
-                        Ok(())
-                    } else {
-                        let supported_hooks = Hook::format_list();
-                        Err(meta.error(format!(
-                            "unsupported hook ({supported_hooks} are supported)"
-                        )))
-                    }
-                })
-            } else {
-                Err(attr.error("unsupported parameter (`hooks` is supported)"))
+            for hook in enum_iterator::all::<Hook>() {
+                if attr.path.is_ident(hook.param_name()) {
+                    // FIXME: allow to rename the hook
+                    // dbg!(&attr.parse_nested_meta(|meta| {
+                    //     // if meta.path.is_ident(Hook::UsbBuilder.param_name()) {
+                    //     //     self.hooks.push(Hook::UsbBuilder);
+                    //     // }
+                    //     Ok(())
+                    // }));
+
+                    self.hooks.push(hook);
+                } else {
+                    let supported_hooks = Hook::format_list();
+                    return Err(attr.error(format!(
+                        "unsupported hook ({supported_hooks} are supported)"
+                    )));
+                }
             }
+
+            Ok(())
         }
     }
 
@@ -122,7 +124,7 @@ mod main_macro {
     impl Hook {
         pub fn param_name(&self) -> &'static str {
             match self {
-                Self::UsbBuilder => "usb_builder",
+                Self::UsbBuilder => "usb_builder_hook",
             }
         }
 
@@ -133,7 +135,7 @@ mod main_macro {
         }
 
         pub fn delegate_ident(&self) -> String {
-            self.type_name().to_uppercase()
+            self.param_name().to_uppercase()
         }
 
         fn format_list() -> String {
