@@ -85,7 +85,7 @@ async fn web_task(
     }
 }
 
-#[riot_rs::main]
+#[riot_rs::spawner]
 fn main(spawner: Spawner, peripherals: pins::Peripherals) {
     let pins::Peripherals {
         #[cfg(feature = "button-readings")]

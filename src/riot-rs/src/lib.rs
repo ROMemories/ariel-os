@@ -10,6 +10,7 @@ pub use riot_rs_rt as rt;
 
 // Attribute macros
 pub use riot_rs_macros::main;
+pub use riot_rs_macros::spawner;
 #[cfg(feature = "threading")]
 pub use riot_rs_macros::thread;
 

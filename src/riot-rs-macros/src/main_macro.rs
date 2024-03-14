@@ -1,7 +1,11 @@
-/// Registers a function acting as an entrypoint for an application.
+/// Registers an async function acting as an entrypoint for an application.
 ///
-/// The function is provided with peripherals, which can be obtained by taking a peripheral struct
-/// defined with `assign_peripherals!` as the first parameter, if present.
+/// The function is provided with a peripheral struct as the first parameter, if present.
+/// The peripheral struct must be defined with the `define_peripherals!` macro.
+///
+/// If this function is only used to spawn other tasks before returning, consider using
+/// [`macro@spawner`] instead, to avoid statically allocating this transient async function as an
+/// `embassy_executor::task`.
 ///
 /// # Parameters
 ///
@@ -40,22 +44,22 @@ pub fn main(args: TokenStream, item: TokenStream) -> TokenStream {
     let main_function_name = &main_function.sig.ident;
     let is_async = main_function.sig.asyncness.is_some();
 
+    assert!(is_async, "the function must be async");
+
     let riot_rs_crate = utils::riot_rs_crate();
 
     let hooks = Hook::hook_definitions();
 
-    // FIXME: split this into two macros
-    let expanded = if is_async {
-        let takes_peripherals = !main_function.sig.inputs.is_empty();
-        let peripheral_param = if takes_peripherals {
-            quote! {peripherals.take_peripherals()}
-        } else {
-            quote! {}
-        };
+    let takes_peripherals = !main_function.sig.inputs.is_empty();
+    let peripheral_param = if takes_peripherals {
+        quote! {peripherals.take_peripherals()}
+    } else {
+        quote! {}
+    };
 
-        let delegates = main_macro::generate_delegates(&riot_rs_crate, &hooks, &attrs);
+    let delegates = main_macro::generate_delegates(&riot_rs_crate, &hooks, &attrs);
 
-        quote! {
+    let expanded = quote! {
             #delegates
 
             #[#riot_rs_crate::embassy::distributed_slice(#riot_rs_crate::embassy::EMBASSY_TASKS)]
@@ -71,28 +75,6 @@ pub fn main(args: TokenStream, item: TokenStream) -> TokenStream {
 
             #[#riot_rs_crate::embassy_executor::task]
             #main_function
-        }
-    } else {
-        let takes_peripherals = !main_function.sig.inputs.len() > 1;
-        let peripheral_param = if takes_peripherals {
-            quote! {, peripherals.take_peripherals()}
-        } else {
-            quote! {}
-        };
-
-        quote! {
-            #[#riot_rs_crate::embassy::distributed_slice(#riot_rs_crate::embassy::EMBASSY_TASKS)]
-            #[linkme(crate = #riot_rs_crate::embassy::linkme)]
-            fn __main(
-                spawner: #riot_rs_crate::embassy::Spawner,
-                mut peripherals: &mut #riot_rs_crate::embassy::arch::OptionalPeripherals,
-            ) {
-                use #riot_rs_crate::define_peripherals::TakePeripherals;
-                #main_function_name(spawner #peripheral_param);
-            }
-
-            #main_function
-        }
     };
 
     TokenStream::from(expanded)
