@@ -1,5 +1,5 @@
-use riot_rs::embassy::arch::peripherals;
 use riot_rs::define_peripherals;
+use riot_rs::embassy::arch::peripherals;
 
 #[cfg(builder = "nrf52840dk")]
 define_peripherals!(Peripherals {
