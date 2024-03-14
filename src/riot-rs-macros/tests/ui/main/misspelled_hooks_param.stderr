@@ -1,5 +1,0 @@
-error: unsupported parameter (`hooks` is supported)
-  --> tests/ui/main/misspelled_hooks_param.rs:13:17
-   |
-13 | #[riot_rs::main(hooooks(usb_builder))]
-   |                 ^^^^^^^

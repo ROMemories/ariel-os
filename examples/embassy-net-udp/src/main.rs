@@ -9,7 +9,7 @@ use riot_rs::rt::debug::println;
 riot_rs::define_peripherals!(Peripherals {});
 
 #[riot_rs::main]
-async fn main(_peripherals: Peripherals) {
+async fn main() {
     use embassy_net::udp::{PacketMetadata, UdpSocket};
     let stack = network::network_stack().await.unwrap();
 

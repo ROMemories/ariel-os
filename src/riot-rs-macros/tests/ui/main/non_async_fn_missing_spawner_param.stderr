@@ -1,0 +1,24 @@
+error[E0599]: no method named `take_peripherals` found for mutable reference `&mut OptionalPeripherals` in the current scope
+ --> tests/ui/main/non_async_fn_missing_spawner_param.rs:6:1
+  |
+6 | #[riot_rs::main]
+  | ^^^^^^^^^^^^^^^^ method not found in `&mut OptionalPeripherals`
+  |
+  = note: this error originates in the attribute macro `riot_rs::main` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0061]: this function takes 1 argument but 2 arguments were supplied
+ --> tests/ui/main/non_async_fn_missing_spawner_param.rs:7:4
+  |
+6 | #[riot_rs::main]
+  | ----------------
+  | |
+  | expected `Bar`, found `Spawner`
+  | unexpected argument
+7 | fn main(foo: Bar) {}
+  |    ^^^^
+  |
+note: function defined here
+ --> tests/ui/main/non_async_fn_missing_spawner_param.rs:7:4
+  |
+7 | fn main(foo: Bar) {}
+  |    ^^^^ --------
