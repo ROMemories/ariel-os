@@ -3,6 +3,7 @@
 //! This is a meta-package, pulling in the sub-crates of RIOT-rs.
 
 #![no_std]
+#![feature(doc_cfg)]
 
 #[doc(inline)]
 pub use riot_rs_buildinfo as buildinfo;
@@ -16,7 +17,8 @@ pub use riot_rs_rt as rt;
 
 // Attribute macros
 pub use riot_rs_macros::config;
-#[cfg(feature = "threading")]
+#[cfg(any(feature = "threading", doc))]
+#[doc(cfg(feature = "threading"))]
 pub use riot_rs_macros::thread;
 
 #[cfg(feature = "threading")]
