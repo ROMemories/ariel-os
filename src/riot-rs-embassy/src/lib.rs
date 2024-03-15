@@ -26,10 +26,11 @@ mod wifi;
 
 use riot_rs_debug::println;
 
+use static_cell::make_static;
+
 // re-exports
 #[cfg_attr(not(feature = "_dev-doc"), doc(hidden))]
 pub use linkme::{self, distributed_slice};
-pub use static_cell::make_static;
 
 pub use embassy_executor::Spawner;
 
