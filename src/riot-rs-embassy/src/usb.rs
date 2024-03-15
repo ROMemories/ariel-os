@@ -4,6 +4,7 @@ pub use crate::arch::usb::UsbDriver;
 
 pub type UsbBuilder = embassy_usb::Builder<'static, UsbDriver>;
 
+#[cfg_attr(not(feature = "_dev-doc"), doc(hidden))]
 #[linkme::distributed_slice]
 pub static USB_BUILDER_HOOKS: [&crate::delegate::Delegate<UsbBuilder>] = [..];
 

@@ -27,6 +27,7 @@ mod wifi;
 use riot_rs_debug::println;
 
 // re-exports
+#[cfg_attr(not(feature = "_dev-doc"), doc(hidden))]
 pub use linkme::{self, distributed_slice};
 pub use static_cell::make_static;
 
@@ -44,24 +45,28 @@ use usb::ethernet::NetworkDevice;
 #[cfg(feature = "wifi")]
 use wifi::NetworkDevice;
 
-#[cfg(feature = "net")]
-pub use network::NetworkStack;
-
+#[cfg_attr(not(feature = "_dev-doc"), doc(hidden))]
 #[cfg(feature = "threading")]
 pub mod blocker;
+#[cfg_attr(not(feature = "_dev-doc"), doc(hidden))]
 pub mod delegate;
+#[cfg_attr(not(feature = "_dev-doc"), doc(hidden))]
 pub mod sendcell;
 
+#[cfg_attr(not(feature = "_dev-doc"), doc(hidden))]
 pub type Task = fn(&Spawner, &mut arch::OptionalPeripherals);
 
-#[distributed_slice]
+#[cfg_attr(not(feature = "_dev-doc"), doc(hidden))]
+#[linkme::distributed_slice]
 pub static EMBASSY_TASKS: [Task] = [..];
 
+#[cfg_attr(not(feature = "_dev-doc"), doc(hidden))]
 #[cfg(feature = "executor-interrupt")]
 pub static EXECUTOR: arch::Executor = arch::Executor::new();
 
+#[cfg_attr(not(feature = "_dev-doc"), doc(hidden))]
 #[cfg(feature = "executor-interrupt")]
-#[distributed_slice(riot_rs_rt::INIT_FUNCS)]
+#[linkme::distributed_slice(riot_rs_rt::INIT_FUNCS)]
 pub(crate) fn init() {
     println!("riot-rs-embassy::init()");
     let p = arch::init(Default::default());
@@ -76,6 +81,7 @@ pub(crate) fn init() {
     EXECUTOR.run(|spawner| spawner.must_spawn(init_task(p)));
 }
 
+#[cfg_attr(not(feature = "_dev-doc"), doc(hidden))]
 #[cfg(feature = "executor-single-thread")]
 #[export_name = "riot_rs_embassy_init"]
 fn init() -> ! {

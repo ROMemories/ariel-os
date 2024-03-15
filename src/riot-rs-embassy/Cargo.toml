@@ -85,6 +85,9 @@ esp-hal = { workspace = true, features = [
 esp-wifi = { workspace = true, features = ["esp32c3"], optional = true }
 
 [features]
+# Includes docs for developers
+_dev-doc = []
+
 time = ["dep:embassy-time", "embassy-executor/integrated-timers"]
 usb = ["dep:embassy-usb"]
 net = ["dep:embassy-net"]
