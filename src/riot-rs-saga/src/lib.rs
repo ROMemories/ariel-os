@@ -1,32 +1,34 @@
 #![no_std]
 
-/// Represents a device providing sensor readings.
-///
-/// The generic `N` is the count of `PhysicalValue`s a single reading is comprised of; this would
-/// be `1` for a temperature sensor and `3` for a 3-axis accelerometer.
-// FIXME: add a test to make sure this trait is object-safe
-pub trait Sensor<const N: usize> {
-    // FIXME: what to use this for
-    fn initialize();
+use core::future::Future;
 
+/// Represents a device providing sensor readings.
+// FIXME: add a test to make sure this trait is object-safe
+pub trait Sensor<R: Reading> {
     // FIXME: do we need a Send bound in the return type?
-    fn read(&mut self) -> impl core::future::Future<Output = Reading<N>>;
+    fn read(&mut self) -> impl Future<Output = R>;
 }
 
-#[derive(Debug)]
-pub struct Reading<const N: usize>(pub [PhysicalValue; N]);
+pub trait Reading {
+    fn value(&self) -> PhysicalValue;
+
+    fn values(&self) -> impl ExactSizeIterator<Item = PhysicalValue> {
+        [self.value()].into_iter()
+    }
+}
 
 // TODO: provide new() + getters instead of making fields public?
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct PhysicalValue {
-    pub value: i16, // FIXME
+    pub value: i32,
     pub unit: PhysicalUnit,
     pub scale: i8,
 }
 
 // Built upon https://doc.riot-os.org/phydat_8h_source.html
 // and https://bthome.io/format/#sensor-data
-#[derive(Debug)]
+// and https://www.rfc-editor.org/rfc/rfc8798.html
+#[derive(Debug, Copy, Clone)]
 #[non_exhaustive]
 pub enum PhysicalUnit {
     Celsius,

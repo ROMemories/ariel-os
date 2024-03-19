@@ -59,20 +59,26 @@ pub mod internal_temp {
         }
     }
 
-    impl Sensor<1> for InternalTemp {
-        fn initialize() {}
+    pub struct TemperatureReading(PhysicalValue);
 
-        async fn read(&mut self) -> Reading<1> {
+    impl Reading for TemperatureReading {
+        fn value(&self) -> PhysicalValue {
+            self.0
+        }
+    }
+
+    impl Sensor<TemperatureReading> for InternalTemp {
+        async fn read(&mut self) -> TemperatureReading {
             use fixed::traits::LossyInto;
 
             let reading = self.temp.read().await;
             let temp: i32 = (100 * reading).lossy_into();
 
-            Reading([PhysicalValue {
-                value: i16::try_from(temp).unwrap(), // FIXME: remove this unwrap
+            TemperatureReading(PhysicalValue {
+                value: i32::try_from(temp).unwrap(), // FIXME: remove this unwrap
                 unit: PhysicalUnit::Celsius,
                 scale: -2,
-            }])
+            })
         }
     }
 }
