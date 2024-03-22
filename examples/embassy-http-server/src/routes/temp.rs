@@ -7,7 +7,8 @@ use riot_rs::saga::{Reading, Sensor};
 use crate::TempInput;
 
 pub async fn temp(State(TempInput(temp)): State<TempInput>) -> impl IntoResponse {
-    let temp = temp.lock().await.read().await.value().value;
+    // FIXME: handle this unwrap
+    let temp = temp.lock().await.read().await.unwrap().value().value;
 
     Json(JsonTemp { temp })
 }

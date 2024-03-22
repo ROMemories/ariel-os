@@ -1,4 +1,5 @@
 #![no_std]
+#![feature(error_in_core)]
 
 use core::future::Future;
 
@@ -25,7 +26,16 @@ pub trait Reading {
 }
 
 // FIXME: make this a proper error type
+#[derive(Debug)]
 pub enum ReadingError {}
+
+impl core::fmt::Display for ReadingError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "error when accessing a sensor reading")
+    }
+}
+
+impl core::error::Error for ReadingError {}
 
 pub type ReadingResult<R> = Result<R, ReadingError>;
 
