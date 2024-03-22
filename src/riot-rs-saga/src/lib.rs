@@ -5,8 +5,15 @@ use core::future::Future;
 /// Represents a device providing sensor readings.
 // FIXME: add a test to make sure this trait is object-safe
 pub trait Sensor<R: Reading> {
-    // FIXME: do we need a Send bound in the return type?
-    fn read(&mut self) -> impl Future<Output = R>;
+    // FIXME: do we need a Send bound in the return type (or rely on consumers using SendCell when
+    // needed)?
+    fn read(&mut self) -> impl Future<Output = Result<R, ReadingError>>;
+
+    // TODO: can we make this a trait const instead? way cause object safety issues
+    fn value_scale() -> i8;
+
+    // TODO: can we make this a trait const instead? way cause object safety issues
+    fn unit() -> PhysicalUnit;
 }
 
 pub trait Reading {
@@ -17,12 +24,15 @@ pub trait Reading {
     }
 }
 
+// FIXME: make this a proper error type
+pub enum ReadingError {}
+
+pub type ReadingResult<R> = Result<R, ReadingError>;
+
 // TODO: provide new() + getters instead of making fields public?
 #[derive(Debug, Copy, Clone)]
 pub struct PhysicalValue {
     pub value: i32,
-    pub unit: PhysicalUnit,
-    pub scale: i8,
 }
 
 // Built upon https://doc.riot-os.org/phydat_8h_source.html
