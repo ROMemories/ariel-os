@@ -109,7 +109,7 @@ jobs:
       - name: Run crate tests
         run: |
             cargo test --no-default-features --features no-boards -p riot-rs -p riot-rs-embassy -p riot-rs-threads -p riot-rs-macros
-            cargo test -p rbi -p ringbuffer
+            cargo test -p clist -p rbi -p ringbuffer
 
   lint:
     runs-on: ubuntu-latest
