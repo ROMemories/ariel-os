@@ -42,41 +42,51 @@ pub fn init(config: Config) -> OptionalPeripherals {
 #[cfg(feature = "internal-temp")]
 pub mod internal_temp {
     use embassy_nrf::{peripherals, temp};
-    use riot_rs_saga::{PhysicalUnit, PhysicalValue, Reading, ReadingResult, Sensor};
+    use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, mutex::Mutex};
+    use riot_rs_saga::sensor::{PhysicalUnit, PhysicalValue, Reading, ReadingResult, Sensor};
 
     embassy_nrf::bind_interrupts!(struct Irqs {
         TEMP => embassy_nrf::temp::InterruptHandler;
     });
 
     pub struct InternalTemp {
-        temp: temp::Temp<'static>,
+        temp: Mutex<CriticalSectionRawMutex, Option<temp::Temp<'static>>>,
     }
 
     impl InternalTemp {
-        pub fn new(peripheral: peripherals::TEMP) -> Self {
-            let temp = temp::Temp::new(peripheral, Irqs);
-            Self { temp }
+        pub const fn new() -> Self {
+            Self {
+                temp: Mutex::new(None),
+            }
+        }
+
+        pub fn init(&self, peripheral: peripherals::TEMP) {
+            // FIXME: we use try_lock instead of lock to not make this function async, can we do
+            // better?
+            // FIXME: return an error when relevant
+            let mut temp = self.temp.try_lock().unwrap();
+            *temp = Some(temp::Temp::new(peripheral, Irqs));
         }
     }
 
-    pub struct TemperatureReading(PhysicalValue);
+    // pub struct TemperatureReading(PhysicalValue);
+    //
+    // impl Reading for TemperatureReading {
+    //     fn value(&self) -> PhysicalValue {
+    //         self.0
+    //     }
+    // }
 
-    impl Reading for TemperatureReading {
-        fn value(&self) -> PhysicalValue {
-            self.0
-        }
-    }
-
-    impl Sensor<TemperatureReading> for InternalTemp {
-        async fn read(&mut self) -> ReadingResult<TemperatureReading> {
+    impl Sensor for InternalTemp {
+        async fn read(&self) -> ReadingResult<PhysicalValue> {
             use fixed::traits::LossyInto;
 
-            let reading = self.temp.read().await;
+            let reading = self.temp.lock().await.as_mut().unwrap().read().await;
             let temp: i32 = (100 * reading).lossy_into();
 
-            Ok(TemperatureReading(PhysicalValue {
+            Ok(PhysicalValue {
                 value: i32::try_from(temp).unwrap(), // FIXME: remove this unwrap
-            }))
+            })
         }
 
         fn value_scale() -> i8 {
@@ -85,6 +95,18 @@ pub mod internal_temp {
 
         fn unit() -> PhysicalUnit {
             PhysicalUnit::Celsius
+        }
+
+        fn display_name() -> Option<&'static str> {
+            Some("Internal temperature sensor")
+        }
+
+        fn part_number() -> &'static str {
+            "nrf52 internal temperature sensor"
+        }
+
+        fn version() -> u8 {
+            0
         }
     }
 }

@@ -11,3 +11,7 @@ repository.workspace = true
 workspace = true
 
 [dependencies]
+embassy-sync = { workspace = true }
+heapless = { workspace = true }
+linkme = { workspace = true }
+static_cell = { workspace = true }

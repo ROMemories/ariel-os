@@ -2,6 +2,9 @@
 #![no_std]
 #![feature(type_alias_impl_trait)]
 #![feature(used_with_arg)]
+// Cast to &dyn Any from refs
+#![feature(trait_upcasting)]
+#![deny(unused_must_use)]
 
 mod pins;
 mod routes;
@@ -23,8 +26,6 @@ use embassy_nrf::gpio::{Input, Pin, Pull};
 struct AppState {
     #[cfg(feature = "button-readings")]
     buttons: ButtonInputs,
-    #[cfg(context = "nrf52840")]
-    temp: TempInput,
 }
 
 #[cfg(feature = "button-readings")]
@@ -46,16 +47,11 @@ impl picoserve::extract::FromRef<AppState> for ButtonInputs {
     }
 }
 
-#[cfg(context = "nrf52840")]
-#[derive(Copy, Clone)]
-struct TempInput(&'static Mutex<CriticalSectionRawMutex, arch::internal_temp::InternalTemp>);
-
-#[cfg(context = "nrf52840")]
-impl picoserve::extract::FromRef<AppState> for TempInput {
-    fn from_ref(state: &AppState) -> Self {
-        state.temp
-    }
-}
+static TEMP_SENSOR: arch::internal_temp::InternalTemp = arch::internal_temp::InternalTemp::new();
+// TODO: can we make this const?
+#[riot_rs::linkme::distributed_slice(riot_rs::sensors::registry::SENSOR_REFS)]
+#[linkme(crate = riot_rs::linkme)]
+static TEMP_SENSOR_REF: &'static dyn riot_rs::sensors::sensor::Sensor = &TEMP_SENSOR;
 
 type AppRouter = impl picoserve::routing::PathRouter<AppState>;
 
@@ -118,16 +114,18 @@ fn web_server_init(spawner: &Spawner, peripherals: &mut arch::OptionalPeripheral
     };
 
     #[cfg(context = "nrf52840")]
-    let temp = {
+    {
+        use riot_rs::sensors::registry::REGISTRY;
+
         let temp_peripheral = peripherals.TEMP.take().unwrap();
-        let temp = arch::internal_temp::InternalTemp::new(temp_peripheral);
-        TempInput(make_static!(Mutex::new(temp)))
-    };
+        TEMP_SENSOR.init(temp_peripheral);
+    }
 
     fn make_app() -> picoserve::Router<AppRouter, AppState> {
         let router = picoserve::Router::new().route("/", get(routes::index));
         #[cfg(feature = "button-readings")]
         let router = router.route("/buttons", get(routes::buttons));
+        let router = router.route("/api/sensors", get(routes::sensors));
         #[cfg(context = "nrf52840")]
         let router = router.route("/api/temp", get(routes::temp));
         router
@@ -145,8 +143,6 @@ fn web_server_init(spawner: &Spawner, peripherals: &mut arch::OptionalPeripheral
         let app_state = AppState {
             #[cfg(feature = "button-readings")]
             buttons: button_inputs,
-            #[cfg(context = "nrf52840")]
-            temp,
         };
         spawner.spawn(web_task(id, app, config, app_state)).unwrap();
     }

@@ -2022,6 +2022,12 @@ version = "0.1.2"
 [[package]]
 name = "riot-rs-saga"
 version = "0.1.0"
+dependencies = [
+ "embassy-sync 0.5.0",
+ "heapless 0.8.0",
+ "linkme",
+ "static_cell",
+]
 
 [[package]]
 name = "riot-rs-threads"

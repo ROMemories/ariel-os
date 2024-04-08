@@ -2,13 +2,13 @@ use picoserve::{
     extract::State,
     response::{IntoResponse, Json},
 };
-use riot_rs::saga::{Reading, Sensor};
+use riot_rs::sensors::sensor::{Reading, Sensor};
 
-use crate::TempInput;
+use crate::TEMP_SENSOR;
 
-pub async fn temp(State(TempInput(temp)): State<TempInput>) -> impl IntoResponse {
+pub async fn temp() -> impl IntoResponse {
     // FIXME: handle this unwrap
-    let temp = temp.lock().await.read().await.unwrap().value().value;
+    let temp = TEMP_SENSOR.read().await.unwrap().value;
 
     Json(JsonTemp { temp })
 }
