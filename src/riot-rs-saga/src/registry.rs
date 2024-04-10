@@ -10,7 +10,7 @@ use crate::sensor::{PhysicalUnit, PhysicalValue, ReadingResult, Sensor};
 pub static SENSOR_REFS: [&'static dyn Sensor] = [..];
 
 // static SENSORS: Mutex<CriticalSectionRawMutex, Vec<&'static dyn Sensor, 8>> =
-    // Mutex::new(Vec::new());
+// Mutex::new(Vec::new());
 
 pub static REGISTRY: Registry = Registry::new();
 
@@ -65,10 +65,12 @@ impl Iterator for ReadAll {
         self.sensor_index += 1;
 
         // As `read()` is non-dispatchable, we have to downcast
-        if let Some(sensor) = (sensor as &dyn Any).downcast_ref::<InternalTemp>() {
-            return Some(sensor.read());
-        }
+        // if let Some(sensor) = (sensor as &dyn Any).downcast_ref::<InternalTemp>() {
+        //     return Some(sensor.read());
+        // }
+        //
+        // unimplemented!()
 
-        unimplemented!()
+        Some(async { sensor.read() })
     }
 }

@@ -78,14 +78,17 @@ pub mod internal_temp {
     // }
 
     impl Sensor for InternalTemp {
-        async fn read(&self) -> ReadingResult<PhysicalValue> {
+        fn read(&self) -> ReadingResult<PhysicalValue> {
             use fixed::traits::LossyInto;
 
-            let reading = self.temp.lock().await.as_mut().unwrap().read().await;
+            let reading = embassy_futures::block_on(async {
+                self.temp.lock().await.as_mut().unwrap().read().await
+            });
+
             let temp: i32 = (100 * reading).lossy_into();
 
             Ok(PhysicalValue {
-                value: i32::try_from(temp).unwrap(), // FIXME: remove this unwrap
+                value: temp,
             })
         }
 

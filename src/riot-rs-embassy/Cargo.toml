@@ -12,6 +12,7 @@ linkme.workspace = true
 static_cell.workspace = true
 
 embassy-executor = { workspace = true, features = ["nightly"] }
+embassy-futures = { workspace = true }
 embassy-net = { workspace = true, optional = true, features = [ "dhcpv4", "medium-ethernet" ] }
 embassy-net-driver-channel = { workspace = true, optional = true }
 embassy-sync = { workspace = true }

@@ -2,14 +2,14 @@ use core::{any::Any, future::Future};
 
 /// Represents a device providing sensor readings.
 // FIXME: add a test to make sure this trait is object-safe
-pub trait Sensor: Any + Send + Sync {
-    // FIXME: do we need a Send bound in the return type (or rely on consumers using SendCell when
-    // needed)?
-    async fn read(&self) -> ReadingResult<PhysicalValue>
-    where
-        Self: Sized;
-    // fn read<R>(&mut self) -> R where R: Future<Output = Result<PhysicalValue, ReadingError>>, Self: Sized;
-    // fn read(&mut self) -> ReadFut;
+pub trait Sensor: Send + Sync {
+    // FIXME: allow to return multiple PhysicalValue (with Reading?, but keep it object-safe)
+    /// Returns a sensor reading.
+    ///
+    /// Blocks until the reading is ready.
+    /// In the future, we may provide an async version of this method, when it becomes possible to
+    /// provide dispatchable async method in traits without an allocator.
+    fn read(&self) -> ReadingResult<PhysicalValue>;
 
     // TODO: can we make this a trait const instead? may cause object safety issues
     fn value_scale() -> i8
@@ -34,8 +34,6 @@ pub trait Sensor: Any + Send + Sync {
     where
         Self: Sized;
 }
-
-pub struct ReadFut {}
 
 pub trait Reading {
     fn value(&self) -> PhysicalValue;

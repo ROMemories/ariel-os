@@ -8,7 +8,8 @@ use crate::TEMP_SENSOR;
 
 pub async fn temp() -> impl IntoResponse {
     // FIXME: handle this unwrap
-    let temp = TEMP_SENSOR.read().await.unwrap().value;
+    // FIXME: this call to read() is blocking
+    let temp = TEMP_SENSOR.read().unwrap().value;
 
     Json(JsonTemp { temp })
 }
