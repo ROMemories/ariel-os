@@ -48,6 +48,8 @@ impl Registry {
         &SENSOR_REFS
     }
 
+    // TODO: returns an iterator returning async values, do we want to asynchronously return an
+    // iterator instead, which would ready every sensor concurrently?
     pub async fn read_all(&self) -> ReadAll {
         ReadAll { sensor_index: 0 }
     }
