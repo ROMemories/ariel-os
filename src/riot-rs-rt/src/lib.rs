@@ -76,6 +76,7 @@ fn startup() -> ! {
 
     #[cfg(feature = "threading")]
     {
+        debug::println!("riot_rs_rt start threading");
         // SAFETY: this function must not be called more than once
         unsafe {
             threading::start();

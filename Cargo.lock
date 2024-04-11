@@ -1987,6 +1987,7 @@ dependencies = [
  "riot-rs-core",
  "riot-rs-rt",
  "riot-rs-saga",
+ "riot-rs-threads",
  "riot-rs-utils",
  "static_cell",
 ]

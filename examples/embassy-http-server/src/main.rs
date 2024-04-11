@@ -148,6 +148,13 @@ fn web_server_init(spawner: &Spawner, peripherals: &mut arch::OptionalPeripheral
     }
 }
 
+#[riot_rs::thread]
+fn dummy() {
+    loop {
+        riot_rs::thread::yield_same();
+    }
+}
+
 #[no_mangle]
 fn riot_rs_network_config() -> embassy_net::Config {
     use embassy_net::Ipv4Address;

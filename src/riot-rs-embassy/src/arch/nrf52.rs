@@ -79,6 +79,28 @@ pub mod internal_temp {
                 // FIXME: return an error when relevant
                 let mut temp = self.temp.try_lock().unwrap();
                 *temp = Some(temp::Temp::new(peripheral, Irqs));
+
+                fn thread_fn() {
+                    riot_rs_rt::println!("Thread started");
+                    loop {}
+                    // loop {
+                    //     if let Ok(value) = sensor.read() {
+                    //         // FIXME: use the value set with set_lower_threshold()
+                    //         if value.value > 22 {
+                    //             // FIXME: should this be LowerThreshold or HigherThreshold?
+                    //             let _ = sensor.channel.send(Notification::LowerThreshold);
+                    //             riot_rs_rt::println!("Test");
+                    //         }
+                    //     }
+                    //
+                    //     // FIXME: do not busy loop, sleep for some time
+                    // }
+                }
+
+                let mut stack = [0u8; 2048_usize];
+                riot_rs_threads::thread_create_noarg(thread_fn, &mut stack, 1);
+                riot_rs_rt::println!("Test", );
+
                 self.enabled.store(true, Ordering::Release);
             }
         }
