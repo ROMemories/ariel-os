@@ -1,5 +1,8 @@
 use core::{any::Any, future::Future};
 
+// TODO: use a zero-copy channel instead?
+use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, channel::Receiver};
+
 /// Represents a device providing sensor readings.
 // FIXME: add a test to make sure this trait is object-safe
 pub trait Sensor: Send + Sync {
@@ -11,25 +14,39 @@ pub trait Sensor: Send + Sync {
     /// provide dispatchable async method in traits without an allocator.
     fn read(&self) -> ReadingResult<PhysicalValue>;
 
+    #[must_use]
+    fn enabled(&self) -> bool;
+
+    fn set_lower_threshold(&self, value: PhysicalValue);
+
+    // TODO: tune the channel size
+    #[must_use]
+    fn subscribe(&self) -> NotificationReceiver;
+
     // TODO: can we make this a trait const instead? may cause object safety issues
+    #[must_use]
     fn value_scale() -> i8
     where
         Self: Sized;
 
     // TODO: can we make this a trait const instead? may cause object safety issues
+    #[must_use]
     fn unit() -> PhysicalUnit
     where
         Self: Sized;
 
     // TODO: i18n?
+    #[must_use]
     fn display_name() -> Option<&'static str>
     where
         Self: Sized;
 
+    #[must_use]
     fn part_number() -> &'static str
     where
         Self: Sized;
 
+    #[must_use]
     fn version() -> u8
     where
         Self: Sized;
@@ -43,12 +60,25 @@ pub trait Reading {
     }
 }
 
+// TODO: should we pass the value as well? that may be difficult because of the required generics
+#[derive(Debug)]
+pub enum Notification {
+    LowerThreshold,
+    HigherThreshold,
+}
+
+pub type NotificationReceiver<'a> = Receiver<'a, CriticalSectionRawMutex, Notification, 1>;
+
 // TODO: is it more useful to indicate the error nature or whether it is temporary or permanent?
 #[derive(Debug)]
-pub enum ReadingError {}
+pub enum ReadingError {
+    // The sensor is disabled.
+    Disabled,
+}
 
 impl core::fmt::Display for ReadingError {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        // FIXME: update this
         write!(f, "error when accessing a sensor reading")
     }
 }

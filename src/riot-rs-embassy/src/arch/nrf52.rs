@@ -41,31 +41,46 @@ pub fn init(config: Config) -> OptionalPeripherals {
 
 #[cfg(feature = "internal-temp")]
 pub mod internal_temp {
+    // FIXME: maybe use portable_atomic's instead
+    use core::sync::atomic::{AtomicBool, Ordering};
+
     use embassy_nrf::{peripherals, temp};
-    use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, mutex::Mutex};
-    use riot_rs_saga::sensor::{PhysicalUnit, PhysicalValue, Reading, ReadingResult, Sensor};
+    use embassy_sync::{
+        blocking_mutex::raw::CriticalSectionRawMutex, channel::Channel, mutex::Mutex,
+    };
+    use riot_rs_saga::sensor::{
+        Notification, NotificationReceiver, PhysicalUnit, PhysicalValue, Reading, ReadingError,
+        ReadingResult, Sensor,
+    };
 
     embassy_nrf::bind_interrupts!(struct Irqs {
         TEMP => embassy_nrf::temp::InterruptHandler;
     });
 
     pub struct InternalTemp {
+        enabled: AtomicBool,
         temp: Mutex<CriticalSectionRawMutex, Option<temp::Temp<'static>>>,
+        channel: Channel<CriticalSectionRawMutex, Notification, 1>,
     }
 
     impl InternalTemp {
         pub const fn new() -> Self {
             Self {
+                enabled: AtomicBool::new(false),
                 temp: Mutex::new(None),
+                channel: Channel::new(),
             }
         }
 
         pub fn init(&self, peripheral: peripherals::TEMP) {
-            // FIXME: we use try_lock instead of lock to not make this function async, can we do
-            // better?
-            // FIXME: return an error when relevant
-            let mut temp = self.temp.try_lock().unwrap();
-            *temp = Some(temp::Temp::new(peripheral, Irqs));
+            if !self.enabled.load(Ordering::Acquire) {
+                // FIXME: we use try_lock instead of lock to not make this function async, can we do
+                // better?
+                // FIXME: return an error when relevant
+                let mut temp = self.temp.try_lock().unwrap();
+                *temp = Some(temp::Temp::new(peripheral, Irqs));
+                self.enabled.store(true, Ordering::Release);
+            }
         }
     }
 
@@ -81,15 +96,30 @@ pub mod internal_temp {
         fn read(&self) -> ReadingResult<PhysicalValue> {
             use fixed::traits::LossyInto;
 
+            if !self.enabled.load(Ordering::Acquire) {
+                return Err(ReadingError::Disabled);
+            }
+
             let reading = embassy_futures::block_on(async {
                 self.temp.lock().await.as_mut().unwrap().read().await
             });
 
             let temp: i32 = (100 * reading).lossy_into();
 
-            Ok(PhysicalValue {
-                value: temp,
-            })
+            Ok(PhysicalValue { value: temp })
+        }
+
+        fn enabled(&self) -> bool {
+            self.enabled.load(Ordering::Acquire)
+        }
+
+        fn set_lower_threshold(&self, value: PhysicalValue) {
+            // FIXME
+        }
+
+        fn subscribe(&self) -> NotificationReceiver {
+            // TODO: receiver competes for notification: limit the number of receivers to 1?
+            self.channel.receiver()
         }
 
         fn value_scale() -> i8 {
