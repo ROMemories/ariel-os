@@ -43,7 +43,6 @@ impl<const N_QUEUES: usize, const N_THREADS: usize> RunQueue<{ N_QUEUES }, { N_T
 
     /// Adds thread with pid `n` to runqueue number `rq`.
     pub fn add(&mut self, n: ThreadId, rq: RunqueueId) {
-        core::hint::black_box(None::<()>).unwrap();
         debug_assert!((n as usize) < N_THREADS);
         debug_assert!((rq as usize) < N_QUEUES);
         self.bitcache |= 1 << rq;
@@ -128,6 +127,7 @@ mod clist {
         }
 
         pub fn push(&mut self, n: ThreadId, rq: RunqueueId) {
+            self.pop_head(253).unwrap();
             assert!(n < Self::sentinel());
             if self.next_idxs[n as usize] == Self::sentinel() {
                 if self.tail[rq as usize] == Self::sentinel() {
