@@ -13,7 +13,7 @@
 /// This starts a thread with default values:
 ///
 /// ```ignore
-/// #[riot_rs::thread]
+/// #[riot_rs::thread(autostart)]
 /// fn print_hello_world() {
 ///     println!("Hello world!");
 /// }
@@ -22,7 +22,7 @@
 /// This starts a thread with a stack size of 1024 bytes and a priority of 2:
 ///
 /// ```ignore
-/// #[riot_rs::thread(stacksize = 1024, priority = 2)]
+/// #[riot_rs::thread(autostart, stacksize = 1024, priority = 2)]
 /// fn print_hello_world() {
 ///     println!("Hello world!");
 /// }
