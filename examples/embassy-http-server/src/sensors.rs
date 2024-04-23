@@ -20,8 +20,8 @@ fn temp_sensor_init(spawner: Spawner, peripherals: TempPeripherals) {
 riot_rs::define_peripherals!(TempPeripherals { p: TEMP });
 
 #[cfg(feature = "button-readings")]
-pub static BUTTON_1: riot_rs::embassy::arch::PushButtonNrf =
-    riot_rs::embassy::arch::PushButtonNrf::new();
+pub static BUTTON_1: external_push_button_sensor::PushButtonNrf =
+    external_push_button_sensor::PushButtonNrf::new();
 #[cfg(feature = "button-readings")]
 #[riot_rs::linkme::distributed_slice(riot_rs::sensors::SENSOR_REFS)]
 #[linkme(crate = riot_rs::linkme)]

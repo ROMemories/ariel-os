@@ -1,0 +1,15 @@
+[package]
+name = "external-push-button-sensor"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+repository.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+embassy-nrf = { workspace = true }
+embassy-sync = { workspace = true }
+embedded-hal = { workspace = true }
+riot-rs-sensors = { workspace = true }

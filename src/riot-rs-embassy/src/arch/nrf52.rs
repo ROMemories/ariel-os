@@ -238,6 +238,3 @@ pub mod internal_temp {
         }
     }
 }
-
-pub type PushButtonNrf =
-    riot_rs_sensors::push_buttons::PushButton<embassy_nrf::gpio::Input<'static>>;

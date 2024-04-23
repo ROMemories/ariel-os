@@ -12,7 +12,6 @@ workspace = true
 
 [dependencies]
 embassy-sync = { workspace = true }
-embedded-hal = { workspace = true }
 heapless = { workspace = true }
 linkme = { workspace = true }
 serde = { workspace = true, features = ["derive"] }

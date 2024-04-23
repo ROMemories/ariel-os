@@ -1,10 +1,12 @@
+#![no_std]
+
 // FIXME: use portable_atomic's instead
 use core::sync::atomic::{AtomicBool, Ordering};
 
 use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, channel::Channel, mutex::Mutex};
 use embedded_hal::digital::InputPin;
 
-use crate::{
+use riot_rs_sensors::{
     categories::push_button::{PushButtonReading, PushButtonSensor},
     sensor::{
         Category, Notification, NotificationReceiver, PhysicalUnit, PhysicalValue, ReadingError,
@@ -118,3 +120,5 @@ impl<I: 'static + InputPin + Send> PushButtonSensor for PushButton<I> {
         self.read_main().await.map(PushButtonReading::new)
     }
 }
+
+pub type PushButtonNrf = PushButton<embassy_nrf::gpio::Input<'static>>;
