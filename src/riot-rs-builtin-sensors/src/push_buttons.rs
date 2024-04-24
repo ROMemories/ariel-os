@@ -13,7 +13,11 @@ use riot_rs_sensors::{
     Sensor,
 };
 
-pub struct PushButton<I: InputPin> {
+pub type PushButton = GenericPushButton<riot_rs_embassy::arch::gpio::Input<'static>>;
+
+// TODO: how to name this?
+// TODO: is it useful to expose this or should we just make it non-generic?
+pub struct GenericPushButton<I: InputPin> {
     initialized: AtomicBool, // TODO: use an atomic bitset for initialized and enabled
     enabled: AtomicBool,
     // buttons: [Option<Button>; N], // TODO: maybe use MaybeUninit
@@ -21,7 +25,7 @@ pub struct PushButton<I: InputPin> {
     channel: Channel<CriticalSectionRawMutex, Notification, 1>,
 }
 
-impl<I: InputPin> PushButton<I> {
+impl<I: InputPin> GenericPushButton<I> {
     #[allow(clippy::new_without_default)]
     pub const fn new() -> Self {
         Self {
@@ -47,7 +51,7 @@ impl<I: InputPin> PushButton<I> {
     }
 }
 
-impl<I: 'static + InputPin + Send> Sensor for PushButton<I> {
+impl<I: 'static + InputPin + Send> Sensor for GenericPushButton<I> {
     async fn read_main(&self) -> ReadingResult<PhysicalValue> {
         //     self.read().await.map(|v| v.value())
         // }
@@ -112,11 +116,9 @@ impl<I: 'static + InputPin + Send> Sensor for PushButton<I> {
     }
 }
 
-impl<I: 'static + InputPin + Send> PushButtonSensor for PushButton<I> {
+impl<I: 'static + InputPin + Send> PushButtonSensor for GenericPushButton<I> {
     // FIXME: rename this
     async fn read_press_state(&self) -> ReadingResult<PushButtonReading> {
         self.read_main().await.map(PushButtonReading::new)
     }
 }
-
-pub type PushButtonArch = PushButton<riot_rs_embassy::arch::gpio::Input<'static>>;
