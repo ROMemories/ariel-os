@@ -22,12 +22,17 @@ pub use riot_rs_embassy::{define_peripherals, group_peripherals};
 pub use riot_rs_random as random;
 #[doc(inline)]
 pub use riot_rs_rt as rt;
+#[doc(inline)]
+pub use riot_rs_sensors as sensors;
 #[cfg(feature = "threading")]
 #[doc(inline)]
 pub use riot_rs_threads as thread;
 
 // Attribute macros
 pub use riot_rs_macros::config;
+// Ideally this would be namespaced to the `sensors` module
+pub use riot_rs_macros::await_read_sensor_main_value;
+pub use riot_rs_macros::hw_setup;
 pub use riot_rs_macros::spawner;
 pub use riot_rs_macros::task;
 #[cfg(any(feature = "threading", doc))]

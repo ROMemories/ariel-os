@@ -3,6 +3,9 @@ pub mod gpio;
 #[cfg(feature = "hwrng")]
 pub mod hwrng;
 
+#[cfg(feature = "internal-temp")]
+pub mod internal_temp;
+
 #[cfg(feature = "usb")]
 pub mod usb;
 
@@ -31,6 +34,10 @@ unsafe fn SWI0_EGU0() {
 unsafe fn EGU0() {
     unsafe { crate::EXECUTOR.on_interrupt() }
 }
+
+// FIXME: move this, and use the arch re-export of the gpio module
+pub type PushButtonNrf =
+    riot_rs_sensors::push_buttons::PushButton<embassy_nrf::gpio::Input<'static>>;
 
 pub fn init(config: Config) -> OptionalPeripherals {
     let peripherals = embassy_nrf::init(config);

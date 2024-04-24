@@ -13,7 +13,7 @@ static_cell.workspace = true
 cfg-if.workspace = true
 
 embassy-executor = { workspace = true, features = ["nightly"] }
-
+embassy-futures = { workspace = true }
 embassy-net = { workspace = true, optional = true, features = [
   "dhcpv4",
   "medium-ethernet",
@@ -23,12 +23,14 @@ embassy-sync = { workspace = true }
 embassy-time = { workspace = true, optional = true }
 embassy-usb = { workspace = true, optional = true }
 
-riot-rs-threads = { path = "../riot-rs-threads", optional = true }
+riot-rs-threads = { path = "../riot-rs-threads" }
 riot-rs-debug = { workspace = true }
 riot-rs-rt = { path = "../riot-rs-rt" }
 riot-rs-random = { path = "../riot-rs-random", optional = true }
+riot-rs-sensors = { workspace = true }
 riot-rs-utils = { workspace = true }
 
+fixed = "1.24.0"
 heapless = "0.8.0"
 once_cell = { version = "1.19.0", default-features = false, features = [
   "critical-section",
@@ -111,7 +113,9 @@ wifi-cyw43 = [
 ]
 wifi-esp = ["dep:esp-wifi", "dep:embassy-net-driver-channel", "net", "wifi"]
 
-threading = ["dep:riot-rs-threads"]
+internal-temp = []
+
+threading = []
 override-network-config = []
 override-usb-config = []
 

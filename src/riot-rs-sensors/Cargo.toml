@@ -1,0 +1,19 @@
+[package]
+name = "riot-rs-sensors"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+repository.workspace = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lints]
+workspace = true
+
+[dependencies]
+embassy-sync = { workspace = true }
+embedded-hal = { workspace = true }
+heapless = { workspace = true }
+linkme = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+static_cell = { workspace = true }
