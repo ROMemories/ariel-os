@@ -8,6 +8,7 @@
 #![feature(used_with_arg)]
 #![feature(error_in_core)]
 #![deny(unused_must_use)]
+#![deny(clippy::pedantic)]
 
 pub mod categories;
 pub mod registry;
