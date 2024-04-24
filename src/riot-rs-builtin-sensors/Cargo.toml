@@ -1,0 +1,15 @@
+[package]
+name = "riot-rs-builtin-sensors"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+repository.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+embassy-sync = { workspace = true }
+embedded-hal = { workspace = true }
+riot-rs-embassy = { workspace = true } # TODO: is this ok?
+riot-rs-sensors = { workspace = true }

@@ -2378,6 +2378,7 @@ dependencies = [
  "linkme",
  "riot-rs-bench",
  "riot-rs-boards",
+ "riot-rs-builtin-sensors",
  "riot-rs-debug",
  "riot-rs-embassy",
  "riot-rs-macros",
@@ -2416,6 +2417,16 @@ dependencies = [
  "particle-xenon",
  "riot-rs-rt",
  "rpi-pico",
+]
+
+[[package]]
+name = "riot-rs-builtin-sensors"
+version = "0.1.0"
+dependencies = [
+ "embassy-sync 0.5.0",
+ "embedded-hal 1.0.0",
+ "riot-rs-embassy",
+ "riot-rs-sensors",
 ]
 
 [[package]]
