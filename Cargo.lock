@@ -3,6 +3,15 @@
 version = 3
 
 [[package]]
+name = "accelerometer"
+version = "0.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1a4586d95cb0695e748760c9a751141eebb68265b1b20392a0f14db608679f7a"
+dependencies = [
+ "micromath",
+]
+
+[[package]]
 name = "adler"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -369,7 +378,7 @@ dependencies = [
  "embassy-time",
  "embedded-hal 1.0.0",
  "futures",
- "num_enum",
+ "num_enum 0.5.11",
 ]
 
 [[package]]
@@ -571,6 +580,7 @@ version = "0.1.0"
 dependencies = [
  "embassy-executor",
  "embassy-net",
+ "embassy-nrf",
  "embassy-sync 0.5.0",
  "embassy-time",
  "embedded-io-async",
@@ -1645,6 +1655,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "lis3dh-async"
+version = "0.9.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "094ca19a0b051ac9d999c815c03b1fb3697c98cf0c46bed1603a31adaa936c74"
+dependencies = [
+ "accelerometer",
+ "embedded-hal-async",
+ "num_enum 0.7.2",
+]
+
+[[package]]
 name = "litrs"
 version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1710,6 +1731,15 @@ dependencies = [
  "nrf52",
  "riot-rs-debug",
  "riot-rs-rt",
+]
+
+[[package]]
+name = "micromath"
+version = "1.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bc4010833aea396656c2f91ee704d51a6f1329ec2ab56ffd00bfd56f7481ea94"
+dependencies = [
+ "generic-array 0.14.7",
 ]
 
 [[package]]
@@ -1996,7 +2026,16 @@ version = "0.5.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1f646caf906c20226733ed5b1374287eb97e3c2a5c227ce668c1f2ce20ae57c9"
 dependencies = [
- "num_enum_derive",
+ "num_enum_derive 0.5.11",
+]
+
+[[package]]
+name = "num_enum"
+version = "0.7.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "02339744ee7253741199f897151b38e72257d13802d4ee837285cc2990a90845"
+dependencies = [
+ "num_enum_derive 0.7.2",
 ]
 
 [[package]]
@@ -2008,6 +2047,17 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 1.0.109",
+]
+
+[[package]]
+name = "num_enum_derive"
+version = "0.7.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "681030a937600a36906c185595136d26abfebb4aa9c65701cefcaf8578bb982b"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.52",
 ]
 
 [[package]]
@@ -2138,7 +2188,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "76e09694b50f89f302ed531c1f2a7569f0be5867aee4ab4f8f729bbeec0078e3"
 dependencies = [
  "arrayvec",
- "num_enum",
+ "num_enum 0.5.11",
  "paste",
 ]
 
@@ -2423,8 +2473,13 @@ dependencies = [
 name = "riot-rs-builtin-sensors"
 version = "0.1.0"
 dependencies = [
+ "embassy-futures",
  "embassy-sync 0.5.0",
+ "embassy-time",
  "embedded-hal 1.0.0",
+ "embedded-hal-async",
+ "lis3dh-async",
+ "portable-atomic",
  "riot-rs-embassy",
  "riot-rs-sensors",
 ]
@@ -2464,6 +2519,7 @@ dependencies = [
  "embassy-sync 0.5.0",
  "embassy-time",
  "embassy-usb",
+ "embedded-hal-async",
  "esp-hal",
  "esp-wifi",
  "fixed",

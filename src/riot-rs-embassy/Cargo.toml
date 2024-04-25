@@ -11,6 +11,7 @@ critical-section.workspace = true
 linkme.workspace = true
 static_cell.workspace = true
 cfg-if.workspace = true
+embedded-hal-async.workspace = true
 
 embassy-executor = { workspace = true, features = ["nightly"] }
 embassy-futures = { workspace = true }

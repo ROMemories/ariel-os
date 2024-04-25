@@ -10,6 +10,13 @@ workspace = true
 
 [dependencies]
 embassy-sync = { workspace = true }
+embassy-futures = { workspace = true }
+embassy-time = { workspace = true }
 embedded-hal = { workspace = true }
+embedded-hal-async = { workspace = true }
+portable-atomic = { workspace = true }
 riot-rs-embassy = { workspace = true } # TODO: is this ok?
 riot-rs-sensors = { workspace = true }
+
+# Sensor drivers
+lis3dh-async = { version = "0.9.2" }

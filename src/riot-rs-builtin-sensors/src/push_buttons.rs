@@ -68,7 +68,7 @@ impl<I: 'static + InputPin + Send> Sensor for GenericPushButton<I> {
         // inputs
         let is_pressed = reading;
 
-        Ok(PhysicalValue::new(is_pressed as i32))
+        Ok(PhysicalValue::new(i32::from(is_pressed)))
     }
 
     fn set_enabled(&self, enabled: bool) {

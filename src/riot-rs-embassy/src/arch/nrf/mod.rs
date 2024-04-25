@@ -1,3 +1,6 @@
+// FIXME: feature-gate this?
+pub mod i2c;
+
 pub mod gpio;
 
 #[cfg(feature = "hwrng")]

@@ -162,6 +162,8 @@ pub type NotificationReceiver<'a> = Receiver<'a, CriticalSectionRawMutex, Notifi
 pub enum ReadingError {
     /// The sensor is disabled.
     Disabled,
+    /// Cannot access the sensor (e.g., because of a bus error).
+    SensorAccess,
 }
 
 impl core::fmt::Display for ReadingError {

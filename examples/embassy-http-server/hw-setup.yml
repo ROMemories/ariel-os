@@ -19,3 +19,9 @@ sensors:
     when: button-readings
     peripherals:
       btn: P0_11 # FIXME: specify pull-up/down resistors
+
+  - name: ACCEL
+    driver: riot_rs::builtin_sensors::lis3dh::Lis3dh
+    on: nrf52840dk
+    peripherals:
+      i2c: TWISPI0

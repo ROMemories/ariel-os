@@ -30,6 +30,7 @@ pub struct InternalTemp {
 }
 
 impl InternalTemp {
+    #[must_use]
     pub const fn new() -> Self {
         Self {
             initialized: AtomicBool::new(false),
