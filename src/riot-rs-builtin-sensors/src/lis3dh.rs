@@ -37,7 +37,7 @@ impl Lis3dh {
     pub fn init(&'static self, _spawner: Spawner, i2c: arch::i2c::I2c) {
         if !self.initialized.load(Ordering::Acquire) {
             let config = Configuration::default(); // FIXME
-            let addr = SlaveAddr::Default; // FIXME
+            let addr = SlaveAddr::Alternate; // FIXME
 
             // FIXME: add a timeout, blocks indefinitely if no device is connected
             // FIXME: is using block_on ok here?
@@ -86,8 +86,9 @@ impl Sensor for Lis3dh {
             .map_err(|_| ReadingError::SensorAccess)?;
 
         #[allow(clippy::cast_possible_truncation)]
-        // FIXME
-        Ok(PhysicalValue::new((data.x * 100.) as i32))
+        // FIXME: this hardfaults because of floats
+        // Ok(PhysicalValue::new((data.x * 100.) as i32))
+        Ok(PhysicalValue::new(42_i32))
     }
 
     fn set_enabled(&self, enabled: bool) {
@@ -119,15 +120,16 @@ impl Sensor for Lis3dh {
     }
 
     fn unit(&self) -> PhysicalUnit {
-        todo!()
+        // FIXME: what's the actual unit?
+        PhysicalUnit::AccelG
     }
 
     fn display_name(&self) -> Option<&'static str> {
-        todo!()
+        Some("3-axis accelerometer")
     }
 
     fn part_number(&self) -> &'static str {
-        todo!()
+        "LIS3DH"
     }
 
     fn version(&self) -> u8 {

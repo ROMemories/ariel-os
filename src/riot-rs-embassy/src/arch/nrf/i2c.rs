@@ -53,13 +53,15 @@ impl embedded_hal_async::i2c::I2c for I2c {
         self.twim.lock().await.write_read(address, write, read).await
     }
 
+    /// # Panics
+    ///
+    /// This panics with a `todo!` as embassy_nrf does *not* support transactions
+    /// https://github.com/embassy-rs/embassy/blob/4d4cbc0dd3e84dfd7d29d1ecdd2b388568be081f/embassy-nrf/src/twim.rs#L875
     async fn transaction(
         &mut self,
         address: SevenBitAddress, // FIXME: support 10-bit addressing as well
         operations: &mut [Operation<'_>],
     ) -> Result<(), Self::Error> {
-        // embassy_nrf does *not* support transactions
-        // https://github.com/embassy-rs/embassy/blob/4d4cbc0dd3e84dfd7d29d1ecdd2b388568be081f/embassy-nrf/src/twim.rs#L875
         self.twim
             .lock()
             .await

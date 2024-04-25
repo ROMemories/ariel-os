@@ -110,6 +110,8 @@ impl PhysicalValue {
 #[derive(serde::Serialize)]
 #[non_exhaustive]
 pub enum PhysicalUnit {
+    /// Acceleration *g*.
+    AccelG,
     /// Logic boolean.
     Bool,
     /// Degree Celsius.
@@ -120,6 +122,7 @@ pub enum PhysicalUnit {
 impl core::fmt::Display for PhysicalUnit {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
+            Self::AccelG => write!(f, "g"),
             Self::Bool => write!(f, ""),
             Self::Celsius => write!(f, "°C"), // The Unicode Standard v15 recommends using U+00B0 + U+0043.
         }
