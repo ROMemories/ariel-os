@@ -75,20 +75,22 @@ impl Sensor for Lis3dh {
         }
 
         // TODO: maybe should check is_data_ready()?
+        // FIXME: use accel_norm() instead
         let data = self
             .accel
             .lock()
             .await
             .as_mut()
             .unwrap()
-            .accel_norm()
+            .accel_raw()
             .await
             .map_err(|_| ReadingError::SensorAccess)?;
 
         #[allow(clippy::cast_possible_truncation)]
         // FIXME: this hardfaults because of floats
         // Ok(PhysicalValue::new((data.x * 100.) as i32))
-        Ok(PhysicalValue::new(42_i32))
+        Ok(PhysicalValue::new((data.x) as i32))
+        // Ok(PhysicalValue::new(42_i32))
     }
 
     fn set_enabled(&self, enabled: bool) {
