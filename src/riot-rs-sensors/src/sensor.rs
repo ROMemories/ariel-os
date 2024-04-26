@@ -10,6 +10,7 @@ use crate::physical_unit::PhysicalUnit;
 /// Represents a device providing sensor readings.
 // TODO: introduce a trait currently deferring to Any
 pub trait Sensor: Any + Send + Sync {
+    // FIXME: clarify the semantics: should this always new data?
     // FIXME: return an enum instead?
     /// Returns the main sensor reading.
     fn read_main(&self) -> impl Future<Output = ReadingResult<PhysicalValue>>

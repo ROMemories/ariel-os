@@ -1,9 +1,8 @@
-use portable_atomic::{AtomicBool, Ordering};
-
 use embassy_futures::select::Either;
 use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, mutex::Mutex};
 use embassy_time::{Duration, Timer};
-use lis3dh_async::{Configuration, Lis3dh as UnderlyingLis3dh, Lis3dhI2C, SlaveAddr}; // TODO: rename this
+use lis3dh_async::{Configuration, Lis3dh as InnerLis3dh, Lis3dhI2C, SlaveAddr}; // TODO: rename this
+use portable_atomic::{AtomicBool, Ordering};
 use riot_rs_embassy::{arch, Spawner};
 use riot_rs_sensors::{
     sensor::{
@@ -17,7 +16,8 @@ use riot_rs_sensors::{
 pub struct Lis3dh {
     initialized: AtomicBool, // TODO: use an atomic bitset for initialized and enabled
     enabled: AtomicBool,
-    accel: Mutex<CriticalSectionRawMutex, Option<UnderlyingLis3dh<Lis3dhI2C<arch::i2c::I2c>>>>, // FIXME
+    // TODO: consider using MaybeUninit?
+    accel: Mutex<CriticalSectionRawMutex, Option<InnerLis3dh<Lis3dhI2C<arch::i2c::I2c>>>>,
 }
 
 // TODO: need to impl Lis3dhCore?
@@ -35,15 +35,15 @@ impl Lis3dh {
 
     pub fn init(&'static self, _spawner: Spawner, i2c: arch::i2c::I2c) {
         if !self.initialized.load(Ordering::Acquire) {
-            let config = Configuration::default(); // FIXME
             let addr = SlaveAddr::Alternate; // FIXME
+            let config = Configuration::default(); // FIXME
 
             // FIXME: add a timeout, blocks indefinitely if no device is connected
             // FIXME: is using block_on ok here?
             // FIXME: handle the Result
             // FIXME: this does not work because of https://github.com/embassy-rs/embassy/issues/2830
             // let init = embassy_futures::block_on(embassy_futures::select::select(
-            //     UnderlyingLis3dh::new_i2c_with_config(i2c, addr, config),
+            //     InnerLis3dh::new_i2c_with_config(i2c, addr, config),
             //     Timer::after(Duration::from_secs(1)),
             // ));
             // let driver = match init {
@@ -52,7 +52,7 @@ impl Lis3dh {
             // };
 
             let driver =
-                embassy_futures::block_on(UnderlyingLis3dh::new_i2c_with_config(i2c, addr, config))
+                embassy_futures::block_on(InnerLis3dh::new_i2c_with_config(i2c, addr, config))
                     .unwrap();
 
             // We use `try_lock()` instead of `lock()` to not make this function async.
@@ -90,11 +90,14 @@ impl Sensor for Lis3dh {
     }
 
     fn set_enabled(&self, enabled: bool) {
-        todo!()
+        if self.initialized.load(Ordering::Acquire) {
+            self.enabled.store(enabled, Ordering::Release);
+        }
+        // TODO: return an error otherwise?
     }
 
     fn enabled(&self) -> bool {
-        todo!()
+        self.enabled.load(Ordering::Acquire)
     }
 
     fn set_threshold(&self, kind: ThresholdKind, value: PhysicalValue) {
@@ -136,6 +139,6 @@ impl Sensor for Lis3dh {
 }
 
 // TODO: consider accelerometer.rs as well
-// impl ThreeAxisAccelerometer for Lis3dh {
+// impl Accelerometer for Lis3dh {
 //
 // }

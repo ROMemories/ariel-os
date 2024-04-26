@@ -17,6 +17,7 @@ fn temp_sensor_init(spawner: Spawner, peripherals: TempPeripherals) {
     TEMP_SENSOR.init(spawner, peripherals.p);
 }
 
+#[cfg(context = "nrf52")]
 riot_rs::define_peripherals!(TempPeripherals { p: TEMP });
 
 #[cfg(feature = "button-readings")]
@@ -37,15 +38,17 @@ fn button_1_init(_spawner: Spawner, peripherals: Button1Peripherals) {
     ));
 }
 
+#[cfg(feature = "button-readings")]
 riot_rs::define_peripherals!(Button1Peripherals { p: P0_11 });
 
-// FIXME: move the Twim instantiation into arch
+#[cfg(context = "nrf52840")]
 pub static ACCEL: riot_rs::builtin_sensors::lis3dh::Lis3dh =
     riot_rs::builtin_sensors::lis3dh::Lis3dh::new();
 #[riot_rs::linkme::distributed_slice(riot_rs::sensors::SENSOR_REFS)]
 #[linkme(crate = riot_rs::linkme)]
 static ACCEL_REF: &'static dyn riot_rs::sensors::sensor::Sensor = &ACCEL;
 
+#[cfg(context = "nrf52840")]
 #[riot_rs::spawner(autostart, peripherals)]
 fn accel_init(spawner: Spawner, peripherals: AccelPeripherals) {
     // FIXME: how to codegen this?
@@ -57,9 +60,13 @@ fn accel_init(spawner: Spawner, peripherals: AccelPeripherals) {
     config.sda_high_drive = false;
     config.scl_pullup = false;
 
-    let i2c =
-        arch::i2c::I2c::new(peripherals.i2c, peripherals.sda, peripherals.scl, config);
+    let i2c = arch::i2c::I2c::new(peripherals.i2c, peripherals.sda, peripherals.scl, config);
     ACCEL.init(spawner, i2c);
 }
 
-riot_rs::define_peripherals!(AccelPeripherals { i2c: TWISPI0, sda: P0_30, scl: P0_31});
+#[cfg(context = "nrf52840")]
+riot_rs::define_peripherals!(AccelPeripherals {
+    i2c: TWISPI0,
+    sda: P0_30,
+    scl: P0_31
+});

@@ -79,9 +79,9 @@ fn main(spawner: Spawner, _peripherals: pins::Peripherals) {
 
     fn make_app() -> picoserve::Router<AppRouter, AppState> {
         let router = picoserve::Router::new().route("/", get(routes::index));
+        let router = router.route("/api/sensors", get(routes::sensors));
         #[cfg(feature = "button-readings")]
         let router = router.route("/api/buttons", get(routes::buttons));
-        let router = router.route("/api/sensors", get(routes::sensors));
         #[cfg(context = "nrf52840")]
         let router = router.route("/api/temp", get(routes::temp));
         router
@@ -101,6 +101,7 @@ fn main(spawner: Spawner, _peripherals: pins::Peripherals) {
     }
 }
 
+#[cfg(context = "nrf52")]
 #[riot_rs::task(autostart)]
 async fn temp_subscriber() {
     let rx = sensors::TEMP_SENSOR.subscribe();

@@ -2,15 +2,13 @@
 use core::sync::atomic::{AtomicBool, AtomicI32, Ordering};
 
 use embassy_executor::Spawner;
-use embassy_sync::{
-    blocking_mutex::raw::CriticalSectionRawMutex, channel::Channel, mutex::Mutex,
-};
+use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, channel::Channel, mutex::Mutex};
 use embassy_time::{Duration, Timer};
 use riot_rs_sensors::{
     categories::temperature::{TemperatureReading, TemperatureSensor},
     sensor::{
-        Category, Notification, NotificationReceiver, PhysicalValue,
-        ReadingError, ReadingResult, Sensor, ThresholdKind,
+        Category, Notification, NotificationReceiver, PhysicalValue, ReadingError, ReadingResult,
+        Sensor, ThresholdKind,
     },
     PhysicalUnit,
 };
@@ -22,12 +20,13 @@ embassy_nrf::bind_interrupts!(struct Irqs {
 pub struct InternalTemp {
     initialized: AtomicBool, // TODO: use an atomic bitset for initialized and enabled
     enabled: AtomicBool,
+    // TODO: use a blocking mutex instead?
     temp: Mutex<CriticalSectionRawMutex, Option<embassy_nrf::temp::Temp<'static>>>,
     channel: Channel<CriticalSectionRawMutex, Notification, 1>,
     // feature is not used
     lower_threshold: AtomicI32,
     lower_threshold_enabled: AtomicBool, // TODO: use an atomic bitset for handler other
-                                            // thresholds
+                                         // thresholds
 }
 
 impl InternalTemp {
@@ -43,11 +42,7 @@ impl InternalTemp {
         }
     }
 
-    pub fn init(
-        &'static self,
-        spawner: Spawner,
-        temp_peripheral: crate::arch::peripherals::TEMP,
-    ) {
+    pub fn init(&'static self, spawner: Spawner, temp_peripheral: crate::arch::peripherals::TEMP) {
         if !self.initialized.load(Ordering::Acquire) {
             // We use `try_lock()` instead of `lock()` to not make this function async.
             // This mutex cannot be locked at this point as it is private and can only be
@@ -116,9 +111,7 @@ impl Sensor for InternalTemp {
 
     fn set_threshold(&self, kind: ThresholdKind, value: PhysicalValue) {
         match kind {
-            ThresholdKind::Lower => {
-                self.lower_threshold.store(value.value(), Ordering::Release)
-            }
+            ThresholdKind::Lower => self.lower_threshold.store(value.value(), Ordering::Release),
             _ => {
                 // TODO: should we return an error instead?
             }
@@ -171,4 +164,3 @@ impl TemperatureSensor for InternalTemp {
         self.read_main().await.map(TemperatureReading::new)
     }
 }
-

@@ -8,11 +8,11 @@ use embassy_nrf::{
 use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, mutex::Mutex};
 use embedded_hal_async::i2c::{Operation, SevenBitAddress};
 
-// FIXME: maybe we should provide our own type, unified across archs
+// FIXME: maybe we should provide our own config type, unified across archs
 pub use embassy_nrf::twim::{Config, Frequency};
 
-// FIXME: does this prevent us from binding another interrupt handler to the same interrupt,
-// elsewhere?
+// FIXME: does this prevent us from binding another interrupt handler to the same interrupt (e.g.,
+// for SPI), elsewhere?
 bind_interrupts!(
     struct Irqs {
         SPIM0_SPIS0_TWIM0_TWIS0_SPI0_TWI0 => InterruptHandler<peripherals::TWISPI0>;
@@ -28,8 +28,8 @@ impl I2c {
     #[must_use]
     pub fn new(
         twim_peripheral: peripherals::TWISPI0,
-        sda_pin: impl Peripheral<P = impl GpioPin> + 'static,
-        scl_pin: impl Peripheral<P = impl GpioPin> + 'static,
+        sda_pin: impl GpioPin,
+        scl_pin: impl GpioPin,
         config: Config,
     ) -> Self {
         let twim = Twim::new(twim_peripheral, Irqs, sda_pin, scl_pin, config);
@@ -49,17 +49,26 @@ impl embedded_hal_async::i2c::I2c for I2c {
         self.twim.lock().await.write(address, write).await
     }
 
-    async fn write_read(&mut self, address: u8, write: &[u8], read: &mut [u8]) -> Result<(), Self::Error> {
-        self.twim.lock().await.write_read(address, write, read).await
+    async fn write_read(
+        &mut self,
+        address: u8,
+        write: &[u8],
+        read: &mut [u8],
+    ) -> Result<(), Self::Error> {
+        self.twim
+            .lock()
+            .await
+            .write_read(address, write, read)
+            .await
     }
 
     /// # Panics
     ///
-    /// This panics with a `todo!` as embassy_nrf does *not* support transactions
+    /// This panics with a `todo!` as [`embassy_nrf`] does *not* support transactions
     /// https://github.com/embassy-rs/embassy/blob/4d4cbc0dd3e84dfd7d29d1ecdd2b388568be081f/embassy-nrf/src/twim.rs#L875
     async fn transaction(
         &mut self,
-        address: SevenBitAddress, // FIXME: support 10-bit addressing as well
+        address: u8,
         operations: &mut [Operation<'_>],
     ) -> Result<(), Self::Error> {
         self.twim

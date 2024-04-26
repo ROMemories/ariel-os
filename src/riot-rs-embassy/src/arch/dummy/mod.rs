@@ -2,6 +2,7 @@
 
 mod executor;
 pub mod gpio;
+pub mod i2c;
 
 #[cfg(feature = "hwrng")]
 pub mod hwrng;
