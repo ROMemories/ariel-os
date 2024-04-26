@@ -7,10 +7,9 @@ use lis3dh_async::{Configuration, Lis3dh as UnderlyingLis3dh, Lis3dhI2C, SlaveAd
 use riot_rs_embassy::{arch, Spawner};
 use riot_rs_sensors::{
     sensor::{
-        Category, NotificationReceiver, PhysicalUnit, PhysicalValue, ReadingError, ReadingResult,
-        ThresholdKind,
+        Category, NotificationReceiver, PhysicalValue, ReadingError, ReadingResult, ThresholdKind,
     },
-    Sensor,
+    PhysicalUnit, Sensor,
 };
 
 // TODO: support SPI as well
@@ -75,22 +74,19 @@ impl Sensor for Lis3dh {
         }
 
         // TODO: maybe should check is_data_ready()?
-        // FIXME: use accel_norm() instead
         let data = self
             .accel
             .lock()
             .await
             .as_mut()
             .unwrap()
-            .accel_raw()
+            .accel_norm()
             .await
             .map_err(|_| ReadingError::SensorAccess)?;
 
         #[allow(clippy::cast_possible_truncation)]
-        // FIXME: this hardfaults because of floats
-        // Ok(PhysicalValue::new((data.x * 100.) as i32))
-        Ok(PhysicalValue::new((data.x) as i32))
-        // Ok(PhysicalValue::new(42_i32))
+        // FIXME: dumb scaling, take precision into account
+        Ok(PhysicalValue::new((data.z * 100.) as i32))
     }
 
     fn set_enabled(&self, enabled: bool) {
@@ -114,11 +110,11 @@ impl Sensor for Lis3dh {
     }
 
     fn category(&self) -> Category {
-        todo!()
+        Category::Accelerometer
     }
 
     fn value_scale(&self) -> i8 {
-        todo!()
+        -2
     }
 
     fn unit(&self) -> PhysicalUnit {
@@ -135,7 +131,7 @@ impl Sensor for Lis3dh {
     }
 
     fn version(&self) -> u8 {
-        todo!()
+        0
     }
 }
 

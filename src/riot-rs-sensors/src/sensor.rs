@@ -5,6 +5,8 @@ use core::{any::Any, future::Future};
 // TODO: use a zero-copy channel instead?
 use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, channel::Receiver};
 
+use crate::physical_unit::PhysicalUnit;
+
 /// Represents a device providing sensor readings.
 // TODO: introduce a trait currently deferring to Any
 pub trait Sensor: Any + Send + Sync {
@@ -82,8 +84,7 @@ pub trait Reading: core::fmt::Debug {
 /// Represents a value obtained from a sensor.
 // TODO: add a timestamp?
 // TODO: add measurement error here (how to define it?)
-#[derive(Debug, Copy, Clone)]
-#[derive(serde::Serialize)]
+#[derive(Debug, Copy, Clone, serde::Serialize)]
 pub struct PhysicalValue {
     value: i32,
 }
@@ -102,54 +103,25 @@ impl PhysicalValue {
     }
 }
 
-/// Represents a unit of measurement.
-// Built upon https://doc.riot-os.org/phydat_8h_source.html
-// and https://bthome.io/format/#sensor-data
-// and https://www.rfc-editor.org/rfc/rfc8798.html
-#[derive(Debug, Copy, Clone)]
-#[derive(serde::Serialize)]
-#[non_exhaustive]
-pub enum PhysicalUnit {
-    /// Acceleration *g*.
-    AccelG,
-    /// Logic boolean.
-    Bool,
-    /// Degree Celsius.
-    Celsius,
-    // TODO: add other units
-}
-
-impl core::fmt::Display for PhysicalUnit {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        match self {
-            Self::AccelG => write!(f, "g"),
-            Self::Bool => write!(f, ""),
-            Self::Celsius => write!(f, "°C"), // The Unicode Standard v15 recommends using U+00B0 + U+0043.
-        }
-    }
-}
-
 // Built upon https://doc.riot-os.org/group__drivers__saul.html#ga8f2dfec7e99562dbe5d785467bb71bbb
 // FIXME: rename this to class?
-#[derive(Debug)]
-#[derive(serde::Serialize)]
+#[derive(Debug, serde::Serialize)]
 pub enum Category {
+    Accelerometer,
+    PushButton,
     Temperature,
-    PushButton
 }
 
 /// A notification provided by a sensor driver.
 // TODO: should we pass the value as well? that may be difficult because of the required generics
-#[derive(Debug, PartialEq, Eq)]
-#[derive(serde::Serialize)]
+#[derive(Debug, PartialEq, Eq, serde::Serialize)]
 #[non_exhaustive]
 pub enum Notification {
     ReadingAvailable,
     Threshold(ThresholdKind),
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-#[derive(serde::Serialize)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, serde::Serialize)]
 #[non_exhaustive]
 pub enum ThresholdKind {
     Lower,
@@ -203,13 +175,13 @@ macro_rules! _await_read_sensor_main {
             if let Some($sensor) = ($sensor as &dyn core::any::Any)
                 .downcast_ref::<$first_sensor_type>(
             ) {
-                ($sensor.read_main().await, $sensor.unit(), $sensor.display_name())
+                ($sensor.read_main().await, $sensor.value_scale(), $sensor.unit(), $sensor.display_name())
             }
             $(
             else if let Some($sensor) = ($sensor as &dyn core::any::Any)
                 .downcast_ref::<$sensor_type>(
             ) {
-                ($sensor.read_main().await, $sensor.unit(), $sensor.display_name())
+                ($sensor.read_main().await, $sensor.value_scale(), $sensor.unit(), $sensor.display_name())
             }
             )*
             else {

@@ -9,9 +9,10 @@ use embassy_time::{Duration, Timer};
 use riot_rs_sensors::{
     categories::temperature::{TemperatureReading, TemperatureSensor},
     sensor::{
-        Category, Notification, NotificationReceiver, PhysicalUnit, PhysicalValue,
+        Category, Notification, NotificationReceiver, PhysicalValue,
         ReadingError, ReadingResult, Sensor, ThresholdKind,
     },
+    PhysicalUnit,
 };
 
 embassy_nrf::bind_interrupts!(struct Irqs {

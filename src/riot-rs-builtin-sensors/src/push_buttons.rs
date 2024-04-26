@@ -7,10 +7,10 @@ use embedded_hal::digital::InputPin;
 use riot_rs_sensors::{
     categories::push_button::{PushButtonReading, PushButtonSensor},
     sensor::{
-        Category, Notification, NotificationReceiver, PhysicalUnit, PhysicalValue, ReadingError,
-        ReadingResult, ThresholdKind,
+        Category, Notification, NotificationReceiver, PhysicalValue, ReadingError, ReadingResult,
+        ThresholdKind,
     },
-    Sensor,
+    PhysicalUnit, Sensor,
 };
 
 pub type PushButton = GenericPushButton<riot_rs_embassy::arch::gpio::Input<'static>>;
