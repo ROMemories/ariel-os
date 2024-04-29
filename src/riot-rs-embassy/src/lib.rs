@@ -33,6 +33,9 @@ pub mod network;
 #[cfg(feature = "wifi")]
 mod wifi;
 
+// Using the OnceCell from once_cell instead of the one from core because it supports critical
+// sections.
+use once_cell::sync::OnceCell;
 use riot_rs_debug::println;
 
 // re-exports
@@ -70,6 +73,13 @@ pub static EMBASSY_TASKS: [Task] = [..];
 
 #[cfg(feature = "executor-interrupt")]
 pub static EXECUTOR: arch::Executor = arch::Executor::new();
+
+pub static I2C_BUS: OnceCell<
+    embassy_sync::mutex::Mutex<
+        embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex,
+        arch::i2c::I2c,
+    >,
+> = OnceCell::new();
 
 #[cfg(feature = "executor-interrupt")]
 #[distributed_slice(riot_rs_rt::INIT_FUNCS)]
@@ -116,6 +126,26 @@ async fn init_task(mut peripherals: arch::OptionalPeripherals) {
         println!("nrf: enabling ext hfosc...");
         clock.tasks_hfclkstart.write(|w| unsafe { w.bits(1) });
         while clock.events_hfclkstarted.read().bits() != 1 {}
+    }
+
+    {
+        // FIXME: codegen this
+        let mut config = arch::i2c::Config::default();
+        config.frequency = arch::i2c::Frequency::K100;
+        config.scl_high_drive = false;
+        config.sda_pullup = false;
+        config.sda_high_drive = false;
+        config.scl_pullup = false;
+        // let i2c = arch::i2c::I2c::new(peripherals.i2c, peripherals.sda, peripherals.scl, config);
+        let i2c = arch::i2c::I2c::new(
+            peripherals.TWISPI0.take().unwrap(),
+            peripherals.P0_30.take().unwrap(),
+            peripherals.P0_31.take().unwrap(),
+            config,
+        );
+
+        let i2c_bus = embassy_sync::mutex::Mutex::new(i2c);
+        let _ = I2C_BUS.set(i2c_bus);
     }
 
     let spawner = Spawner::for_current_executor().await;
