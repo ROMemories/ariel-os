@@ -4,11 +4,13 @@
 
 use std::{collections::HashMap, env, fs, path::PathBuf};
 
-use serde::Deserialize;
+use serde::{Serialize, Deserialize};
+use serde_yaml::Value as YamlValue;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct HwSetup {
+    buses: Buses,
     sensors: Vec<Sensor>,
 }
 
@@ -36,13 +38,44 @@ pub enum Error {
     YamlError,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Buses {
+    i2c: Vec<I2cBus>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct I2cBus {
+    instance: String,
+    on: Option<String>,
+    pull_ups: I2cPullUps,
+    frequency: I2cFrequency,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct I2cPullUps {
+    sda: bool,
+    scl: bool,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub enum I2cFrequency {
+    K100,
+    K250,
+    K400,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Sensor {
     name: String,
     driver: String,
     on: Option<String>,
     when: Option<String>,
+    with: Option<SensorConfig>,
+    bus: Option<SensorBus>,
     peripherals: Option<Peripherals>,
 }
 
@@ -73,12 +106,31 @@ impl Sensor {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct Peripherals(HashMap<String, String>);
+pub struct SensorConfig(HashMap<String, YamlValue>);
 
-impl Peripherals {
-    pub fn iter(&self) -> impl Iterator<Item = (&String, &String)> {
-        self.0.iter()
-    }
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub enum SensorBus {
+    #[serde(rename = "i2c")]
+    I2c(Vec<SensorBusI2c>),
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct SensorBusI2c {
+    on: Option<String>,
+    instance: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Peripherals(HashMap<String, Vec<Peripheral>>);
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Peripheral {
+    instance: String,
+    on: Option<String>,
 }
