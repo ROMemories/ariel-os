@@ -3,13 +3,12 @@ use embassy_nrf::{
     gpio::Pin as GpioPin,
     peripherals,
     twim::{InterruptHandler, Twim},
-    Peripheral,
 };
-use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, mutex::Mutex};
 use embedded_hal_async::i2c::{Operation, SevenBitAddress};
 
 // FIXME: maybe we should provide our own config type, unified across archs
 pub use embassy_nrf::twim::{Config, Frequency};
+pub use embassy_embedded_hal::shared_bus::asynch::i2c::I2cDevice;
 
 // FIXME: does this prevent us from binding another interrupt handler to the same interrupt (e.g.,
 // for SPI), elsewhere?
@@ -21,7 +20,7 @@ bind_interrupts!(
 
 // FIXME: support other I2C peripherals as well
 pub struct I2c {
-    twim: Mutex<CriticalSectionRawMutex, Twim<'static, peripherals::TWISPI0>>,
+    twim: Twim<'static, peripherals::TWISPI0>,
 }
 
 impl I2c {
@@ -35,29 +34,27 @@ impl I2c {
         let twim = Twim::new(twim_peripheral, Irqs, sda_pin, scl_pin, config);
 
         Self {
-            twim: Mutex::new(twim),
+            twim,
         }
     }
 }
 
 impl embedded_hal_async::i2c::I2c for I2c {
-    async fn read(&mut self, address: u8, read: &mut [u8]) -> Result<(), Self::Error> {
-        self.twim.lock().await.read(address, read).await
+    async fn read(&mut self, address: SevenBitAddress, read: &mut [u8]) -> Result<(), Self::Error> {
+        self.twim.read(address, read).await
     }
 
-    async fn write(&mut self, address: u8, write: &[u8]) -> Result<(), Self::Error> {
-        self.twim.lock().await.write(address, write).await
+    async fn write(&mut self, address: SevenBitAddress, write: &[u8]) -> Result<(), Self::Error> {
+        self.twim.write(address, write).await
     }
 
     async fn write_read(
         &mut self,
-        address: u8,
+        address: SevenBitAddress,
         write: &[u8],
         read: &mut [u8],
     ) -> Result<(), Self::Error> {
         self.twim
-            .lock()
-            .await
             .write_read(address, write, read)
             .await
     }
@@ -68,12 +65,10 @@ impl embedded_hal_async::i2c::I2c for I2c {
     /// https://github.com/embassy-rs/embassy/blob/4d4cbc0dd3e84dfd7d29d1ecdd2b388568be081f/embassy-nrf/src/twim.rs#L875
     async fn transaction(
         &mut self,
-        address: u8,
+        address: SevenBitAddress,
         operations: &mut [Operation<'_>],
     ) -> Result<(), Self::Error> {
         self.twim
-            .lock()
-            .await
             .transaction(address, operations)
             .await
     }

@@ -1,9 +1,10 @@
+use embassy_embedded_hal::shared_bus::asynch::i2c::I2cDevice;
 use embassy_futures::select::Either;
 use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, mutex::Mutex};
 use embassy_time::{Duration, Timer};
 use lis3dh_async::{Configuration, Lis3dh as InnerLis3dh, Lis3dhI2C, SlaveAddr}; // TODO: rename this
 use portable_atomic::{AtomicBool, Ordering};
-use riot_rs_embassy::{arch, Spawner};
+use riot_rs_embassy::Spawner;
 use riot_rs_sensors::{
     sensor::{
         Category, NotificationReceiver, PhysicalValue, ReadingError, ReadingResult, ThresholdKind,
@@ -13,16 +14,19 @@ use riot_rs_sensors::{
 
 // TODO: support SPI as well
 // TODO: could maybe use a OncelCell instead of an Option
-pub struct Lis3dh {
+pub struct Lis3dh<I2C: embedded_hal_async::i2c::I2c + 'static> {
     initialized: AtomicBool, // TODO: use an atomic bitset for initialized and enabled
     enabled: AtomicBool,
     // TODO: consider using MaybeUninit?
-    accel: Mutex<CriticalSectionRawMutex, Option<InnerLis3dh<Lis3dhI2C<arch::i2c::I2c>>>>,
+    accel: Mutex<
+        CriticalSectionRawMutex,
+        Option<InnerLis3dh<Lis3dhI2C<I2cDevice<'static, CriticalSectionRawMutex, I2C>>>>,
+    >,
 }
 
 // TODO: need to impl Lis3dhCore?
 
-impl Lis3dh {
+impl<I2C: embedded_hal_async::i2c::I2c> Lis3dh<I2C> {
     #[expect(clippy::new_without_default)]
     #[must_use]
     pub const fn new() -> Self {
@@ -33,7 +37,7 @@ impl Lis3dh {
         }
     }
 
-    pub fn init(&'static self, _spawner: Spawner, i2c: arch::i2c::I2c) {
+    pub fn init(&'static self, _spawner: Spawner, i2c: I2cDevice<'static, CriticalSectionRawMutex, I2C>) {
         if !self.initialized.load(Ordering::Acquire) {
             let addr = SlaveAddr::Alternate; // FIXME
             let config = Configuration::default(); // FIXME
@@ -67,7 +71,7 @@ impl Lis3dh {
     }
 }
 
-impl Sensor for Lis3dh {
+impl<I2C: embedded_hal_async::i2c::I2c + Send> Sensor for Lis3dh<I2C> {
     async fn read_main(&self) -> ReadingResult<PhysicalValue> {
         if !self.enabled.load(Ordering::Acquire) {
             return Err(ReadingError::Disabled);

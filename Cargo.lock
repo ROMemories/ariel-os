@@ -2472,6 +2472,7 @@ dependencies = [
 name = "riot-rs-builtin-sensors"
 version = "0.1.0"
 dependencies = [
+ "embassy-embedded-hal",
  "embassy-futures",
  "embassy-sync 0.5.0",
  "embassy-time",
@@ -2509,6 +2510,7 @@ dependencies = [
  "critical-section",
  "cyw43",
  "cyw43-pio",
+ "embassy-embedded-hal",
  "embassy-executor",
  "embassy-futures",
  "embassy-net",

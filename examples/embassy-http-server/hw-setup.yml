@@ -29,7 +29,7 @@ sensors:
           on: nrf52840dk
 
   - name: ACCEL
-    driver: riot_rs::builtin_sensors::lis3dh::Lis3dh
+    driver: riot_rs::builtin_sensors::lis3dh::Lis3dh<riot_rs::embassy::arch::i2c::I2c>
     with:
       mode: !Normal
     bus:

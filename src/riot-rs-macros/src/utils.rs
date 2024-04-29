@@ -24,11 +24,8 @@ pub fn riot_rs_crate() -> syn::Ident {
     }
 }
 
-// TODO: is there a ready-made version of this function in the syn crate?
 pub fn parse_type_path(type_path: &str) -> proc_macro2::TokenStream {
-    let path_segments = type_path
-        .split("::")
-        .map(|seg| quote::format_ident!("{seg}"));
-
-    quote::quote! {#(#path_segments)::*}
+    // TODO: is this the right type of path?
+    let path = syn::parse_str::<syn::TypePath>(type_path).unwrap();
+    quote::quote! {#path}
 }

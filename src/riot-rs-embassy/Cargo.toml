@@ -13,6 +13,7 @@ static_cell.workspace = true
 cfg-if.workspace = true
 embedded-hal-async.workspace = true
 
+embassy-embedded-hal = { workspace = true }
 embassy-executor = { workspace = true, features = ["nightly"] }
 embassy-futures = { workspace = true }
 embassy-net = { workspace = true, optional = true, features = [

@@ -42,11 +42,19 @@ fn button_1_init(_spawner: Spawner, peripherals: Button1Peripherals) {
 riot_rs::define_peripherals!(Button1Peripherals { p: P0_11 });
 
 #[cfg(context = "nrf52840")]
-pub static ACCEL: riot_rs::builtin_sensors::lis3dh::Lis3dh =
-    riot_rs::builtin_sensors::lis3dh::Lis3dh::new();
+pub static ACCEL: riot_rs::builtin_sensors::lis3dh::Lis3dh<arch::i2c::I2c> =
+    riot_rs::builtin_sensors::lis3dh::Lis3dh::<arch::i2c::I2c>::new();
 #[riot_rs::linkme::distributed_slice(riot_rs::sensors::SENSOR_REFS)]
 #[linkme(crate = riot_rs::linkme)]
 static ACCEL_REF: &'static dyn riot_rs::sensors::sensor::Sensor = &ACCEL;
+
+#[cfg(context = "nrf52840")]
+static I2C_BUS: riot_rs::static_cell::StaticCell<
+    embassy_sync::mutex::Mutex<
+        embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex,
+        arch::i2c::I2c,
+    >,
+> = riot_rs::static_cell::StaticCell::new();
 
 #[cfg(context = "nrf52840")]
 #[riot_rs::spawner(autostart, peripherals)]
@@ -60,8 +68,15 @@ fn accel_init(spawner: Spawner, peripherals: AccelPeripherals) {
     config.sda_high_drive = false;
     config.scl_pullup = false;
 
+    // FIXME: should be instantiated in riot-rs-embassy
     let i2c = arch::i2c::I2c::new(peripherals.i2c, peripherals.sda, peripherals.scl, config);
-    ACCEL.init(spawner, i2c);
+    let i2c_bus = embassy_sync::mutex::Mutex::new(i2c);
+    let i2c_bus = I2C_BUS.init(i2c_bus);
+
+    // FIXME: unclear how to get this static reference when initialization is moved to
+    // riot-rs-embassy
+    let i2c_dev = arch::i2c::I2cDevice::new(i2c_bus);
+    ACCEL.init(spawner, i2c_dev);
 }
 
 #[cfg(context = "nrf52840")]
