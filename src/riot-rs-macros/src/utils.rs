@@ -29,3 +29,11 @@ pub fn parse_type_path(type_path: &str) -> proc_macro2::TokenStream {
     let path = syn::parse_str::<syn::TypePath>(type_path).unwrap();
     quote::quote! {#path}
 }
+
+pub fn bool_as_token(boolean: bool) -> proc_macro2::TokenStream {
+    if boolean {
+        quote::quote! { true }
+    } else {
+        quote::quote! { false }
+    }
+}

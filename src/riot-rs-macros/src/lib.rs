@@ -6,6 +6,7 @@ use proc_macro::TokenStream;
 
 include!("config.rs");
 include!("hw_setup.rs");
+include!("hw_setup_init.rs");
 include!("read_sensor.rs");
 include!("spawner.rs");
 include!("task.rs");

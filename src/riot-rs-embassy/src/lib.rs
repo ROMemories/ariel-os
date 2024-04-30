@@ -128,27 +128,9 @@ async fn init_task(mut peripherals: arch::OptionalPeripherals) {
         while clock.events_hfclkstarted.read().bits() != 1 {}
     }
 
-    {
-        // FIXME: codegen this
-        let mut config = arch::i2c::Config::default();
-        config.frequency = arch::i2c::Frequency::K100;
-        config.scl_high_drive = false;
-        config.sda_pullup = false;
-        config.sda_high_drive = false;
-        config.scl_pullup = false;
-        // let i2c = arch::i2c::I2c::new(peripherals.i2c, peripherals.sda, peripherals.scl, config);
-        let i2c = arch::i2c::I2c::new(
-            peripherals.TWISPI0.take().unwrap(),
-            peripherals.P0_30.take().unwrap(),
-            peripherals.P0_31.take().unwrap(),
-            config,
-        );
-
-        let i2c_bus = embassy_sync::mutex::Mutex::new(i2c);
-        let _ = I2C_BUS.set(i2c_bus);
-    }
-
     let spawner = Spawner::for_current_executor().await;
+
+    codegened_init(&mut peripherals);
 
     for task in EMBASSY_TASKS {
         task(spawner, &mut peripherals);
@@ -271,3 +253,6 @@ async fn init_task(mut peripherals: arch::OptionalPeripherals) {
 
     println!("riot-rs-embassy::init_task() done");
 }
+
+#[riot_rs_macros::hw_setup_init]
+fn codegened_init(peripherals: &mut arch::OptionalPeripherals) {}

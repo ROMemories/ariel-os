@@ -16,13 +16,20 @@ pub struct HwSetup {
 
 impl HwSetup {
     pub fn read_from_file() -> Result<Self, Error> {
-        let root = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap()); // FIXME: do something about this error?
+        // let root = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap()); // FIXME: do something about this error?
+        // FIXME
+        let root = PathBuf::from("examples/embassy-http-server"); // FIXME: do something about this error?
         let file_path = root.join("hw-setup.yml");
 
         let file = fs::File::open(file_path).unwrap(); // FIXME: handle the error
         let hwconfig = serde_yaml::from_reader(&file).unwrap(); // FIXME: handle the error
 
         Ok(hwconfig)
+    }
+
+    #[must_use]
+    pub fn buses(&self) -> &Buses {
+        &self.buses
     }
 
     #[must_use]
@@ -44,23 +51,65 @@ pub struct Buses {
     i2c: Vec<I2cBus>,
 }
 
+impl Buses {
+    #[must_use]
+    pub fn i2c(&self) -> &[I2cBus] {
+        &self.i2c
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct I2cBus {
     instance: String,
     on: Option<String>,
+    when: Option<String>,
     pull_ups: I2cPullUps,
     frequency: I2cFrequency,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+impl I2cBus {
+    #[must_use]
+    pub fn on(&self) -> Option<&str> {
+        self.on.as_deref()
+    }
+
+    #[must_use]
+    pub fn when(&self) -> Option<&str> {
+        self.when.as_deref()
+    }
+
+    #[must_use]
+    pub fn pull_ups(&self) -> I2cPullUps {
+        self.pull_ups
+    }
+
+    #[must_use]
+    pub fn frequency(&self) -> I2cFrequency {
+        self.frequency
+    }
+}
+
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct I2cPullUps {
     sda: bool,
     scl: bool,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+impl I2cPullUps {
+    #[must_use]
+    pub fn sda(&self) -> bool {
+        self.sda
+    }
+
+    #[must_use]
+    pub fn scl(&self) -> bool {
+        self.scl
+    }
+}
+
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub enum I2cFrequency {
     K100,
     K250,
