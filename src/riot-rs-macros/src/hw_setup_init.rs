@@ -46,8 +46,16 @@ mod hw_setup_init {
             I2cFrequency::K400 => quote! { arch::i2c::Frequency::K400 },
         };
 
-        let sda_pullup = utils::bool_as_token(i2c_setup.pull_ups().sda());
-        let scl_pullup = utils::bool_as_token(i2c_setup.pull_ups().scl());
+        // FIXME: support on/when on sda/scl
+        let sda_pullup = utils::bool_as_token(i2c_setup.sda().first().unwrap().pull_up());
+        let scl_pullup = utils::bool_as_token(i2c_setup.scl().first().unwrap().pull_up());
+
+        // FIXME: test what happens when trying to use a peripheral that doesn't exist or that is
+        // already used
+        // FIXME: support on/when on sda/scl
+        let sda_peripheral = format_ident!("{}", i2c_setup.sda().first().unwrap().pin());
+        let scl_peripheral = format_ident!("{}", i2c_setup.scl().first().unwrap().pin());
+        dbg!(&sda_peripheral, &scl_peripheral);
 
         let expanded = quote! {
             #[cfg(all(#(#cfg_conds),*))]
@@ -63,8 +71,8 @@ mod hw_setup_init {
                 // FIXME: use configuration
                 let i2c = arch::i2c::I2c::new(
                     peripherals.TWISPI0.take().unwrap(),
-                    peripherals.P0_30.take().unwrap(),
-                    peripherals.P0_31.take().unwrap(),
+                    peripherals.#sda_peripheral.take().unwrap(),
+                    peripherals.#scl_peripheral.take().unwrap(),
                     config,
                 );
 

@@ -64,7 +64,8 @@ pub struct I2cBus {
     instance: String,
     on: Option<String>,
     when: Option<String>,
-    pull_ups: I2cPullUps,
+    sda: Vec<I2cPin>,
+    scl: Vec<I2cPin>,
     frequency: I2cFrequency,
 }
 
@@ -80,8 +81,13 @@ impl I2cBus {
     }
 
     #[must_use]
-    pub fn pull_ups(&self) -> I2cPullUps {
-        self.pull_ups
+    pub fn sda(&self) -> &[I2cPin] {
+        &self.sda
+    }
+
+    #[must_use]
+    pub fn scl(&self) -> &[I2cPin] {
+        &self.scl
     }
 
     #[must_use]
@@ -90,22 +96,34 @@ impl I2cBus {
     }
 }
 
-#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct I2cPullUps {
-    sda: bool,
-    scl: bool,
+pub struct I2cPin {
+    pin: String,
+    pull_up: bool,
+    on: Option<String>,
+    when: Option<String>,
 }
 
-impl I2cPullUps {
+impl I2cPin {
     #[must_use]
-    pub fn sda(&self) -> bool {
-        self.sda
+    pub fn pin(&self) -> &str {
+        &self.pin
     }
 
     #[must_use]
-    pub fn scl(&self) -> bool {
-        self.scl
+    pub fn pull_up(&self) -> bool {
+        self.pull_up
+    }
+
+    #[must_use]
+    pub fn on(&self) -> Option<&str> {
+        self.on.as_deref()
+    }
+
+    #[must_use]
+    pub fn when(&self) -> Option<&str> {
+        self.when.as_deref()
     }
 }
 

@@ -17,6 +17,16 @@ embassy_nrf::bind_interrupts!(struct Irqs {
     TEMP => embassy_nrf::temp::InterruptHandler;
 });
 
+#[derive(Debug)]
+#[non_exhaustive]
+pub struct Config {}
+
+impl Default for Config {
+    fn default() -> Self {
+        Self {}
+    }
+}
+
 pub struct InternalTemp {
     initialized: AtomicBool, // TODO: use an atomic bitset for initialized and enabled
     enabled: AtomicBool,

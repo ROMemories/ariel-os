@@ -40,6 +40,23 @@ mod hw_setup {
         let sensor_ref = format_ident!("{sensor_name}_REF");
         let sensor_type = crate::utils::parse_type_path(sensor_setup.driver());
 
+        // Path of the module containing the sensor driver
+        // FIXME: is this robust enough?
+        let sensor_mod = sensor_setup
+            .driver()
+            .split("::<")
+            .next()
+            .unwrap()
+            .rsplit("::")
+            .skip(1)
+            .collect::<Vec<_>>()
+            .into_iter()
+            .rev()
+            .collect::<Vec<_>>()
+            .join("::");
+        let sensor_mod = crate::utils::parse_type_path(&sensor_mod);
+        dbg!(&sensor_mod);
+
         let spawner_fn = format_ident!("{sensor_name}_init");
 
         let peripheral_struct = format_ident!("{sensor_name}Peripherals");
@@ -66,12 +83,16 @@ mod hw_setup {
 
             #[cfg(all(#(#cfg_conds),*))]
             #[#riot_rs_crate::spawner(autostart, peripherals)]
-            fn #spawner_fn(_spawner: Spawner, peripherals: #peripheral_struct) {
+            fn #spawner_fn(spawner: Spawner, peripherals: #peripheral_struct) {
             //     // FIXME: how to codegen this?
             //     BUTTON_1.init(#riot_rs_crate::embassy::arch::gpio::Input::new(
             //         peripherals.p,
             //         #riot_rs_crate::embassy::arch::gpio::Pull::Up,
             //     ));
+
+                let i2c_dev = #riot_rs_crate::embassy::arch::i2c::I2cDevice::new(#riot_rs_crate::embassy::I2C_BUS.get().unwrap());
+                let config = #sensor_mod::Config::default();
+                ACCEL.init(spawner, i2c_dev, config);
             }
 
             #[cfg(all(#(#cfg_conds),*))]

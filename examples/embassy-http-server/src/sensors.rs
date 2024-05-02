@@ -53,7 +53,8 @@ static ACCEL_REF: &'static dyn riot_rs::sensors::sensor::Sensor = &ACCEL;
 #[riot_rs::spawner(autostart, peripherals)]
 fn accel_init(spawner: Spawner, peripherals: AccelPeripherals) {
     let i2c_dev = arch::i2c::I2cDevice::new(riot_rs::embassy::I2C_BUS.get().unwrap());
-    ACCEL.init(spawner, i2c_dev);
+    let config = riot_rs::builtin_sensors::lis3dh::Config::default();
+    ACCEL.init(spawner, i2c_dev, config);
 }
 
 #[cfg(context = "nrf52840")]

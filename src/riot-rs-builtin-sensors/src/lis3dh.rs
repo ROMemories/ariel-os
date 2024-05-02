@@ -2,7 +2,7 @@ use embassy_embedded_hal::shared_bus::asynch::i2c::I2cDevice;
 use embassy_futures::select::Either;
 use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, mutex::Mutex};
 use embassy_time::{Duration, Timer};
-use lis3dh_async::{Configuration, Lis3dh as InnerLis3dh, Lis3dhI2C, SlaveAddr}; // TODO: rename this
+use lis3dh_async::{Configuration, DataRate, Lis3dh as InnerLis3dh, Lis3dhI2C, Mode, SlaveAddr}; // TODO: rename this
 use portable_atomic::{AtomicBool, Ordering};
 use riot_rs_embassy::Spawner;
 use riot_rs_sensors::{
@@ -11,6 +11,36 @@ use riot_rs_sensors::{
     },
     PhysicalUnit, Sensor,
 };
+
+// // FIXME: what's the best way to instantiate sensor driver configuration?
+#[derive(Debug)]
+#[non_exhaustive]
+pub struct Config {
+    // pub address: u8, // FIXME
+    pub mode: Mode,
+    pub datarate: DataRate,
+    pub enable_x_axis: bool,
+    pub enable_y_axis: bool,
+    pub enable_z_axis: bool,
+    pub block_data_update: bool,
+    pub enable_temperature: bool,
+}
+
+impl Default for Config {
+    fn default() -> Self {
+        let config = Configuration::default();
+        Self {
+            // address: SlaveAddr::Alternate,
+            mode: config.mode,
+            datarate: config.datarate,
+            enable_x_axis: config.enable_x_axis,
+            enable_y_axis: config.enable_y_axis,
+            enable_z_axis: config.enable_z_axis,
+            block_data_update: config.block_data_update,
+            enable_temperature: config.enable_temperature,
+        }
+    }
+}
 
 // TODO: support SPI as well
 // TODO: could maybe use a OncelCell instead of an Option
@@ -37,10 +67,25 @@ impl<I2C: embedded_hal_async::i2c::I2c> Lis3dh<I2C> {
         }
     }
 
-    pub fn init(&'static self, _spawner: Spawner, i2c: I2cDevice<'static, CriticalSectionRawMutex, I2C>) {
+    pub fn init(
+        &'static self,
+        _spawner: Spawner,
+        i2c: I2cDevice<'static, CriticalSectionRawMutex, I2C>,
+        config: Config,
+    ) {
         if !self.initialized.load(Ordering::Acquire) {
             let addr = SlaveAddr::Alternate; // FIXME
-            let config = Configuration::default(); // FIXME
+
+            // TODO: can this be made shorter?
+            let mut lis3dh_config = Configuration::default();
+            lis3dh_config.mode = config.mode;
+            lis3dh_config.datarate = config.datarate;
+            lis3dh_config.enable_x_axis = config.enable_x_axis;
+            lis3dh_config.enable_y_axis = config.enable_y_axis;
+            lis3dh_config.enable_z_axis = config.enable_z_axis;
+            lis3dh_config.block_data_update = config.block_data_update;
+            lis3dh_config.enable_temperature = config.enable_temperature;
+
 
             // FIXME: add a timeout, blocks indefinitely if no device is connected
             // FIXME: is using block_on ok here?
@@ -56,7 +101,7 @@ impl<I2C: embedded_hal_async::i2c::I2c> Lis3dh<I2C> {
             // };
 
             let driver =
-                embassy_futures::block_on(InnerLis3dh::new_i2c_with_config(i2c, addr, config))
+                embassy_futures::block_on(InnerLis3dh::new_i2c_with_config(i2c, addr, lis3dh_config))
                     .unwrap();
 
             // We use `try_lock()` instead of `lock()` to not make this function async.

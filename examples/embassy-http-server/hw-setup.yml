@@ -2,36 +2,44 @@ buses: # TODO: rename this? Shared communication interfaces
   i2c:
     - instance: TWISPI0
       on: nrf52840
-      pull_ups:
-        sda: false
-        scl: false
+      sda:
+        - pin: P0_30
+          pull_up: false
+      scl:
+        - pin: P0_31
+          pull_up: false
       frequency: !K100
 
     - instance: I2C0
       on: rp2040
-      pull_ups:
-        sda: false
-        scl: false
+      sda:
+        - pin: P0_30  # FIXME
+          pull_up: false
+      scl:
+        - pin: P0_31  # FIXME
+          pull_up: false
       frequency: !K100
 
 sensors:
-  - name: TEMP_SENSOR
-    driver: riot_rs::embassy::arch::internal_temp::InternalTemp
-    on: nrf52
+  # - name: TEMP_SENSOR
+  #   driver: riot_rs::embassy::arch::internal_temp::InternalTemp
+  #   on: nrf52
 
-  - name: BUTTON_1
-    driver: riot_rs::builtin_sensors::push_buttons::PushButton
-    on: nrf52840dk
-    when: button-readings
-    peripherals:
-      gpio:
-        - instance: P0_11 # FIXME: specify pull-up/down resistors
-          on: nrf52840dk
+  # - name: BUTTON_1
+  #   driver: riot_rs::builtin_sensors::push_buttons::PushButton
+  #   on: nrf52840dk
+  #   when: button-readings
+  #   peripherals:
+  #     gpio:
+  #       - on: nrf52840dk
+  #         instance: P0_11  # FIXME: specify pull-up/down resistors
 
   - name: ACCEL
-    driver: riot_rs::builtin_sensors::lis3dh::Lis3dh<riot_rs::embassy::arch::i2c::I2c>
+    driver: riot_rs::builtin_sensors::lis3dh::Lis3dh::<riot_rs::embassy::arch::i2c::I2c>
     with:
-      mode: !Normal
+      mode: !Normal  # FIXME
+      # address: 0x19  # FIXME
+      enable_z_axis: false
     bus:
       !i2c
       - on: nrf52840dk
