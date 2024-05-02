@@ -21,18 +21,19 @@ buses: # TODO: rename this? Shared communication interfaces
       frequency: !K100
 
 sensors:
-  # - name: TEMP_SENSOR
-  #   driver: riot_rs::embassy::arch::internal_temp::InternalTemp
-  #   on: nrf52
+  - name: TEMP_SENSOR
+    driver: riot_rs::embassy::arch::internal_temp::InternalTemp
+    on: nrf52
 
-  # - name: BUTTON_1
-  #   driver: riot_rs::builtin_sensors::push_buttons::PushButton
-  #   on: nrf52840dk
-  #   when: button-readings
-  #   peripherals:
-  #     gpio:
-  #       - on: nrf52840dk
-  #         instance: P0_11  # FIXME: specify pull-up/down resistors
+  - name: BUTTON_1
+    driver: riot_rs::builtin_sensors::push_buttons::PushButton
+    on: nrf52840dk
+    when: button-readings
+    peripherals:
+      - !input
+        on: nrf52840dk
+        pin: P0_11
+        pull: !up  # FIXME
 
   - name: ACCEL
     driver: riot_rs::builtin_sensors::lis3dh::Lis3dh::<riot_rs::embassy::arch::i2c::I2c>

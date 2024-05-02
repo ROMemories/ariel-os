@@ -3,6 +3,7 @@ use core::sync::atomic::{AtomicBool, Ordering};
 
 use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, channel::Channel, mutex::Mutex};
 use embedded_hal::digital::InputPin;
+use riot_rs_embassy::Spawner;
 
 use riot_rs_sensors::{
     categories::push_button::{PushButtonReading, PushButtonSensor},
@@ -12,6 +13,15 @@ use riot_rs_sensors::{
     },
     PhysicalUnit, Sensor,
 };
+
+#[derive(Debug)]
+pub struct Config {}
+
+impl Default for Config {
+    fn default() -> Self {
+        Self {}
+    }
+}
 
 pub type PushButton = GenericPushButton<riot_rs_embassy::arch::gpio::Input<'static>>;
 
@@ -37,7 +47,7 @@ impl<I: InputPin> GenericPushButton<I> {
     }
 
     // TODO: add Spawner for consistency
-    pub fn init(&'static self, gpio: I) {
+    pub fn init(&'static self, _spawner: Spawner, gpio: I, config: Config) {
         if !self.initialized.load(Ordering::Acquire) {
             // We use `try_lock()` instead of `lock()` to not make this function async.
             // This mutex cannot be locked at this point as it is private and can only be

@@ -13,6 +13,8 @@ use riot_rs_sensors::{
     PhysicalUnit,
 };
 
+use crate::arch::peripherals;
+
 embassy_nrf::bind_interrupts!(struct Irqs {
     TEMP => embassy_nrf::temp::InterruptHandler;
 });
@@ -26,6 +28,8 @@ impl Default for Config {
         Self {}
     }
 }
+
+crate::define_peripherals!(Peripherals { temp: TEMP });
 
 pub struct InternalTemp {
     initialized: AtomicBool, // TODO: use an atomic bitset for initialized and enabled
@@ -52,13 +56,13 @@ impl InternalTemp {
         }
     }
 
-    pub fn init(&'static self, spawner: Spawner, temp_peripheral: crate::arch::peripherals::TEMP) {
+    pub fn init(&'static self, spawner: Spawner, peripherals: Peripherals, config: Config) {
         if !self.initialized.load(Ordering::Acquire) {
             // We use `try_lock()` instead of `lock()` to not make this function async.
             // This mutex cannot be locked at this point as it is private and can only be
             // locked when the sensor has been initialized successfully.
             let mut temp = self.temp.try_lock().unwrap();
-            *temp = Some(embassy_nrf::temp::Temp::new(temp_peripheral, Irqs));
+            *temp = Some(embassy_nrf::temp::Temp::new(peripherals.temp, Irqs));
 
             #[embassy_executor::task]
             async fn temp_watcher(sensor: &'static InternalTemp) {

@@ -31,7 +31,7 @@ pub fn hw_setup(_args: TokenStream, _item: TokenStream) -> TokenStream {
 mod hw_setup {
     use proc_macro2::TokenStream;
     use quote::{format_ident, quote};
-    use riot_rs_hwsetup::Sensor;
+    use riot_rs_hwsetup::{Peripheral, PullResistor, Sensor, SensorBus};
 
     pub fn generate_sensor(riot_rs_crate: &syn::Ident, sensor_setup: &Sensor) -> TokenStream {
         let sensor_name = sensor_setup.name();
@@ -42,24 +42,11 @@ mod hw_setup {
 
         // Path of the module containing the sensor driver
         // FIXME: is this robust enough?
-        let sensor_mod = sensor_setup
-            .driver()
-            .split("::<")
-            .next()
-            .unwrap()
-            .rsplit("::")
-            .skip(1)
-            .collect::<Vec<_>>()
-            .into_iter()
-            .rev()
-            .collect::<Vec<_>>()
-            .join("::");
+        let sensor_mod = parse_parent_module_path(sensor_setup.driver());
         let sensor_mod = crate::utils::parse_type_path(&sensor_mod);
         dbg!(&sensor_mod);
 
         let spawner_fn = format_ident!("{sensor_name}_init");
-
-        let peripheral_struct = format_ident!("{sensor_name}Peripherals");
 
         let on_conds = parse_conditional_list("context", sensor_setup.on());
         let when_conds = parse_conditional_list("feature", sensor_setup.when());
@@ -69,7 +56,66 @@ mod hw_setup {
         let cfg_conds = on_conds.iter().chain(when_conds.iter()).collect::<Vec<_>>();
         dbg!(&cfg_conds);
 
-        // FIXME: codegen the sensor init
+        let one_shot_peripheral_struct_ident = format_ident!("{sensor_name}Peripherals");
+        let mut use_one_shot_peripheral_struct = false;
+
+        // FIXME: these are not mutually exclusive
+        let sensor_init = if let Some(SensorBus::I2c(i2cs)) = sensor_setup.bus() {
+            // FIXME: maybe do not even pass raw peripherals, always wrap them into embedded_hal
+            // types/arch types (including the internal temp sensor)
+            // TODO: select the appropriate I2C instance
+            quote! {
+                let i2c_bus = #riot_rs_crate::embassy::I2C_BUS.get().unwrap();
+                let i2c_dev = #riot_rs_crate::embassy::arch::i2c::I2cDevice::new(i2c_bus);
+                #sensor_name_static.init(spawner, peripherals, i2c_dev, config);
+            }
+        } else {
+            if let Some(peripherals) = sensor_setup.peripherals() {
+                // FIXME: handle multiple GPIOs
+                // FIXME: handle multiple peripheral types
+                let input = peripherals.inputs().next().unwrap();
+
+                // TODO: move this elsewhere?
+                let pull_setting = match input.pull() {
+                    PullResistor::Up => quote! {Up},
+                    PullResistor::Down => quote! {Down},
+                    PullResistor::None => quote! {None},
+                };
+
+                let peripheral = format_ident!("{}", input.pin());
+
+                use_one_shot_peripheral_struct = true;
+
+                quote! {
+                    let pull = #riot_rs_crate::embassy::arch::gpio::Pull::#pull_setting;
+                    let input = #riot_rs_crate::embassy::arch::gpio::Input::new(peripherals.p, pull);
+
+                    #sensor_name_static.init(spawner, input, config);
+                }
+            } else {
+                quote! {
+                    #sensor_name_static.init(spawner, peripherals, config);
+                }
+            }
+
+        };
+
+        let (peripheral_struct, one_shot_peripheral_struct) = if use_one_shot_peripheral_struct {
+            (
+                quote! { #one_shot_peripheral_struct_ident },
+                quote! {
+                    #riot_rs_crate::embassy::define_peripherals!(#one_shot_peripheral_struct_ident {
+                        // p: #peripheral // FIXME
+                        p: P0_11, // FIXME
+                    });
+                }
+            )
+        } else {
+            (
+                quote! { #sensor_mod::Peripherals },
+                quote! {},
+            )
+        };
 
         let expanded = quote! {
             // FIXME: does this work with zero cfg_conds?
@@ -84,24 +130,27 @@ mod hw_setup {
             #[cfg(all(#(#cfg_conds),*))]
             #[#riot_rs_crate::spawner(autostart, peripherals)]
             fn #spawner_fn(spawner: Spawner, peripherals: #peripheral_struct) {
-            //     // FIXME: how to codegen this?
-            //     BUTTON_1.init(#riot_rs_crate::embassy::arch::gpio::Input::new(
-            //         peripherals.p,
-            //         #riot_rs_crate::embassy::arch::gpio::Pull::Up,
-            //     ));
-
-                let i2c_dev = #riot_rs_crate::embassy::arch::i2c::I2cDevice::new(#riot_rs_crate::embassy::I2C_BUS.get().unwrap());
                 let config = #sensor_mod::Config::default();
-                ACCEL.init(spawner, i2c_dev, config);
+                #sensor_init
             }
 
-            #[cfg(all(#(#cfg_conds),*))]
-            #riot_rs_crate::define_peripherals!(#peripheral_struct { });
-            // FIXME
-            // #riot_rs_crate::define_peripherals!(Button1Peripherals { p: P0_11 });
+            #one_shot_peripheral_struct
         };
 
         TokenStream::from(expanded)
+    }
+
+    fn parse_parent_module_path(path: &str) -> String {
+        path.split("::<")
+            .next()
+            .unwrap()
+            .rsplit("::")
+            .skip(1)
+            .collect::<Vec<_>>()
+            .into_iter()
+            .rev()
+            .collect::<Vec<_>>()
+            .join("::")
     }
 
     fn parse_conditional_list(cfg_attr: &str, conditionals: Option<&str>) -> Vec<TokenStream> {

@@ -42,6 +42,8 @@ impl Default for Config {
     }
 }
 
+riot_rs_embassy::define_peripherals!(Peripherals {});
+
 // TODO: support SPI as well
 // TODO: could maybe use a OncelCell instead of an Option
 pub struct Lis3dh<I2C: embedded_hal_async::i2c::I2c + 'static> {
@@ -70,6 +72,7 @@ impl<I2C: embedded_hal_async::i2c::I2c> Lis3dh<I2C> {
     pub fn init(
         &'static self,
         _spawner: Spawner,
+        peripherals: Peripherals,
         i2c: I2cDevice<'static, CriticalSectionRawMutex, I2C>,
         config: Config,
     ) {
@@ -86,7 +89,6 @@ impl<I2C: embedded_hal_async::i2c::I2c> Lis3dh<I2C> {
             lis3dh_config.block_data_update = config.block_data_update;
             lis3dh_config.enable_temperature = config.enable_temperature;
 
-
             // FIXME: add a timeout, blocks indefinitely if no device is connected
             // FIXME: is using block_on ok here?
             // FIXME: handle the Result
@@ -100,9 +102,12 @@ impl<I2C: embedded_hal_async::i2c::I2c> Lis3dh<I2C> {
             //     Either::Second(_) => panic!("timeout when initializing Lis3dh"), // FIXME
             // };
 
-            let driver =
-                embassy_futures::block_on(InnerLis3dh::new_i2c_with_config(i2c, addr, lis3dh_config))
-                    .unwrap();
+            let driver = embassy_futures::block_on(InnerLis3dh::new_i2c_with_config(
+                i2c,
+                addr,
+                lis3dh_config,
+            ))
+            .unwrap();
 
             // We use `try_lock()` instead of `lock()` to not make this function async.
             // This mutex cannot be locked at this point as it is private and can only be

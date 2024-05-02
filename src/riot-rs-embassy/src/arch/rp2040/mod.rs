@@ -1,5 +1,5 @@
-pub mod i2c;
 pub mod gpio;
+pub mod i2c;
 
 #[cfg(feature = "usb")]
 pub mod usb;

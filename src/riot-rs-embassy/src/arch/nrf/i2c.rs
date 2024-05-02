@@ -7,8 +7,8 @@ use embassy_nrf::{
 use embedded_hal_async::i2c::{Operation, SevenBitAddress};
 
 // FIXME: maybe we should provide our own config type, unified across archs
-pub use embassy_nrf::twim::{Config, Frequency};
 pub use embassy_embedded_hal::shared_bus::asynch::i2c::I2cDevice;
+pub use embassy_nrf::twim::{Config, Frequency};
 
 // FIXME: does this prevent us from binding another interrupt handler to the same interrupt (e.g.,
 // for SPI), elsewhere?
@@ -33,9 +33,7 @@ impl I2c {
     ) -> Self {
         let twim = Twim::new(twim_peripheral, Irqs, sda_pin, scl_pin, config);
 
-        Self {
-            twim,
-        }
+        Self { twim }
     }
 }
 
@@ -54,9 +52,7 @@ impl embedded_hal_async::i2c::I2c for I2c {
         write: &[u8],
         read: &mut [u8],
     ) -> Result<(), Self::Error> {
-        self.twim
-            .write_read(address, write, read)
-            .await
+        self.twim.write_read(address, write, read).await
     }
 
     /// # Panics
@@ -68,9 +64,7 @@ impl embedded_hal_async::i2c::I2c for I2c {
         address: SevenBitAddress,
         operations: &mut [Operation<'_>],
     ) -> Result<(), Self::Error> {
-        self.twim
-            .transaction(address, operations)
-            .await
+        self.twim.transaction(address, operations).await
     }
 }
 
