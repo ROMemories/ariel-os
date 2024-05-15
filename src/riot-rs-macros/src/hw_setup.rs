@@ -56,6 +56,7 @@ mod hw_setup {
 
         let one_shot_peripheral_struct_ident = format_ident!("{sensor_name}Peripherals");
         let mut use_one_shot_peripheral_struct = false;
+        let mut peripheral = None;
 
         // FIXME: these are not mutually exclusive
         let sensor_init = if let Some(SensorBus::I2c(i2cs)) = sensor_setup.bus() {
@@ -80,7 +81,7 @@ mod hw_setup {
                     PullResistor::None => quote! { None },
                 };
 
-                let peripheral = format_ident!("{}", input.pin());
+                peripheral = Some(format_ident!("{}", input.pin()));
 
                 use_one_shot_peripheral_struct = true;
 
@@ -98,12 +99,13 @@ mod hw_setup {
         };
 
         let (peripheral_struct, one_shot_peripheral_struct) = if use_one_shot_peripheral_struct {
+            let peripheral = peripheral.unwrap();
+
             (
                 quote! { #one_shot_peripheral_struct_ident },
                 quote! {
                     #riot_rs_crate::embassy::define_peripherals!(#one_shot_peripheral_struct_ident {
-                        // p: #peripheral // FIXME
-                        p: P0_11, // FIXME
+                        p: #peripheral
                     });
                 },
             )
