@@ -7,7 +7,7 @@
 #[proc_macro]
 pub fn await_read_sensor_value(input: TokenStream) -> TokenStream {
     use quote::quote;
-    use riot_rs_hwsetup::{HwSetup, Sensor};
+    use riot_rs_hwsetup::{HwSetup, sensors::Sensor};
     use syn::Ident;
 
     let sensor_ident: Ident = syn::parse_macro_input!(input);

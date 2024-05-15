@@ -31,7 +31,10 @@ pub fn hw_setup(_args: TokenStream, _item: TokenStream) -> TokenStream {
 mod hw_setup {
     use proc_macro2::TokenStream;
     use quote::{format_ident, quote};
-    use riot_rs_hwsetup::{Peripheral, PullResistor, Sensor, SensorBus};
+    use riot_rs_hwsetup::{
+        peripherals::{Peripheral, PullResistor},
+        sensors::{Sensor, SensorBus, SensorConfig},
+    };
     use serde_yaml::Value as YamlValue;
 
     use crate::utils;
@@ -137,9 +140,7 @@ mod hw_setup {
         TokenStream::from(expanded)
     }
 
-    fn generate_sensor_config(
-        with: Option<&riot_rs_hwsetup::SensorConfig>,
-    ) -> proc_macro2::TokenStream {
+    fn generate_sensor_config(with: Option<&SensorConfig>) -> proc_macro2::TokenStream {
         if let Some(with) = with {
             let config_statements = with.iter().map(|(k, v)| {
                 let field = format_ident!("{k}");

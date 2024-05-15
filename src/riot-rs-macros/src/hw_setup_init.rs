@@ -29,7 +29,7 @@ pub fn hw_setup_init(_args: TokenStream, _item: TokenStream) -> TokenStream {
 mod hw_setup_init {
     use proc_macro2::TokenStream;
     use quote::{format_ident, quote};
-    use riot_rs_hwsetup::{I2cBus, I2cFrequency};
+    use riot_rs_hwsetup::buses::{I2cBus, I2cFrequency};
 
     use crate::utils;
 
