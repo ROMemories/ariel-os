@@ -38,11 +38,8 @@ sensors:
   - name: ACCEL
     driver: riot_rs::builtin_sensors::lis3dh::Lis3dh::<riot_rs::embassy::arch::i2c::I2c>
     with:
-      # mode: !Normal  # FIXME
-      mode: riot_rs::builtin_sensors::lis3dh::Lis3dh::Mode::Normal  # FIXME: better?
-      # address: 0x19  # FIXME
-      address: riot_rs::builtin_sensors::lis3dh::Lis3dh::Address::Alternate  # FIXME: better?
-      enable_z_axis: false  #  FIXME
+      mode: riot_rs::builtin_sensors::lis3dh::Mode::Normal
+      enable_z_axis: true
     bus:
       !i2c
       - on: nrf52840dk

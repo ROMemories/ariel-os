@@ -158,6 +158,11 @@ impl Sensor {
     }
 
     #[must_use]
+    pub fn with(&self) -> Option<&SensorConfig> {
+        self.with.as_ref()
+    }
+
+    #[must_use]
     pub fn bus(&self) -> Option<&SensorBus> {
         self.bus.as_ref()
     }
@@ -181,6 +186,12 @@ impl Conditioned for Sensor {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct SensorConfig(HashMap<String, YamlValue>);
+
+impl SensorConfig {
+    pub fn iter(&self) -> impl Iterator<Item = (&String, &YamlValue)> {
+        self.0.iter()
+    }
+}
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]

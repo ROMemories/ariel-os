@@ -2,7 +2,7 @@ use embassy_embedded_hal::shared_bus::asynch::i2c::I2cDevice;
 use embassy_futures::select::Either;
 use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, mutex::Mutex};
 use embassy_time::{Duration, Timer};
-use lis3dh_async::{Configuration, DataRate, Lis3dh as InnerLis3dh, Lis3dhI2C, Mode, SlaveAddr}; // TODO: rename this
+use lis3dh_async::{Configuration, DataRate, Lis3dh as InnerLis3dh, Lis3dhI2C};
 use portable_atomic::{AtomicBool, Ordering};
 use riot_rs_embassy::Spawner;
 use riot_rs_sensors::{
@@ -14,17 +14,19 @@ use riot_rs_sensors::{
     PhysicalUnit, Sensor,
 };
 
+pub use lis3dh_async::{Mode, SlaveAddr as Address};
+
 // FIXME: what's the best way to instantiate sensor driver configuration?
 #[derive(Debug)]
 #[non_exhaustive]
 pub struct Config {
-    // pub address: u8, // FIXME
+    pub address: Address,
     pub mode: Mode,
     pub datarate: DataRate,
     pub enable_x_axis: bool,
     pub enable_y_axis: bool,
     pub enable_z_axis: bool,
-    pub block_data_update: bool,
+    pub block_data_update: bool, // TODO: do we need to expose this?
     pub enable_temperature: bool,
 }
 
@@ -32,7 +34,7 @@ impl Default for Config {
     fn default() -> Self {
         let config = Configuration::default();
         Self {
-            // address: SlaveAddr::Alternate,
+            address: Address::Alternate,
             mode: config.mode,
             datarate: config.datarate,
             enable_x_axis: config.enable_x_axis,
@@ -79,8 +81,6 @@ impl<I2C: embedded_hal_async::i2c::I2c> Lis3dh<I2C> {
         config: Config,
     ) {
         if !self.initialized.load(Ordering::Acquire) {
-            let addr = SlaveAddr::Alternate; // FIXME
-
             // TODO: can this be made shorter?
             let mut lis3dh_config = Configuration::default();
             lis3dh_config.mode = config.mode;
@@ -106,7 +106,7 @@ impl<I2C: embedded_hal_async::i2c::I2c> Lis3dh<I2C> {
 
             let driver = embassy_futures::block_on(InnerLis3dh::new_i2c_with_config(
                 i2c,
-                addr,
+                config.address,
                 lis3dh_config,
             ))
             .unwrap();

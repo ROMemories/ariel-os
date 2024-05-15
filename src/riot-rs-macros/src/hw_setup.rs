@@ -32,6 +32,7 @@ mod hw_setup {
     use proc_macro2::TokenStream;
     use quote::{format_ident, quote};
     use riot_rs_hwsetup::{Peripheral, PullResistor, Sensor, SensorBus};
+    use serde_yaml::Value as YamlValue;
 
     use crate::utils;
 
@@ -91,7 +92,6 @@ mod hw_setup {
                     #sensor_name_static.init(spawner, peripherals, config);
                 }
             }
-
         };
 
         let (peripheral_struct, one_shot_peripheral_struct) = if use_one_shot_peripheral_struct {
@@ -102,14 +102,13 @@ mod hw_setup {
                         // p: #peripheral // FIXME
                         p: P0_11, // FIXME
                     });
-                }
+                },
             )
         } else {
-            (
-                quote! { #sensor_mod::Peripherals },
-                quote! {},
-            )
+            (quote! { #sensor_mod::Peripherals }, quote! {})
         };
+
+        let sensor_config = generate_sensor_config(sensor_setup.with());
 
         let expanded = quote! {
             // Instantiate the sensor driver
@@ -127,8 +126,8 @@ mod hw_setup {
             #[cfg(all(#(#cfg_conds),*))]
             #[#riot_rs_crate::spawner(autostart, peripherals)]
             fn #spawner_fn(spawner: Spawner, peripherals: #peripheral_struct) {
-                let config = #sensor_mod::Config::default();
-                // FIXME: set the sensor config from the setup file
+                let mut config = #sensor_mod::Config::default();
+                #sensor_config
                 #sensor_init
             }
 
@@ -136,5 +135,44 @@ mod hw_setup {
         };
 
         TokenStream::from(expanded)
+    }
+
+    fn generate_sensor_config(
+        with: Option<&riot_rs_hwsetup::SensorConfig>,
+    ) -> proc_macro2::TokenStream {
+        if let Some(with) = with {
+            let config_statements = with.iter().map(|(k, v)| {
+                let field = format_ident!("{k}");
+
+                let value = match v {
+                    YamlValue::String(s) => utils::parse_type_path(s),
+                    YamlValue::Bool(b) => utils::bool_as_token(*b),
+                    YamlValue::Number(n) => yaml_number_to_tokens(n),
+                    _ => unimplemented!(), // TODO: proper error message
+                };
+
+                quote! { config.#field = #value; }
+            });
+
+            quote! { #(#config_statements)* }
+        } else {
+            quote! {}
+        }
+    }
+
+    fn yaml_number_to_tokens(number: &serde_yaml::Number) -> proc_macro2::TokenStream {
+        // TODO: is there a simpler way to do this?
+        if number.is_u64() {
+            let n = number.as_u64();
+            quote! { #n }
+        } else if number.is_i64() {
+            let n = number.as_i64();
+            quote! { #n }
+        } else if number.is_f64() {
+            let n = number.as_f64();
+            quote! { #n }
+        } else {
+            unimplemented!()
+        }
     }
 }
