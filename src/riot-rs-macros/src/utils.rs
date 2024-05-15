@@ -65,3 +65,32 @@ fn parse_conditional_list(
         Vec::new()
     }
 }
+
+pub fn parse_parent_module_path(path: &str) -> String {
+    // FIXME: is this robust enough? could we parse with syn first?
+    path.split("::<")
+        .next()
+        .unwrap()
+        .rsplit("::")
+        .skip(1)
+        .collect::<Vec<_>>()
+        .into_iter()
+        .rev()
+        .collect::<Vec<_>>()
+        .join("::")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_parent_module_path() {
+        assert_eq!(
+            parse_parent_module_path(
+                "riot_rs::builtin_sensors::lis3dh::Lis3dh::<riot_rs::embassy::arch::i2c::I2c>",
+            ),
+            "riot_rs::builtin_sensors::lis3dh",
+        );
+    }
+}

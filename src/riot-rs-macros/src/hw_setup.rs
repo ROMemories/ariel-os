@@ -33,23 +33,22 @@ mod hw_setup {
     use quote::{format_ident, quote};
     use riot_rs_hwsetup::{Peripheral, PullResistor, Sensor, SensorBus};
 
+    use crate::utils;
+
     pub fn generate_sensor(riot_rs_crate: &syn::Ident, sensor_setup: &Sensor) -> TokenStream {
         let sensor_name = sensor_setup.name();
 
         let sensor_name_static = format_ident!("{sensor_name}");
         let sensor_ref = format_ident!("{sensor_name}_REF");
-        let sensor_type = crate::utils::parse_type_path(sensor_setup.driver());
+        let sensor_type = utils::parse_type_path(sensor_setup.driver());
 
         // Path of the module containing the sensor driver
-        // FIXME: is this robust enough?
-        let sensor_mod = parse_parent_module_path(sensor_setup.driver());
-        let sensor_mod = crate::utils::parse_type_path(&sensor_mod);
-        dbg!(&sensor_mod);
+        let sensor_mod = utils::parse_parent_module_path(sensor_setup.driver());
+        let sensor_mod = utils::parse_type_path(&sensor_mod);
 
         let spawner_fn = format_ident!("{sensor_name}_init");
 
-        let cfg_conds = crate::utils::parse_cfg_conditionals(sensor_setup);
-        dbg!(&cfg_conds);
+        let cfg_conds = utils::parse_cfg_conditionals(sensor_setup);
 
         let one_shot_peripheral_struct_ident = format_ident!("{sensor_name}Peripherals");
         let mut use_one_shot_peripheral_struct = false;
@@ -137,18 +136,5 @@ mod hw_setup {
         };
 
         TokenStream::from(expanded)
-    }
-
-    fn parse_parent_module_path(path: &str) -> String {
-        path.split("::<")
-            .next()
-            .unwrap()
-            .rsplit("::")
-            .skip(1)
-            .collect::<Vec<_>>()
-            .into_iter()
-            .rev()
-            .collect::<Vec<_>>()
-            .join("::")
     }
 }
