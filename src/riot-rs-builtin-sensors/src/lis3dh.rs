@@ -6,13 +6,15 @@ use lis3dh_async::{Configuration, DataRate, Lis3dh as InnerLis3dh, Lis3dhI2C, Mo
 use portable_atomic::{AtomicBool, Ordering};
 use riot_rs_embassy::Spawner;
 use riot_rs_sensors::{
+    label::Label,
     sensor::{
-        Category, NotificationReceiver, PhysicalValue, ReadingError, ReadingResult, ThresholdKind,
+        Category, Labels, NotificationReceiver, PhysicalUnits, PhysicalValue, PhysicalValues,
+        ReadingError, ReadingResult, ThresholdKind, ValueScales,
     },
     PhysicalUnit, Sensor,
 };
 
-// // FIXME: what's the best way to instantiate sensor driver configuration?
+// FIXME: what's the best way to instantiate sensor driver configuration?
 #[derive(Debug)]
 #[non_exhaustive]
 pub struct Config {
@@ -122,7 +124,7 @@ impl<I2C: embedded_hal_async::i2c::I2c> Lis3dh<I2C> {
 }
 
 impl<I2C: embedded_hal_async::i2c::I2c + Send> Sensor for Lis3dh<I2C> {
-    async fn read_main(&self) -> ReadingResult<PhysicalValue> {
+    async fn read(&self) -> ReadingResult<PhysicalValues> {
         if !self.enabled.load(Ordering::Acquire) {
             return Err(ReadingError::Disabled);
         }
@@ -140,7 +142,11 @@ impl<I2C: embedded_hal_async::i2c::I2c + Send> Sensor for Lis3dh<I2C> {
 
         #[allow(clippy::cast_possible_truncation)]
         // FIXME: dumb scaling, take precision into account
-        Ok(PhysicalValue::new((data.z * 100.) as i32))
+        // FIXME: specify the measurement error
+        Ok(PhysicalValues::One([PhysicalValue::new(
+            (data.z * 100.) as i32,
+            None,
+        )]))
     }
 
     fn set_enabled(&self, enabled: bool) {
@@ -170,13 +176,17 @@ impl<I2C: embedded_hal_async::i2c::I2c + Send> Sensor for Lis3dh<I2C> {
         Category::Accelerometer
     }
 
-    fn value_scale(&self) -> i8 {
-        -2
+    fn value_scales(&self) -> ValueScales {
+        ValueScales::One([-2])
     }
 
-    fn unit(&self) -> PhysicalUnit {
+    fn units(&self) -> PhysicalUnits {
         // FIXME: what's the actual unit?
-        PhysicalUnit::AccelG
+        PhysicalUnits::One([PhysicalUnit::AccelG])
+    }
+
+    fn labels(&self) -> Labels {
+        Labels::One([Label::Main])
     }
 
     fn display_name(&self) -> Option<&'static str> {

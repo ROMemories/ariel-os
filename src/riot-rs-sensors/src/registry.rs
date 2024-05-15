@@ -3,6 +3,8 @@
 
 use crate::Sensor;
 
+// FIXME: this should not be part of the users' documentation, to force users to use
+// `Registry::sensors()` instead
 /// Stores references to registered sensors.
 ///
 /// To register a sensor, insert it to this [distributed slice](linkme).

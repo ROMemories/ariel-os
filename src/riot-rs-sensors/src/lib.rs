@@ -12,9 +12,13 @@
 
 pub mod categories;
 pub mod physical_unit;
+pub mod label;
 pub mod registry;
 pub mod sensor;
 
 pub use physical_unit::PhysicalUnit;
-pub use registry::{REGISTRY, SENSOR_REFS};
+pub use registry::REGISTRY;
+// FIXME: this should not be part of the users' documentation, to force users to use
+// `Registry::sensors()` instead
+pub use registry::SENSOR_REFS;
 pub use sensor::{Reading, Sensor};

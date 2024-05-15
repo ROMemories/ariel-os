@@ -5,7 +5,7 @@
 /// This macro panics when the `riot-rs` crate cannot be found as a dependency of the crate where
 /// this macro is used.
 #[proc_macro]
-pub fn await_read_sensor_main_value(input: TokenStream) -> TokenStream {
+pub fn await_read_sensor_value(input: TokenStream) -> TokenStream {
     use quote::quote;
     use riot_rs_hwsetup::{HwSetup, Sensor};
     use syn::Ident;
@@ -26,7 +26,7 @@ pub fn await_read_sensor_main_value(input: TokenStream) -> TokenStream {
 
     // The `_read_sensor` macro expects a trailing comma
     let expanded = quote! {
-        #riot_rs_crate::sensors::_await_read_sensor_main!(#sensor_ident, #(#sensor_type_list),* ,)
+        #riot_rs_crate::sensors::_await_read_sensor!(#sensor_ident, #(#sensor_type_list),* ,)
     };
 
     TokenStream::from(expanded)

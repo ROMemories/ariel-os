@@ -1,13 +1,18 @@
 use picoserve::response::IntoResponse;
-use riot_rs::sensors::{Sensor, REGISTRY};
+use riot_rs::sensors::{Reading, Sensor, REGISTRY};
 
 pub async fn sensors() -> impl IntoResponse {
     for sensor in REGISTRY.sensors() {
-        if let (Ok(value), value_scale, unit, display_name) =
-            riot_rs::await_read_sensor_main_value!(sensor)
+        if let (Ok(values), value_scales, units, display_name, labels) =
+            riot_rs::await_read_sensor_value!(sensor)
         {
-            let value = value.value() as f32 / 10i32.pow((-value_scale) as u32) as f32;
-            riot_rs::debug::println!("{}: {} {}", display_name.unwrap(), value, unit);
+            for (i, value) in values.values().enumerate() {
+                let value_scale = value_scales.iter().nth(i).unwrap();
+                let unit = units.iter().nth(i).unwrap();
+                let label = labels.iter().nth(i).unwrap();
+                let value = value.value() as f32 / 10i32.pow((-value_scale) as u32) as f32;
+                riot_rs::debug::println!("{}: {} {} ({})", display_name.unwrap(), value, unit, label);
+            }
         } else {
             return "Error reading sensor";
         }

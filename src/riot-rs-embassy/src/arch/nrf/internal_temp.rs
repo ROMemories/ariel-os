@@ -6,11 +6,13 @@ use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, channel::Channe
 use embassy_time::{Duration, Timer};
 use riot_rs_sensors::{
     categories::temperature::{TemperatureReading, TemperatureSensor},
+    label::Label,
     sensor::{
-        Category, Notification, NotificationReceiver, PhysicalValue, ReadingError, ReadingResult,
-        Sensor, ThresholdKind,
+        Category, Labels, MeasurementError, Notification, NotificationReceiver, PhysicalUnits,
+        PhysicalValue, PhysicalValues, ReadingError, ReadingResult, Sensor, ThresholdKind,
+        ValueScales,
     },
-    PhysicalUnit,
+    PhysicalUnit, Reading,
 };
 
 use crate::arch::peripherals;
@@ -94,7 +96,13 @@ impl InternalTemp {
 }
 
 impl Sensor for InternalTemp {
-    async fn read_main(&self) -> ReadingResult<PhysicalValue> {
+    async fn read(&self) -> ReadingResult<PhysicalValues> {
+        const ERROR: MeasurementError = MeasurementError {
+            deviation: 5,
+            bias: 0,
+            scale: 0,
+        };
+
         //     self.read().await.map(|v| v.value())
         // }
         //
@@ -109,7 +117,7 @@ impl Sensor for InternalTemp {
         let reading = self.temp.lock().await.as_mut().unwrap().read().await;
         let temp: i32 = (100 * reading).lossy_into();
 
-        Ok(PhysicalValue::new(temp))
+        Ok(PhysicalValues::One([PhysicalValue::new(temp, Some(ERROR))]))
     }
 
     fn set_enabled(&self, enabled: bool) {
@@ -152,12 +160,16 @@ impl Sensor for InternalTemp {
         Category::Temperature
     }
 
-    fn value_scale(&self) -> i8 {
-        -2
+    fn value_scales(&self) -> ValueScales {
+        ValueScales::One([-2])
     }
 
-    fn unit(&self) -> PhysicalUnit {
-        PhysicalUnit::Celsius
+    fn labels(&self) -> Labels {
+        Labels::One([Label::Main])
+    }
+
+    fn units(&self) -> PhysicalUnits {
+        PhysicalUnits::One([PhysicalUnit::Celsius])
     }
 
     fn display_name(&self) -> Option<&'static str> {
@@ -175,6 +187,8 @@ impl Sensor for InternalTemp {
 
 impl TemperatureSensor for InternalTemp {
     async fn read_temperature(&self) -> ReadingResult<TemperatureReading> {
-        self.read_main().await.map(TemperatureReading::new)
+        self.read()
+            .await
+            .map(|values| TemperatureReading::new(values.value()))
     }
 }

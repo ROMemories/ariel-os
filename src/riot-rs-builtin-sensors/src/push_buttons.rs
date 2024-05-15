@@ -7,11 +7,12 @@ use riot_rs_embassy::Spawner;
 
 use riot_rs_sensors::{
     categories::push_button::{PushButtonReading, PushButtonSensor},
+    label::Label,
     sensor::{
-        Category, Notification, NotificationReceiver, PhysicalValue, ReadingError, ReadingResult,
-        ThresholdKind,
+        Category, Notification, NotificationReceiver, PhysicalValue, PhysicalValues, ReadingError,
+        ReadingResult, ThresholdKind, PhysicalUnits, ValueScales, Labels,
     },
-    PhysicalUnit, Sensor,
+    PhysicalUnit, Reading, Sensor,
 };
 
 #[derive(Debug)]
@@ -62,7 +63,7 @@ impl<I: InputPin> GenericPushButton<I> {
 }
 
 impl<I: 'static + InputPin + Send> Sensor for GenericPushButton<I> {
-    async fn read_main(&self) -> ReadingResult<PhysicalValue> {
+    async fn read(&self) -> ReadingResult<PhysicalValues> {
         //     self.read().await.map(|v| v.value())
         // }
         //
@@ -78,7 +79,10 @@ impl<I: 'static + InputPin + Send> Sensor for GenericPushButton<I> {
         // inputs
         let is_pressed = reading;
 
-        Ok(PhysicalValue::new(i32::from(is_pressed)))
+        Ok(PhysicalValues::One([PhysicalValue::new(
+            i32::from(is_pressed),
+            None,
+        )]))
     }
 
     fn set_enabled(&self, enabled: bool) {
@@ -105,12 +109,17 @@ impl<I: 'static + InputPin + Send> Sensor for GenericPushButton<I> {
         Category::PushButton
     }
 
-    fn value_scale(&self) -> i8 {
-        0
+    fn value_scales(&self) -> ValueScales {
+        // TODO: should we introduce a ValueScales::None instead?
+        ValueScales::One([0])
     }
 
-    fn unit(&self) -> PhysicalUnit {
-        PhysicalUnit::Bool
+    fn units(&self) -> PhysicalUnits {
+        PhysicalUnits::One([PhysicalUnit::Bool])
+    }
+
+    fn labels(&self) -> Labels {
+        Labels::One([Label::Main])
     }
 
     fn display_name(&self) -> Option<&'static str> {
@@ -129,6 +138,8 @@ impl<I: 'static + InputPin + Send> Sensor for GenericPushButton<I> {
 impl<I: 'static + InputPin + Send> PushButtonSensor for GenericPushButton<I> {
     // FIXME: rename this
     async fn read_press_state(&self) -> ReadingResult<PushButtonReading> {
-        self.read_main().await.map(PushButtonReading::new)
+        self.read()
+            .await
+            .map(|values| PushButtonReading::new(values.value()))
     }
 }

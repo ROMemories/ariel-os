@@ -75,11 +75,11 @@ mod hw_setup {
                 // FIXME: handle multiple peripheral types
                 let input = peripherals.inputs().next().unwrap();
 
-                // TODO: move this elsewhere?
+                // TODO: move this match elsewhere?
                 let pull_setting = match input.pull() {
-                    PullResistor::Up => quote! {Up},
-                    PullResistor::Down => quote! {Down},
-                    PullResistor::None => quote! {None},
+                    PullResistor::Up => quote! { Up },
+                    PullResistor::Down => quote! { Down },
+                    PullResistor::None => quote! { None },
                 };
 
                 let peripheral = format_ident!("{}", input.pin());
@@ -118,19 +118,23 @@ mod hw_setup {
         };
 
         let expanded = quote! {
+            // Instantiate the sensor driver
             // FIXME: does this work with zero cfg_conds?
             #[cfg(all(#(#cfg_conds),*))]
             pub static #sensor_name_static: #sensor_type = #sensor_type::new();
 
+            // Store a static reference in the sensor distributed slice
             #[cfg(all(#(#cfg_conds),*))]
             #[#riot_rs_crate::linkme::distributed_slice(#riot_rs_crate::sensors::SENSOR_REFS)]
             #[linkme(crate = #riot_rs_crate::linkme)]
             static #sensor_ref: &'static dyn #riot_rs_crate::sensors::Sensor = &#sensor_name_static;
 
+            // Set the sensor initialization to run at startup
             #[cfg(all(#(#cfg_conds),*))]
             #[#riot_rs_crate::spawner(autostart, peripherals)]
             fn #spawner_fn(spawner: Spawner, peripherals: #peripheral_struct) {
                 let config = #sensor_mod::Config::default();
+                // FIXME: set the sensor config from the setup file
                 #sensor_init
             }
 

@@ -5,22 +5,16 @@ use core::{any::Any, future::Future};
 // TODO: use a zero-copy channel instead?
 use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, channel::Receiver};
 
-use crate::physical_unit::PhysicalUnit;
+use crate::{label::Label, physical_unit::PhysicalUnit};
 
 /// Represents a device providing sensor readings.
 // TODO: introduce a trait currently deferring to Any
 pub trait Sensor: Any + Send + Sync {
-    // FIXME: clarify the semantics: should this always new data?
-    // FIXME: return an enum instead?
-    /// Returns the main sensor reading.
-    fn read_main(&self) -> impl Future<Output = ReadingResult<PhysicalValue>>
+    // FIXME: clarify the semantics: should this always return new data (in which rename this to `measure`)?
+    /// Returns the sensor reading.
+    fn read(&self) -> impl Future<Output = ReadingResult<PhysicalValues>>
     where
         Self: Sized;
-
-    /// Returns a sensor reading.
-    // fn read(&self) -> impl Future<Output = ReadingResult<impl Reading>>
-    // where
-    //     Self: Sized;
 
     /// Enables or disables the sensor driver.
     fn set_enabled(&self, enabled: bool);
@@ -51,14 +45,16 @@ pub trait Sensor: Any + Send + Sync {
     /// and precision must additionally be taken into account).
     ///
     /// This is required to avoid handling floats.
-    // FIXME: how to handle sensors measuring different physical values?
     // TODO: rename this?
     #[must_use]
-    fn value_scale(&self) -> i8;
+    fn value_scales(&self) -> ValueScales;
 
     /// Returns the unit of measurement in which readings are returned.
     #[must_use]
-    fn unit(&self) -> PhysicalUnit;
+    fn units(&self) -> PhysicalUnits;
+
+    #[must_use]
+    fn labels(&self) -> Labels;
 
     /// Returns a human-readable name of the sensor.
     // TODO: i18n?
@@ -82,25 +78,130 @@ pub trait Reading: core::fmt::Debug {
     }
 }
 
-/// Represents a value obtained from a sensor.
 // TODO: add a timestamp?
-// TODO: add measurement error here (how to define it?)
+// TODO: introduce a method exposing labels for each physical value?
+// FIXME: what to do about 3-axis accelerator+magnetometer+gyroscope (9 values)?
+#[derive(Debug, Copy, Clone, serde::Serialize)]
+pub enum PhysicalValues {
+    One([PhysicalValue; 1]),
+    Two([PhysicalValue; 2]),
+    Three([PhysicalValue; 3]),
+}
+
+impl Reading for PhysicalValues {
+    fn value(&self) -> PhysicalValue {
+        match self {
+            Self::One([v]) | Self::Two([v, ..]) | Self::Three([v, ..]) => *v,
+        }
+    }
+}
+
+/// Represents a value obtained from a sensor.
+///
+/// The [`Sensor::value_scale()`] must be taken into account using the following formula:
+///
+/// <math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow><mi mathvariant="monospace">PhysicalValue::value()</mi></mrow><mo>·</mo><msup><mn>10</mn><mrow><mi mathvariant="monospace">Sensor::value_scale()</mi></mrow></msup></math>
 #[derive(Debug, Copy, Clone, serde::Serialize)]
 pub struct PhysicalValue {
     value: i32,
+    error: Option<MeasurementError>,
 }
 
 impl PhysicalValue {
     /// Creates a new value.
     #[must_use]
-    pub const fn new(value: i32) -> Self {
-        Self { value }
+    pub const fn new(value: i32, error: Option<MeasurementError>) -> Self {
+        Self { value, error }
     }
 
     /// Returns the value.
     #[must_use]
     pub fn value(&self) -> i32 {
         self.value
+    }
+}
+
+/// Specifies the accuracy error of a measurement.
+///
+/// It is assumed that the accuracy error is symmetrical around a possibly non-zero bias.
+///
+/// The unit of measurement is that of the sensor driver, as provided by [`Sensor::unit()`].
+/// The [`scale`](MeasurementError::scale) is used for both
+/// [`deviation`](MeasurementError::deviation) and [`bias`](MeasurementError::bias).
+/// The accuracy error is thus given by the following formulas:
+///
+/// <math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mo>+</mo><mo>(</mo><mrow><mi mathvariant="monospace">bias</mi></mrow><mo>+</mo><mrow><mi mathvariant="monospace">deviation</mi></mrow><mo>)</mo><mo>·</mo><msup><mn>10</mn><mrow><mi mathvariant="monospace">scale</mi></mrow></msup>/<mo>-</mo><mo>(</mo><mrow><mi mathvariant="monospace">bias</mi></mrow><mo>-</mo><mrow><mi mathvariant="monospace">deviation</mi></mrow><mo>)</mo><mo>·</mo><msup><mn>10</mn><mrow><mi mathvariant="monospace">scale</mi></mrow></msup></math>
+///
+/// # Examples
+///
+/// The DS18B20 temperature sensor accuracy error is <mo>+</mo><mn>0.05</mn>/<mo>-</mo><mn>0.45</mn> at 20 °C (see Figure 1 of
+/// its datasheet).
+/// [`MeasurementError`] would thus be the following:
+///
+/// ```
+/// # use riot_rs_sensors::sensor::MeasurementError;
+/// MeasurementError {
+///     deviation: 25,
+///     bias: -20,
+///     scale: -2,
+/// }
+/// # ;
+/// ```
+#[derive(Debug, Copy, Clone, serde::Serialize)]
+pub struct MeasurementError {
+    pub deviation: i16, // FIXME: rename this and provide a clear definition (3-sigma precision?)
+    pub bias: i16,
+    pub scale: i8,
+}
+
+#[derive(Debug, Copy, Clone)]
+pub enum ValueScales {
+    One([i8; 1]),
+    Two([i8; 2]),
+    Three([i8; 3]),
+}
+
+impl ValueScales {
+    pub fn iter(&self) -> impl Iterator<Item = i8> + '_ {
+        match self {
+            Self::One(v) => v.iter().copied(),
+            Self::Two(v) => v.iter().copied(),
+            Self::Three(v) => v.iter().copied(),
+        }
+    }
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum PhysicalUnits {
+    One([PhysicalUnit; 1]),
+    Two([PhysicalUnit; 2]),
+    Three([PhysicalUnit; 3]),
+}
+
+impl PhysicalUnits {
+    pub fn iter(&self) -> impl Iterator<Item = PhysicalUnit> + '_ {
+        match self {
+            Self::One(v) => v.iter().copied(),
+            Self::Two(v) => v.iter().copied(),
+            Self::Three(v) => v.iter().copied(),
+        }
+    }
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum Labels {
+    One([Label; 1]),
+    Two([Label; 2]),
+    Three([Label; 3]),
+}
+
+impl Labels {
+    pub fn iter(&self) -> impl Iterator<Item = Label> + '_ {
+        match self {
+            Self::One(v) => v.iter().copied(),
+            Self::Two(v) => v.iter().copied(),
+            Self::Three(v) => v.iter().copied(),
+        }
     }
 }
 
@@ -169,20 +270,20 @@ pub type ReadingResult<R> = Result<R, ReadingError>;
 // Should not be used by users directly, users should use the `riot_rs::read_sensor!()` proc-macro
 // instead.
 #[macro_export]
-macro_rules! _await_read_sensor_main {
+macro_rules! _await_read_sensor {
     ($sensor:ident, $first_sensor_type:path, $($sensor_type:path),* $(,)?) => {
         {
             // As sensor methods are non-dispatchable, we have to downcast
             if let Some($sensor) = ($sensor as &dyn core::any::Any)
                 .downcast_ref::<$first_sensor_type>(
             ) {
-                ($sensor.read_main().await, $sensor.value_scale(), $sensor.unit(), $sensor.display_name())
+                ($sensor.read().await, $sensor.value_scales(), $sensor.units(), $sensor.display_name(), $sensor.labels())
             }
             $(
             else if let Some($sensor) = ($sensor as &dyn core::any::Any)
                 .downcast_ref::<$sensor_type>(
             ) {
-                ($sensor.read_main().await, $sensor.value_scale(), $sensor.unit(), $sensor.display_name())
+                ($sensor.read().await, $sensor.value_scales(), $sensor.units(), $sensor.display_name(), $sensor.labels())
             }
             )*
             else {

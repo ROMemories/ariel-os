@@ -38,12 +38,25 @@ sensors:
   - name: ACCEL
     driver: riot_rs::builtin_sensors::lis3dh::Lis3dh::<riot_rs::embassy::arch::i2c::I2c>
     with:
-      mode: !Normal  # FIXME
+      # mode: !Normal  # FIXME
+      mode: riot_rs::builtin_sensors::lis3dh::Lis3dh::Mode::Normal  # FIXME: better?
       # address: 0x19  # FIXME
-      enable_z_axis: false
+      address: riot_rs::builtin_sensors::lis3dh::Lis3dh::Address::Alternate  # FIXME: better?
+      enable_z_axis: false  #  FIXME
     bus:
       !i2c
       - on: nrf52840dk
         instance: TWISPI0
       - on: rp2040
         instance: I2C0
+
+  # - name: HUMID_TEMP
+  #   driver: riot_rs::builtin_sensors::aht20::Aht20::<riot_rs::embassy::arch::i2c::I2c>
+  #   with:
+  #     # address: 0x19  # FIXME
+  #   bus:
+  #     !i2c
+  #     - on: nrf52840dk
+  #       instance: TWISPI0
+  #     - on: rp2040
+  #       instance: I2C0

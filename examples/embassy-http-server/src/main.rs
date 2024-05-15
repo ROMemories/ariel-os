@@ -67,8 +67,8 @@ async fn web_task(
     }
 }
 
-#[riot_rs::spawner(autostart, peripherals)]
-fn main(spawner: Spawner, _peripherals: pins::Peripherals) {
+#[riot_rs::spawner(autostart)]
+fn main(spawner: Spawner) {
     // #[cfg(context = "nrf52")]
     // {
     //     use riot_rs::sensors::sensor::{PhysicalValue, ThresholdKind};
