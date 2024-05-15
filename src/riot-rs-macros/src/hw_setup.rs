@@ -145,7 +145,22 @@ mod hw_setup {
                 let field = format_ident!("{k}");
 
                 let value = match v {
-                    YamlValue::String(s) => utils::parse_type_path(s),
+                    YamlValue::String(s) => {
+                        if is_type_path_config_string(s) {
+                            // NOTE(no-panic): a type path string always has at least two bytes
+                            utils::parse_type_path(&s[1..])
+                        } else {
+                            let s = if s.starts_with('@') {
+                                // Discard the first @
+                                // NOTE(no-panic): that string has at least one byte as it starts
+                                // with @
+                                &s[1..]
+                            } else {
+                                s
+                            };
+                            quote! { #s }
+                        }
+                    }
                     YamlValue::Bool(b) => utils::bool_as_token(*b),
                     YamlValue::Number(n) => yaml_number_to_tokens(n),
                     _ => unimplemented!(), // TODO: proper error message
@@ -158,6 +173,10 @@ mod hw_setup {
         } else {
             quote! {}
         }
+    }
+
+    fn is_type_path_config_string(string: &str) -> bool {
+        string.len() >= 2 && string.starts_with('@') && !string.starts_with("@@")
     }
 
     fn yaml_number_to_tokens(number: &serde_yaml::Number) -> proc_macro2::TokenStream {
