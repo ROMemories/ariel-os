@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::Conditioned;
+use crate::{derive_conditioned, Conditioned};
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -53,22 +53,17 @@ impl Input {
     }
 }
 
-impl Conditioned for Input {
-    fn on(&self) -> Option<&str> {
-        self.on.as_deref()
-    }
-
-    fn when(&self) -> Option<&str> {
-        self.when.as_deref()
-    }
-}
+derive_conditioned!(Input);
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Output {
     pin: String,
     on: Option<String>,
+    when: Option<String>,
 }
+
+derive_conditioned!(Output);
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]

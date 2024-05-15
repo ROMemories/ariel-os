@@ -1,6 +1,8 @@
+use std::collections::HashMap;
+
 use serde::{Deserialize, Serialize};
 
-use crate::Conditioned;
+use crate::{derive_conditioned, Conditioned};
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -18,7 +20,25 @@ impl Buses {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct I2cBus {
-    instance: String,
+    name: String,
+    peripheral: HashMap<String, I2cBusPeripheral>,
+}
+
+impl I2cBus {
+    #[must_use]
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    #[must_use]
+    pub fn peripheral(&self) -> &HashMap<String, I2cBusPeripheral> {
+        &self.peripheral
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct I2cBusPeripheral {
     on: Option<String>,
     when: Option<String>,
     sda: Vec<I2cPin>,
@@ -26,7 +46,7 @@ pub struct I2cBus {
     frequency: I2cFrequency,
 }
 
-impl I2cBus {
+impl I2cBusPeripheral {
     #[must_use]
     pub fn sda(&self) -> &[I2cPin] {
         &self.sda
@@ -43,15 +63,7 @@ impl I2cBus {
     }
 }
 
-impl Conditioned for I2cBus {
-    fn on(&self) -> Option<&str> {
-        self.on.as_deref()
-    }
-
-    fn when(&self) -> Option<&str> {
-        self.when.as_deref()
-    }
-}
+derive_conditioned!(I2cBusPeripheral);
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -74,15 +86,7 @@ impl I2cPin {
     }
 }
 
-impl Conditioned for I2cPin {
-    fn on(&self) -> Option<&str> {
-        self.on.as_deref()
-    }
-
-    fn when(&self) -> Option<&str> {
-        self.when.as_deref()
-    }
-}
+derive_conditioned!(I2cPin);
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum I2cFrequency {

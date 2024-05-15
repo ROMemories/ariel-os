@@ -8,8 +8,8 @@ use riot_rs_embassy::Spawner;
 use riot_rs_sensors::{
     label::Label,
     sensor::{
-        Category, NotificationReceiver, PhysicalUnits, PhysicalValue, PhysicalValues, ReadingError,
-        ReadingResult, ThresholdKind, ValueScales, Labels,
+        Category, Labels, NotificationReceiver, PhysicalUnits, PhysicalValue, PhysicalValues,
+        ReadingError, ReadingResult, ThresholdKind, ValueScales,
     },
     PhysicalUnit, Sensor,
 };

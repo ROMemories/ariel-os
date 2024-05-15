@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 use serde_yaml::Value as YamlValue;
 
-use crate::{peripherals::Peripherals, Conditioned};
+use crate::{derive_conditioned, peripherals::Peripherals, Conditioned};
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -44,15 +44,7 @@ impl Sensor {
     }
 }
 
-impl Conditioned for Sensor {
-    fn on(&self) -> Option<&str> {
-        self.on.as_deref()
-    }
-
-    fn when(&self) -> Option<&str> {
-        self.when.as_deref()
-    }
-}
+derive_conditioned!(Sensor);
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -69,12 +61,16 @@ impl SensorConfig {
 #[serde(rename_all = "lowercase")]
 #[non_exhaustive]
 pub enum SensorBus {
-    I2c(Vec<SensorBusI2c>),
+    I2c(HashMap<String, SensorBusI2c>),
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct SensorBusI2c {
     on: Option<String>,
-    instance: String,
+    when: Option<String>,
+    // TODO: we may want to add additional per-sensor configuration later (e.g., I2C frequency
+    // configuration)
 }
+
+derive_conditioned!(SensorBusI2c);

@@ -9,8 +9,8 @@ use riot_rs_sensors::{
     categories::push_button::{PushButtonReading, PushButtonSensor},
     label::Label,
     sensor::{
-        Category, Notification, NotificationReceiver, PhysicalValue, PhysicalValues, ReadingError,
-        ReadingResult, ThresholdKind, PhysicalUnits, ValueScales, Labels,
+        Category, Labels, Notification, NotificationReceiver, PhysicalUnits, PhysicalValue,
+        PhysicalValues, ReadingError, ReadingResult, ThresholdKind, ValueScales,
     },
     PhysicalUnit, Reading, Sensor,
 };

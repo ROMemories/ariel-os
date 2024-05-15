@@ -3,17 +3,17 @@ pub fn hw_setup_init(_args: TokenStream, _item: TokenStream) -> TokenStream {
     use quote::{format_ident, quote};
     use riot_rs_hwsetup::HwSetup;
 
-    // FIXME: check that the item is indeed just a function declaration
+    // TODO: check that the item is indeed just a function declaration
     let fn_name = format_ident!("codegened_init");
 
     let hwsetup = HwSetup::read_from_file().unwrap();
-    dbg!(&hwsetup);
 
     let i2c_buses = hwsetup
         .buses()
         .i2c()
         .iter()
-        .map(|bus| hw_setup_init::generate_i2c_bus_init(bus));
+        .flat_map(|b| b.peripheral().iter())
+        .map(|(peripheral, bus)| hw_setup_init::generate_i2c_bus_init(peripheral, bus));
     // TODO: chain other buses
     let buses = i2c_buses;
 
@@ -29,11 +29,11 @@ pub fn hw_setup_init(_args: TokenStream, _item: TokenStream) -> TokenStream {
 mod hw_setup_init {
     use proc_macro2::TokenStream;
     use quote::{format_ident, quote};
-    use riot_rs_hwsetup::buses::{I2cBus, I2cFrequency};
+    use riot_rs_hwsetup::buses::{I2cBus, I2cBusPeripheral, I2cFrequency};
 
     use crate::utils;
 
-    pub fn generate_i2c_bus_init(i2c_setup: &I2cBus) -> TokenStream {
+    pub fn generate_i2c_bus_init(peripheral: &str, i2c_setup: &I2cBusPeripheral) -> TokenStream {
         let cfg_conds = crate::utils::parse_cfg_conditionals(i2c_setup);
 
         // TODO: is this the best place to do this conversion?
@@ -52,7 +52,8 @@ mod hw_setup_init {
         // FIXME: support on/when on sda/scl
         let sda_peripheral = format_ident!("{}", i2c_setup.sda().first().unwrap().pin());
         let scl_peripheral = format_ident!("{}", i2c_setup.scl().first().unwrap().pin());
-        dbg!(&sda_peripheral, &scl_peripheral);
+
+        let i2c_peripheral = format_ident!("{peripheral}");
 
         let expanded = quote! {
             #[cfg(all(#(#cfg_conds),*))]
@@ -65,9 +66,8 @@ mod hw_setup_init {
                 config.sda_high_drive = false;
                 config.scl_high_drive = false;
 
-                // FIXME: use configuration
                 let i2c = arch::i2c::I2c::new(
-                    peripherals.TWISPI0.take().unwrap(),
+                    peripherals.#i2c_peripheral.take().unwrap(),
                     peripherals.#sda_peripheral.take().unwrap(),
                     peripherals.#scl_peripheral.take().unwrap(),
                     config,

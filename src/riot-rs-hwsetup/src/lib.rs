@@ -1,6 +1,7 @@
 //! Reads and parses the hardware setup defined in a configuration file.
 
-#![deny(clippy::pedantic)]
+#![feature(lint_reasons)]
+#![deny(clippy::pedantic)] // FIXME: remove this when rebasing
 
 pub mod buses;
 pub mod peripherals;
@@ -50,10 +51,33 @@ pub enum Error {
     YamlError,
 }
 
-pub trait Conditioned {
+/// This trait is sealed and cannot be implemented for types outside this crate.
+#[allow(private_bounds, reason = "sealed trait")]
+pub trait Conditioned: private::Sealed {
     #[must_use]
     fn on(&self) -> Option<&str>;
 
     #[must_use]
     fn when(&self) -> Option<&str>;
 }
+
+mod private {
+    pub(crate) trait Sealed {}
+}
+
+macro_rules! derive_conditioned {
+    ($type:ident) => {
+        impl crate::private::Sealed for $type {}
+
+        impl Conditioned for $type {
+            fn on(&self) -> Option<&str> {
+                self.on.as_deref()
+            }
+
+            fn when(&self) -> Option<&str> {
+                self.when.as_deref()
+            }
+        }
+    };
+}
+pub(crate) use derive_conditioned;

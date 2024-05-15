@@ -11,8 +11,8 @@
 #![deny(clippy::pedantic)]
 
 pub mod categories;
-pub mod physical_unit;
 pub mod label;
+pub mod physical_unit;
 pub mod registry;
 pub mod sensor;
 
