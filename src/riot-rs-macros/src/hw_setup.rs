@@ -48,12 +48,7 @@ mod hw_setup {
 
         let spawner_fn = format_ident!("{sensor_name}_init");
 
-        let on_conds = parse_conditional_list("context", sensor_setup.on());
-        let when_conds = parse_conditional_list("feature", sensor_setup.when());
-
-        // We have to collect the iterator because `cfg_conds` is used multiple times when
-        // expanding
-        let cfg_conds = on_conds.iter().chain(when_conds.iter()).collect::<Vec<_>>();
+        let cfg_conds = crate::utils::parse_cfg_conditionals(sensor_setup);
         dbg!(&cfg_conds);
 
         let one_shot_peripheral_struct_ident = format_ident!("{sensor_name}Peripherals");
@@ -155,18 +150,5 @@ mod hw_setup {
             .rev()
             .collect::<Vec<_>>()
             .join("::")
-    }
-
-    fn parse_conditional_list(cfg_attr: &str, conditionals: Option<&str>) -> Vec<TokenStream> {
-        if let Some(on) = conditionals {
-            let context_attr = format_ident!("{cfg_attr}");
-
-            on.split(',')
-                .map(str::trim)
-                .map(|context| quote!(#context_attr = #context))
-                .collect::<Vec<_>>()
-        } else {
-            Vec::new()
-        }
     }
 }

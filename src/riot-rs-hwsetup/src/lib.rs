@@ -71,16 +71,6 @@ pub struct I2cBus {
 
 impl I2cBus {
     #[must_use]
-    pub fn on(&self) -> Option<&str> {
-        self.on.as_deref()
-    }
-
-    #[must_use]
-    pub fn when(&self) -> Option<&str> {
-        self.when.as_deref()
-    }
-
-    #[must_use]
     pub fn sda(&self) -> &[I2cPin] {
         &self.sda
     }
@@ -93,6 +83,16 @@ impl I2cBus {
     #[must_use]
     pub fn frequency(&self) -> I2cFrequency {
         self.frequency
+    }
+}
+
+impl Conditioned for I2cBus {
+    fn on(&self) -> Option<&str> {
+        self.on.as_deref()
+    }
+
+    fn when(&self) -> Option<&str> {
+        self.when.as_deref()
     }
 }
 
@@ -115,14 +115,14 @@ impl I2cPin {
     pub fn pull_up(&self) -> bool {
         self.pull_up
     }
+}
 
-    #[must_use]
-    pub fn on(&self) -> Option<&str> {
+impl Conditioned for I2cPin {
+    fn on(&self) -> Option<&str> {
         self.on.as_deref()
     }
 
-    #[must_use]
-    pub fn when(&self) -> Option<&str> {
+    fn when(&self) -> Option<&str> {
         self.when.as_deref()
     }
 }
@@ -158,16 +158,6 @@ impl Sensor {
     }
 
     #[must_use]
-    pub fn on(&self) -> Option<&str> {
-        self.on.as_deref()
-    }
-
-    #[must_use]
-    pub fn when(&self) -> Option<&str> {
-        self.when.as_deref()
-    }
-
-    #[must_use]
     pub fn bus(&self) -> Option<&SensorBus> {
         self.bus.as_ref()
     }
@@ -175,6 +165,16 @@ impl Sensor {
     #[must_use]
     pub fn peripherals(&self) -> Option<&Peripherals> {
         self.peripherals.as_ref()
+    }
+}
+
+impl Conditioned for Sensor {
+    fn on(&self) -> Option<&str> {
+        self.on.as_deref()
+    }
+
+    fn when(&self) -> Option<&str> {
+        self.when.as_deref()
     }
 }
 
@@ -232,6 +232,7 @@ pub enum Peripheral {
 pub struct Input {
     pin: String,
     on: Option<String>,
+    when: Option<String>,
     pull: PullResistor,
 }
 
@@ -242,13 +243,18 @@ impl Input {
     }
 
     #[must_use]
-    pub fn on(&self) -> Option<&str> {
+    pub fn pull(&self) -> PullResistor {
+        self.pull
+    }
+}
+
+impl Conditioned for Input {
+    fn on(&self) -> Option<&str> {
         self.on.as_deref()
     }
 
-    #[must_use]
-    pub fn pull(&self) -> PullResistor {
-        self.pull
+    fn when(&self) -> Option<&str> {
+        self.when.as_deref()
     }
 }
 
@@ -265,4 +271,12 @@ pub enum PullResistor {
     Up,
     Down,
     None,
+}
+
+pub trait Conditioned {
+    #[must_use]
+    fn on(&self) -> Option<&str>;
+
+    #[must_use]
+    fn when(&self) -> Option<&str>;
 }

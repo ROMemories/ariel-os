@@ -37,3 +37,31 @@ pub fn bool_as_token(boolean: bool) -> proc_macro2::TokenStream {
         quote::quote! { false }
     }
 }
+
+pub fn parse_cfg_conditionals(
+    conditioned_setup: &impl riot_rs_hwsetup::Conditioned,
+) -> Vec<proc_macro2::TokenStream> {
+    let on_conds = parse_conditional_list("context", conditioned_setup.on());
+    let when_conds = parse_conditional_list("feature", conditioned_setup.when());
+
+    on_conds
+        .into_iter()
+        .chain(when_conds.into_iter())
+        .collect::<Vec<_>>()
+}
+
+fn parse_conditional_list(
+    cfg_attr: &str,
+    conditionals: Option<&str>,
+) -> Vec<proc_macro2::TokenStream> {
+    if let Some(on) = conditionals {
+        let context_attr = format_ident!("{cfg_attr}");
+
+        on.split(',')
+            .map(str::trim)
+            .map(|context| quote::quote!(#context_attr = #context))
+            .collect::<Vec<_>>()
+    } else {
+        Vec::new()
+    }
+}

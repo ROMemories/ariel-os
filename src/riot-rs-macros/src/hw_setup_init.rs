@@ -34,10 +34,7 @@ mod hw_setup_init {
     use crate::utils;
 
     pub fn generate_i2c_bus_init(i2c_setup: &I2cBus) -> TokenStream {
-        let on_conds = parse_conditional_list("context", i2c_setup.on());
-        let when_conds = parse_conditional_list("feature", i2c_setup.when());
-
-        let cfg_conds = on_conds.iter().chain(when_conds.iter()).collect::<Vec<_>>();
+        let cfg_conds = crate::utils::parse_cfg_conditionals(i2c_setup);
 
         // TODO: is this the best place to do this conversion?
         let frequency = match i2c_setup.frequency() {
