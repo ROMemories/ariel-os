@@ -21,6 +21,25 @@ pub fn hw_setup_init(_args: TokenStream, _item: TokenStream) -> TokenStream {
         fn codegened_init(peripherals: &mut arch::OptionalPeripherals) {
             #(#buses)*
         }
+
+        // Using the OnceCell from once_cell instead of the one from core because it supports
+        // critical sections.
+        // TODO: move this to a `bus` module?
+        pub static I2C_BUS: once_cell::sync::OnceCell<
+            embassy_sync::mutex::Mutex<
+                embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex,
+                arch::i2c::I2c,
+            >,
+        > = once_cell::sync::OnceCell::new();
+
+        // Using the OnceCell from once_cell instead of the one from core because it supports
+        // critical sections.
+        pub static SPI_BUS: once_cell::sync::OnceCell<
+            embassy_sync::mutex::Mutex<
+                embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex,
+                arch::spi::Spi,
+            >,
+        > = once_cell::sync::OnceCell::new();
     };
 
     TokenStream::from(expanded)
@@ -29,18 +48,23 @@ pub fn hw_setup_init(_args: TokenStream, _item: TokenStream) -> TokenStream {
 mod hw_setup_init {
     use proc_macro2::TokenStream;
     use quote::{format_ident, quote};
-    use riot_rs_hwsetup::buses::{I2cBus, I2cBusPeripheral, I2cFrequency};
+    use riot_rs_hwsetup::buses;
 
     use crate::utils;
 
-    pub fn generate_i2c_bus_init(peripheral: &str, i2c_setup: &I2cBusPeripheral) -> TokenStream {
+    pub fn generate_i2c_bus_init(
+        peripheral: &str,
+        i2c_setup: &buses::i2c::BusPeripheral,
+    ) -> TokenStream {
+        use buses::i2c::Frequency;
+
         let cfg_conds = crate::utils::parse_cfg_conditionals(i2c_setup);
 
         // TODO: is this the best place to do this conversion?
         let frequency = match i2c_setup.frequency() {
-            I2cFrequency::K100 => quote! { arch::i2c::Frequency::K100 },
-            I2cFrequency::K250 => quote! { arch::i2c::Frequency::K250 },
-            I2cFrequency::K400 => quote! { arch::i2c::Frequency::K400 },
+            Frequency::K100 => quote! { arch::i2c::Frequency::K100 },
+            Frequency::K250 => quote! { arch::i2c::Frequency::K250 },
+            Frequency::K400 => quote! { arch::i2c::Frequency::K400 },
         };
 
         // FIXME: support on/when on sda/scl
@@ -73,25 +97,45 @@ mod hw_setup_init {
                     config,
                 );
 
-                let i2c_bus = embassy_sync::mutex::Mutex::new(i2c);
-                let _ = I2C_BUS.set(i2c_bus);
+                let _ = I2C_BUS.set(embassy_sync::mutex::Mutex::new(i2c));
             }
         };
 
         TokenStream::from(expanded)
     }
 
-    // FIXME: factor this out with hw_setup
-    fn parse_conditional_list(cfg_attr: &str, conditionals: Option<&str>) -> Vec<TokenStream> {
-        if let Some(on) = conditionals {
-            let context_attr = format_ident!("{cfg_attr}");
+    pub fn generate_spi_bus_init(
+        peripheral: &str,
+        spi_setup: &buses::spi::BusPeripheral,
+    ) -> TokenStream {
+        let cfg_conds = crate::utils::parse_cfg_conditionals(spi_setup);
 
-            on.split(',')
-                .map(str::trim)
-                .map(|context| quote!(#context_attr = #context))
-                .collect::<Vec<_>>()
-        } else {
-            Vec::new()
-        }
+        // FIXME: test what happens when trying to use a peripheral that doesn't exist or that is
+        // already used
+        // FIXME: support on/when on sck/miso/mosi
+        let sck_peripheral = format_ident!("{}", spi_setup.sck().first().unwrap().pin());
+        let miso_peripheral = format_ident!("{}", spi_setup.miso().first().unwrap().pin());
+        let mosi_peripheral = format_ident!("{}", spi_setup.mosi().first().unwrap().pin());
+
+        let spi_peripheral = format_ident!("{peripheral}");
+
+        let expanded = quote! {
+            #[cfg(all(#(#cfg_conds),*))]
+            {
+                let mut config = arch::spi::Config::default();
+                // FIXME: set the config
+
+                let spi = arch::spi::Spi::new(
+                    peripherals.#sck_peripheral.take().unwrap(),
+                    peripherals.#miso_peripheral.take().unwrap(),
+                    peripherals.#mosi_peripheral.take().unwrap(),
+                    config,
+                );
+
+                let _ = SPI_BUS.set(embassy_sync::mutex::Mutex::new(spi));
+            }
+        };
+
+        TokenStream::from(expanded)
     }
 }

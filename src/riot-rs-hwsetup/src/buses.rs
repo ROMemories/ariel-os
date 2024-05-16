@@ -1,96 +1,175 @@
-use std::collections::HashMap;
-
 use serde::{Deserialize, Serialize};
-
-use crate::{derive_conditioned, Conditioned};
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Buses {
-    i2c: Vec<I2cBus>,
+    i2c: Vec<i2c::Bus>,
+    spi: Vec<spi::Bus>,
 }
 
 impl Buses {
     #[must_use]
-    pub fn i2c(&self) -> &[I2cBus] {
+    pub fn i2c(&self) -> &[i2c::Bus] {
         &self.i2c
     }
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct I2cBus {
-    name: String,
-    peripheral: HashMap<String, I2cBusPeripheral>,
-}
-
-impl I2cBus {
-    #[must_use]
-    pub fn name(&self) -> &str {
-        &self.name
-    }
 
     #[must_use]
-    pub fn peripheral(&self) -> &HashMap<String, I2cBusPeripheral> {
-        &self.peripheral
+    pub fn spi(&self) -> &[spi::Bus] {
+        &self.spi
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct I2cBusPeripheral {
-    on: Option<String>,
-    when: Option<String>,
-    sda: Vec<I2cPin>,
-    scl: Vec<I2cPin>,
-    frequency: I2cFrequency,
+pub mod i2c {
+    use std::collections::HashMap;
+
+    use serde::{Deserialize, Serialize};
+
+    use crate::{derive_conditioned, Conditioned};
+
+    #[derive(Debug, Serialize, Deserialize)]
+    #[serde(deny_unknown_fields)]
+    pub struct Bus {
+        name: String,
+        peripheral: HashMap<String, BusPeripheral>, // FIXME: require at least one element
+    }
+
+    impl Bus {
+        #[must_use]
+        pub fn name(&self) -> &str {
+            &self.name
+        }
+
+        #[must_use]
+        pub fn peripheral(&self) -> &HashMap<String, BusPeripheral> {
+            &self.peripheral
+        }
+    }
+
+    #[derive(Debug, Serialize, Deserialize)]
+    #[serde(deny_unknown_fields)]
+    pub struct BusPeripheral {
+        on: Option<String>,
+        when: Option<String>,
+        sda: Vec<Pin>, // FIXME: require at least one element
+        scl: Vec<Pin>, // FIXME: require at least one element
+        frequency: Frequency,
+    }
+
+    impl BusPeripheral {
+        #[must_use]
+        pub fn sda(&self) -> &[Pin] {
+            &self.sda
+        }
+
+        #[must_use]
+        pub fn scl(&self) -> &[Pin] {
+            &self.scl
+        }
+
+        #[must_use]
+        pub fn frequency(&self) -> Frequency {
+            self.frequency
+        }
+    }
+
+    derive_conditioned!(BusPeripheral);
+
+    #[derive(Debug, Clone, Serialize, Deserialize)]
+    #[serde(deny_unknown_fields)]
+    pub struct Pin {
+        pin: String,
+        pull_up: bool,
+        on: Option<String>,
+        when: Option<String>,
+    }
+
+    impl Pin {
+        #[must_use]
+        pub fn pin(&self) -> &str {
+            &self.pin
+        }
+
+        #[must_use]
+        pub fn pull_up(&self) -> bool {
+            self.pull_up
+        }
+    }
+
+    derive_conditioned!(Pin);
+
+    #[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize)]
+    pub enum Frequency {
+        K100,
+        K250,
+        K400,
+    }
 }
 
-impl I2cBusPeripheral {
-    #[must_use]
-    pub fn sda(&self) -> &[I2cPin] {
-        &self.sda
+pub mod spi {
+    use std::collections::HashMap;
+
+    use serde::{Deserialize, Serialize};
+
+    use crate::{derive_conditioned, Conditioned};
+
+    #[derive(Debug, Serialize, Deserialize)]
+    #[serde(deny_unknown_fields)]
+    pub struct Bus {
+        name: String,
+        peripheral: HashMap<String, BusPeripheral>, // FIXME: require at least one element
     }
 
-    #[must_use]
-    pub fn scl(&self) -> &[I2cPin] {
-        &self.scl
+    #[derive(Debug, Serialize, Deserialize)]
+    #[serde(deny_unknown_fields)]
+    pub struct BusPeripheral {
+        on: Option<String>,
+        when: Option<String>,
+        sck: Vec<Pin>, // FIXME: require at least one element
+        miso: Vec<Pin>, // FIXME: require at least one element
+        mosi: Vec<Pin>, // FIXME: require at least one element
+        mode: Mode,
     }
 
-    #[must_use]
-    pub fn frequency(&self) -> I2cFrequency {
-        self.frequency
-    }
-}
+    impl BusPeripheral {
+        #[must_use]
+        pub fn sck(&self) -> &[Pin] {
+            &self.sck
+        }
 
-derive_conditioned!(I2cBusPeripheral);
+        #[must_use]
+        pub fn miso(&self) -> &[Pin] {
+            &self.miso
+        }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct I2cPin {
-    pin: String,
-    pull_up: bool,
-    on: Option<String>,
-    when: Option<String>,
-}
-
-impl I2cPin {
-    #[must_use]
-    pub fn pin(&self) -> &str {
-        &self.pin
+        #[must_use]
+        pub fn mosi(&self) -> &[Pin] {
+            &self.mosi
+        }
     }
 
-    #[must_use]
-    pub fn pull_up(&self) -> bool {
-        self.pull_up
+    derive_conditioned!(BusPeripheral);
+
+    #[derive(Debug, Clone, Serialize, Deserialize)]
+    #[serde(deny_unknown_fields)]
+    pub struct Pin {
+        pin: String,
+        pull_up: bool,
+        on: Option<String>,
+        when: Option<String>,
     }
-}
 
-derive_conditioned!(I2cPin);
+    impl Pin {
+        #[must_use]
+        pub fn pin(&self) -> &str {
+            &self.pin
+        }
+    }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub enum I2cFrequency {
-    K100,
-    K250,
-    K400,
+    #[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize)]
+    pub enum Mode {
+        Mode0,
+        Mode1,
+        Mode2,
+        Mode3,
+    }
 }

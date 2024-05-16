@@ -21,6 +21,15 @@ buses: # TODO: rename this? Shared communication interfaces
             - pin: P0_31  # FIXME: not an RP2040 pin
               pull_up: false
           frequency: !K100
+  spi:
+    - name: SPI0
+      peripheral:
+        SPI2:
+          on: nrf52840
+          sck:  #  FIXME
+          miso:  #  FIXME
+          mosi:  #  FIXME
+          mode: !Mode0
 
 sensors:
   - name: TEMP_SENSOR

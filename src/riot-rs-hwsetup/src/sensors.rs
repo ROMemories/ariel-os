@@ -62,6 +62,7 @@ impl SensorConfig {
 #[non_exhaustive]
 pub enum SensorBus {
     I2c(HashMap<String, SensorBusI2c>),
+    Spi(HashMap<String, SensorBusSpi>),
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -74,3 +75,14 @@ pub struct SensorBusI2c {
 }
 
 derive_conditioned!(SensorBusI2c);
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct SensorBusSpi {
+    on: Option<String>,
+    when: Option<String>,
+    // TODO: we may want to add additional per-sensor configuration later (e.g., I2C frequency
+    // configuration)
+}
+
+derive_conditioned!(SensorBusSpi);

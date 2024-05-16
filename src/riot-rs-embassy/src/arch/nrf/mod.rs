@@ -1,7 +1,8 @@
 // FIXME: feature-gate this?
 pub mod i2c;
-
 pub mod gpio;
+// FIXME: feature-gate this?
+pub mod spi;
 
 #[cfg(feature = "hwrng")]
 pub mod hwrng;

@@ -33,9 +33,6 @@ pub mod network;
 #[cfg(feature = "wifi")]
 mod wifi;
 
-// Using the OnceCell from once_cell instead of the one from core because it supports critical
-// sections.
-use once_cell::sync::OnceCell;
 use riot_rs_debug::println;
 
 // re-exports
@@ -73,13 +70,6 @@ pub static EMBASSY_TASKS: [Task] = [..];
 
 #[cfg(feature = "executor-interrupt")]
 pub static EXECUTOR: arch::Executor = arch::Executor::new();
-
-pub static I2C_BUS: OnceCell<
-    embassy_sync::mutex::Mutex<
-        embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex,
-        arch::i2c::I2c,
-    >,
-> = OnceCell::new();
 
 #[cfg(feature = "executor-interrupt")]
 #[distributed_slice(riot_rs_rt::INIT_FUNCS)]
