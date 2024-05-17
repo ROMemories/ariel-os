@@ -153,7 +153,6 @@ pub mod spi {
     #[serde(deny_unknown_fields)]
     pub struct Pin {
         pin: String,
-        pull_up: bool,
         on: Option<String>,
         when: Option<String>,
     }

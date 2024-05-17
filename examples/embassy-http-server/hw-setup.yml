@@ -6,9 +6,11 @@ buses: # TODO: rename this? Shared communication interfaces
           on: nrf52840
           sda:
             - pin: P0_30
+              on: nrf52840dk
               pull_up: false
           scl:
             - pin: P0_31
+              on: nrf52840dk
               pull_up: false
           frequency: !K100
 
@@ -26,9 +28,15 @@ buses: # TODO: rename this? Shared communication interfaces
       peripheral:
         SPI2:
           on: nrf52840
-          sck:  #  FIXME
-          miso:  #  FIXME
-          mosi:  #  FIXME
+          sck:
+            - pin: P1_15
+              on: nrf52840dk
+          miso:
+            - pin: P1_14
+              on: nrf52840dk
+          mosi:
+            - pin: P1_13
+              on: nrf52840dk
           mode: !Mode0
 
 sensors:
