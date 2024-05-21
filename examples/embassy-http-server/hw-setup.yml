@@ -42,10 +42,12 @@ buses: # TODO: rename this? Shared communication interfaces
 sensors:
   - name: TEMP_SENSOR
     driver: riot_rs::embassy::arch::internal_temp::InternalTemp
+    label: "internal"
     on: nrf52
 
   - name: BUTTON_1
     driver: riot_rs::builtin_sensors::push_buttons::PushButton
+    label: 'btn1'
     on: nrf52840dk
     when: button-readings
     peripherals:
@@ -56,6 +58,7 @@ sensors:
 
   - name: ACCEL
     driver: riot_rs::builtin_sensors::lis3dh::Lis3dh::<riot_rs::embassy::arch::i2c::I2c>
+    label: 'accel'
     with:
       mode: '@riot_rs::builtin_sensors::lis3dh::Mode::Normal'
       enable_z_axis: true

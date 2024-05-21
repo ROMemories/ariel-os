@@ -54,7 +54,14 @@ pub trait Sensor: Any + Send + Sync {
     fn units(&self) -> PhysicalUnits;
 
     #[must_use]
-    fn labels(&self) -> Labels;
+    fn reading_labels(&self) -> Labels;
+
+    /// String label of the sensor instance.
+    ///
+    /// For instance, in the case of a temperature sensor, this allows to specify whether it is
+    /// placed indoor or outdoor.
+    #[must_use]
+    fn label(&self) -> &'static str;
 
     /// Returns a human-readable name of the sensor.
     // TODO: i18n?
@@ -277,13 +284,27 @@ macro_rules! _await_read_sensor {
             if let Some($sensor) = ($sensor as &dyn core::any::Any)
                 .downcast_ref::<$first_sensor_type>(
             ) {
-                ($sensor.read().await, $sensor.value_scales(), $sensor.units(), $sensor.display_name(), $sensor.labels())
+                (
+                    $sensor.read().await,
+                    $sensor.value_scales(),
+                    $sensor.units(),
+                    $sensor.display_name(),
+                    $sensor.label(),
+                    $sensor.reading_labels(),
+                )
             }
             $(
             else if let Some($sensor) = ($sensor as &dyn core::any::Any)
                 .downcast_ref::<$sensor_type>(
             ) {
-                ($sensor.read().await, $sensor.value_scales(), $sensor.units(), $sensor.display_name(), $sensor.labels())
+                (
+                    $sensor.read().await,
+                    $sensor.value_scales(),
+                    $sensor.units(),
+                    $sensor.display_name(),
+                    $sensor.label(),
+                    $sensor.reading_labels(),
+                )
             }
             )*
             else {

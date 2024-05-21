@@ -30,6 +30,7 @@ riot_rs_embassy::define_peripherals!(Peripherals {});
 pub struct Aht20<I2C: embedded_hal_async::i2c::I2c + 'static> {
     initialized: AtomicBool, // TODO: use an atomic bitset for initialized and enabled
     enabled: AtomicBool,
+    label: &'static str,
     // TODO: consider using MaybeUninit?
     ht: Mutex<
         CriticalSectionRawMutex,
@@ -40,10 +41,11 @@ pub struct Aht20<I2C: embedded_hal_async::i2c::I2c + 'static> {
 impl<I2C: embedded_hal_async::i2c::I2c> Aht20<I2C> {
     #[expect(clippy::new_without_default)]
     #[must_use]
-    pub const fn new() -> Self {
+    pub const fn new(label: &'static str) -> Self {
         Self {
             initialized: AtomicBool::new(false),
             enabled: AtomicBool::new(false),
+            label,
             ht: Mutex::new(None),
         }
     }
@@ -135,8 +137,12 @@ impl<I2C: embedded_hal_async::i2c::I2c + Send> Sensor for Aht20<I2C> {
         PhysicalUnits::Two([PhysicalUnit::Percent, PhysicalUnit::Celsius])
     }
 
-    fn labels(&self) -> Labels {
+    fn reading_labels(&self) -> Labels {
         Labels::Two([Label::Humidity, Label::Temperature])
+    }
+
+    fn label(&self) -> &'static str {
+        &self.label
     }
 
     fn display_name(&self) -> Option<&'static str> {

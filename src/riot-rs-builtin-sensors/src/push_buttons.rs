@@ -31,6 +31,7 @@ pub type PushButton = GenericPushButton<riot_rs_embassy::arch::gpio::Input<'stat
 pub struct GenericPushButton<I: InputPin> {
     initialized: AtomicBool, // TODO: use an atomic bitset for initialized and enabled
     enabled: AtomicBool,
+    label: &'static str,
     // buttons: [Option<Button>; N], // TODO: maybe use MaybeUninit
     button: Mutex<CriticalSectionRawMutex, Option<I>>, // TODO: maybe use MaybeUninit
     channel: Channel<CriticalSectionRawMutex, Notification, 1>,
@@ -38,10 +39,11 @@ pub struct GenericPushButton<I: InputPin> {
 
 impl<I: InputPin> GenericPushButton<I> {
     #[allow(clippy::new_without_default)]
-    pub const fn new() -> Self {
+    pub const fn new(label: &'static str) -> Self {
         Self {
             initialized: AtomicBool::new(false),
             enabled: AtomicBool::new(false),
+            label,
             button: Mutex::new(None),
             channel: Channel::new(),
         }
@@ -118,8 +120,12 @@ impl<I: 'static + InputPin + Send> Sensor for GenericPushButton<I> {
         PhysicalUnits::One([PhysicalUnit::Bool])
     }
 
-    fn labels(&self) -> Labels {
+    fn reading_labels(&self) -> Labels {
         Labels::One([Label::Main])
+    }
+
+    fn label(&self) -> &'static str {
+        &self.label
     }
 
     fn display_name(&self) -> Option<&'static str> {

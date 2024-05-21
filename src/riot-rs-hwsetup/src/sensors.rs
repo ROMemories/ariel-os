@@ -10,6 +10,7 @@ use crate::{derive_conditioned, peripherals::Peripherals, Conditioned};
 pub struct Sensor {
     name: String,
     driver: String,
+    label: String,
     on: Option<String>,
     when: Option<String>,
     with: Option<SensorConfig>,
@@ -26,6 +27,11 @@ impl Sensor {
     #[must_use]
     pub fn driver(&self) -> &str {
         &self.driver
+    }
+
+    #[must_use]
+    pub fn label(&self) -> &str {
+        &self.label
     }
 
     #[must_use]

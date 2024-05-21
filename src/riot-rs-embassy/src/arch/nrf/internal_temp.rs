@@ -36,6 +36,7 @@ crate::define_peripherals!(Peripherals { temp: TEMP });
 pub struct InternalTemp {
     initialized: AtomicBool, // TODO: use an atomic bitset for initialized and enabled
     enabled: AtomicBool,
+    label: &'static str,
     // TODO: use a blocking mutex instead?
     temp: Mutex<CriticalSectionRawMutex, Option<embassy_nrf::temp::Temp<'static>>>,
     channel: Channel<CriticalSectionRawMutex, Notification, 1>,
@@ -47,10 +48,11 @@ pub struct InternalTemp {
 
 impl InternalTemp {
     #[must_use]
-    pub const fn new() -> Self {
+    pub const fn new(label: &'static str) -> Self {
         Self {
             initialized: AtomicBool::new(false),
             enabled: AtomicBool::new(false),
+            label,
             temp: Mutex::new(None),
             channel: Channel::new(),
             lower_threshold: AtomicI32::new(0),
@@ -164,8 +166,12 @@ impl Sensor for InternalTemp {
         ValueScales::One([-2])
     }
 
-    fn labels(&self) -> Labels {
+    fn reading_labels(&self) -> Labels {
         Labels::One([Label::Main])
+    }
+
+    fn label(&self) -> &'static str {
+        &self.label
     }
 
     fn units(&self) -> PhysicalUnits {
