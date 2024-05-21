@@ -22,9 +22,7 @@ pub struct HwSetup {
 
 impl HwSetup {
     pub fn read_from_file() -> Result<Self, Error> {
-        // let root = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap()); // FIXME: do something about this error?
-        // FIXME
-        let root = PathBuf::from("examples/embassy-http-server"); // FIXME: do something about this error?
+        let root = PathBuf::from(env::var("APPDIR").unwrap()); // FIXME: do something about this error
         let file_path = root.join("hw-setup.yml");
 
         let file = fs::File::open(file_path).unwrap(); // FIXME: handle the error
