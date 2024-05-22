@@ -7,7 +7,11 @@ pub mod buses;
 pub mod peripherals;
 pub mod sensors;
 
-use std::{fs, io::Read, path::Path};
+use std::{
+    fs,
+    io::{self, Read},
+    path::{Path, PathBuf},
+};
 
 use serde::{Deserialize, Serialize};
 
@@ -21,13 +25,27 @@ pub struct HwSetup {
 }
 
 impl HwSetup {
-    pub fn read_from_path(file_path: &Path) -> Result<Self, Error> {
-        let file = fs::File::open(file_path).unwrap(); // FIXME: handle the error
+    /// Parses a [`HwSetup`] struct from a file.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Error::SetupFileNotFound`] if the file cannot be found.
+    pub fn read_from_path(path: &Path) -> Result<Self, Error> {
+        let file = fs::File::open(path).map_err(|source| Error::SetupFileNotFound {
+            path: path.to_path_buf(),
+            source,
+        })?;
         Self::read_from_reader(&file)
     }
 
+    /// Parses a [`HwSetup`] struct from a reader.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Error::YamlParsing`] in case of parsing error.
     pub fn read_from_reader(setup: impl Read) -> Result<Self, Error> {
-        let hwconfig = serde_yaml::from_reader(setup).unwrap(); // FIXME: handle the error
+        let hwconfig =
+            serde_yaml::from_reader(setup).map_err(|source| Error::YamlParsing { source })?;
 
         Ok(hwconfig)
     }
@@ -46,8 +64,8 @@ impl HwSetup {
 // TODO
 #[derive(Debug)]
 pub enum Error {
-    ConfigNotFound,
-    YamlError,
+    SetupFileNotFound { path: PathBuf, source: io::Error },
+    YamlParsing { source: serde_yaml::Error },
 }
 
 /// This trait is sealed and cannot be implemented for types outside this crate.
