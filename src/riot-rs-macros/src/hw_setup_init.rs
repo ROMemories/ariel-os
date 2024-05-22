@@ -6,7 +6,8 @@ pub fn hw_setup_init(_args: TokenStream, _item: TokenStream) -> TokenStream {
     // TODO: check that the item is indeed just a function declaration
     let fn_name = format_ident!("codegened_init");
 
-    let hwsetup = HwSetup::read_from_file().unwrap();
+    let hwsetup_path = std::path::PathBuf::from(std::env::var("SETUP_FILE").unwrap());
+    let hwsetup = HwSetup::read_from_path(&hwsetup_path).unwrap();
 
     let i2c_buses = hwsetup
         .buses()

@@ -8,7 +8,8 @@ pub fn hw_setup(_args: TokenStream, _item: TokenStream) -> TokenStream {
 
     let riot_rs_crate = utils::riot_rs_crate();
 
-    let hwsetup = HwSetup::read_from_file().unwrap();
+    let hwsetup_path = std::path::PathBuf::from(std::env::var("SETUP_FILE").unwrap());
+    let hwsetup = HwSetup::read_from_path(&hwsetup_path).unwrap();
     dbg!(&hwsetup);
 
     let sensors = hwsetup

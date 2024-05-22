@@ -7,7 +7,7 @@ pub mod buses;
 pub mod peripherals;
 pub mod sensors;
 
-use std::{env, fs, path::PathBuf};
+use std::{fs, io::Read, path::Path};
 
 use serde::{Deserialize, Serialize};
 
@@ -21,12 +21,13 @@ pub struct HwSetup {
 }
 
 impl HwSetup {
-    pub fn read_from_file() -> Result<Self, Error> {
-        let root = PathBuf::from(env::var("APPDIR").unwrap()); // FIXME: do something about this error
-        let file_path = root.join("hw-setup.yml");
-
+    pub fn read_from_path(file_path: &Path) -> Result<Self, Error> {
         let file = fs::File::open(file_path).unwrap(); // FIXME: handle the error
-        let hwconfig = serde_yaml::from_reader(&file).unwrap(); // FIXME: handle the error
+        Self::read_from_reader(&file)
+    }
+
+    pub fn read_from_reader(setup: impl Read) -> Result<Self, Error> {
+        let hwconfig = serde_yaml::from_reader(setup).unwrap(); // FIXME: handle the error
 
         Ok(hwconfig)
     }

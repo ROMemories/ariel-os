@@ -12,7 +12,8 @@ pub fn await_read_sensor_value(input: TokenStream) -> TokenStream {
 
     let sensor_ident: Ident = syn::parse_macro_input!(input);
 
-    let hwsetup = HwSetup::read_from_file().unwrap();
+    let hwsetup_path = std::path::PathBuf::from(std::env::var("SETUP_FILE").unwrap());
+    let hwsetup = HwSetup::read_from_path(&hwsetup_path).unwrap();
     dbg!(&hwsetup);
 
     let sensor_type_list = hwsetup.sensors().iter().map(Sensor::driver);
