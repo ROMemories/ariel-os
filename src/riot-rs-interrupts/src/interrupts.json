@@ -1,0 +1,8 @@
+{
+  "nrf52": {
+    "TWISPI0": "SPIM0_SPIS0_TWIM0_TWIS0_SPI0_TWI0"
+  },
+  "rp": {
+    "I2C0": "I2C0_IRQ"
+  }
+}
