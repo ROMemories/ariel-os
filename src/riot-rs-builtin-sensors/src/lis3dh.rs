@@ -48,6 +48,8 @@ impl Default for Config {
 
 riot_rs_embassy::define_peripherals!(Peripherals {});
 
+pub type Lis3dhI2c = Lis3dh<riot_rs_embassy::arch::i2c::I2c>;
+
 // TODO: support SPI as well
 // TODO: could maybe use a OncelCell instead of an Option
 pub struct Lis3dh<I2C: embedded_hal_async::i2c::I2c + 'static> {

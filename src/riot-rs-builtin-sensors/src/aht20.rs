@@ -27,6 +27,8 @@ impl Default for Config {
 
 riot_rs_embassy::define_peripherals!(Peripherals {});
 
+pub type Aht20I2c = Aht20<riot_rs_embassy::arch::i2c::I2c>;
+
 pub struct Aht20<I2C: embedded_hal_async::i2c::I2c + 'static> {
     initialized: AtomicBool, // TODO: use an atomic bitset for initialized and enabled
     enabled: AtomicBool,

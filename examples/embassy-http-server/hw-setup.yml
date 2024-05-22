@@ -57,7 +57,7 @@ sensors:
         pull: !up  # FIXME
 
   - name: ACCEL
-    driver: riot_rs::builtin_sensors::lis3dh::Lis3dh::<riot_rs::embassy::arch::i2c::I2c>
+    driver: riot_rs::builtin_sensors::lis3dh::Lis3dhI2c
     label: 'accel'
     with:
       mode: '@riot_rs::builtin_sensors::lis3dh::Mode::Normal'
@@ -67,6 +67,8 @@ sensors:
       I2C0:
 
   # - name: HUMID_TEMP
-  #   driver: riot_rs::builtin_sensors::aht20::Aht20::<riot_rs::embassy::arch::i2c::I2c>
+  #   driver: riot_rs::builtin_sensors::aht20::Aht20I2c
+  #   label: 'indoor'
   #   bus:
   #     !i2c
+  #     I2C0:
