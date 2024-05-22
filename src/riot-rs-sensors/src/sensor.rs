@@ -77,6 +77,12 @@ pub trait Sensor: Any + Send + Sync {
     fn version(&self) -> u8;
 }
 
+impl dyn Sensor {
+    pub fn downcast_ref<T: Sensor>(&self) -> Option<&T> {
+        (self as &dyn Any).downcast_ref::<T>()
+    }
+}
+
 pub trait Reading: core::fmt::Debug {
     fn value(&self) -> PhysicalValue;
 
@@ -281,9 +287,7 @@ macro_rules! _await_read_sensor {
     ($sensor:ident, $first_sensor_type:path, $($sensor_type:path),* $(,)?) => {
         {
             // As sensor methods are non-dispatchable, we have to downcast
-            if let Some($sensor) = ($sensor as &dyn core::any::Any)
-                .downcast_ref::<$first_sensor_type>(
-            ) {
+            if let Some($sensor) = $sensor.downcast_ref::<$first_sensor_type>() {
                 (
                     $sensor.read().await,
                     $sensor.value_scales(),
@@ -294,9 +298,7 @@ macro_rules! _await_read_sensor {
                 )
             }
             $(
-            else if let Some($sensor) = ($sensor as &dyn core::any::Any)
-                .downcast_ref::<$sensor_type>(
-            ) {
+            else if let Some($sensor) = $sensor.downcast_ref::<$sensor_type>() {
                 (
                     $sensor.read().await,
                     $sensor.value_scales(),

@@ -7,6 +7,7 @@
 // Required by linkme
 #![feature(used_with_arg)]
 #![feature(error_in_core)]
+#![feature(trait_upcasting)]
 #![deny(unused_must_use)]
 #![deny(clippy::pedantic)]
 
