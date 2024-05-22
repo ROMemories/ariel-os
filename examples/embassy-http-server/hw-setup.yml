@@ -64,6 +64,7 @@ sensors:
       enable_z_axis: true
     bus:
       !i2c
+      I2C0:
 
   # - name: HUMID_TEMP
   #   driver: riot_rs::builtin_sensors::aht20::Aht20::<riot_rs::embassy::arch::i2c::I2c>

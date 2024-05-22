@@ -119,6 +119,18 @@ pub mod spi {
         peripheral: HashMap<String, BusPeripheral>, // FIXME: require at least one element
     }
 
+    impl Bus {
+        #[must_use]
+        pub fn name(&self) -> &str {
+            &self.name
+        }
+
+        #[must_use]
+        pub fn peripheral(&self) -> &HashMap<String, BusPeripheral> {
+            &self.peripheral
+        }
+    }
+
     #[derive(Debug, Serialize, Deserialize)]
     #[serde(deny_unknown_fields)]
     pub struct BusPeripheral {

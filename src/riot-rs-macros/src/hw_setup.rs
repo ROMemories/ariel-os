@@ -33,7 +33,7 @@ mod hw_setup {
     use proc_macro2::TokenStream;
     use quote::{format_ident, quote};
     use riot_rs_hwsetup::{
-        peripherals::{Peripheral, PullResistor},
+        peripherals::PullResistor,
         sensors::{Sensor, SensorBus, SensorConfig},
     };
     use serde_yaml::Value as YamlValue;
@@ -62,41 +62,43 @@ mod hw_setup {
 
         // FIXME: these are not mutually exclusive
         let sensor_init = if let Some(SensorBus::I2c(i2cs)) = sensor_setup.bus() {
+            // FIXME: handle conds
+            let bus_name = i2cs.keys().next().unwrap();
+            let i2c_bus_static = format_ident!("{}", super::i2c_bus_static(bus_name));
+
             // FIXME: maybe do not even pass raw peripherals, always wrap them into embedded_hal
             // types/arch types (including the internal temp sensor)
             // TODO: select the appropriate I2C instance
             quote! {
-                let i2c_bus = #riot_rs_crate::embassy::I2C_BUS.get().unwrap();
+                let i2c_bus = #riot_rs_crate::embassy::#i2c_bus_static.get().unwrap();
                 let i2c_dev = #riot_rs_crate::embassy::arch::i2c::I2cDevice::new(i2c_bus);
                 #sensor_name_static.init(spawner, peripherals, i2c_dev, config);
             }
+        } else if let Some(peripherals) = sensor_setup.peripherals() {
+            // FIXME: handle multiple GPIOs
+            // FIXME: handle multiple peripheral types
+            let input = peripherals.inputs().next().unwrap();
+
+            // TODO: move this match elsewhere?
+            let pull_setting = match input.pull() {
+                PullResistor::Up => quote! { Up },
+                PullResistor::Down => quote! { Down },
+                PullResistor::None => quote! { None },
+            };
+
+            peripheral = Some(format_ident!("{}", input.pin()));
+
+            use_one_shot_peripheral_struct = true;
+
+            quote! {
+                let pull = #riot_rs_crate::embassy::arch::gpio::Pull::#pull_setting;
+                let input = #riot_rs_crate::embassy::arch::gpio::Input::new(peripherals.p, pull);
+
+                #sensor_name_static.init(spawner, input, config);
+            }
         } else {
-            if let Some(peripherals) = sensor_setup.peripherals() {
-                // FIXME: handle multiple GPIOs
-                // FIXME: handle multiple peripheral types
-                let input = peripherals.inputs().next().unwrap();
-
-                // TODO: move this match elsewhere?
-                let pull_setting = match input.pull() {
-                    PullResistor::Up => quote! { Up },
-                    PullResistor::Down => quote! { Down },
-                    PullResistor::None => quote! { None },
-                };
-
-                peripheral = Some(format_ident!("{}", input.pin()));
-
-                use_one_shot_peripheral_struct = true;
-
-                quote! {
-                    let pull = #riot_rs_crate::embassy::arch::gpio::Pull::#pull_setting;
-                    let input = #riot_rs_crate::embassy::arch::gpio::Input::new(peripherals.p, pull);
-
-                    #sensor_name_static.init(spawner, input, config);
-                }
-            } else {
-                quote! {
-                    #sensor_name_static.init(spawner, peripherals, config);
-                }
+            quote! {
+                #sensor_name_static.init(spawner, peripherals, config);
             }
         };
 
