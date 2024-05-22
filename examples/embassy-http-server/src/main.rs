@@ -2,7 +2,6 @@
 #![no_std]
 #![feature(type_alias_impl_trait)]
 #![feature(used_with_arg)]
-#![feature(impl_trait_in_assoc_type)]
 
 mod pins;
 mod routes;
