@@ -12,7 +12,7 @@ pub fn await_read_sensor_value(input: TokenStream) -> TokenStream {
 
     let sensor_ident: Ident = syn::parse_macro_input!(input);
 
-    let hwsetup_path = std::path::PathBuf::from(std::env::var("SETUP_FILE").unwrap());
+    let hwsetup_path = HwSetup::get_path_from_env().unwrap();
     let hwsetup = HwSetup::read_from_path(&hwsetup_path).unwrap();
     dbg!(&hwsetup);
 

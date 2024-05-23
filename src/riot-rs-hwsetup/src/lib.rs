@@ -8,7 +8,7 @@ pub mod peripherals;
 pub mod sensors;
 
 use std::{
-    fs,
+    env, fs,
     io::{self, Read},
     path::{Path, PathBuf},
 };
@@ -16,6 +16,8 @@ use std::{
 use serde::{Deserialize, Serialize};
 
 use crate::{buses::Buses, sensors::Sensor};
+
+const PATH_ENV_VAR: &str = "SETUP_FILE";
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -25,6 +27,20 @@ pub struct HwSetup {
 }
 
 impl HwSetup {
+    /// Returns the file path of the setup file read from the `SETUP_FILE` environment variable.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Error::EnvVarNotFound`] if the environment variable from which to read the file
+    /// path of the setup file was not present in the environment.
+    pub fn get_path_from_env() -> Result<PathBuf, Error> {
+        Ok(PathBuf::from(env::var(PATH_ENV_VAR).map_err(|_| {
+            Error::EnvVarNotFound {
+                var: PATH_ENV_VAR.to_owned(),
+            }
+        })?))
+    }
+
     /// Parses a [`HwSetup`] struct from a file.
     ///
     /// # Errors
@@ -64,6 +80,7 @@ impl HwSetup {
 // TODO
 #[derive(Debug)]
 pub enum Error {
+    EnvVarNotFound { var: String },
     SetupFileNotFound { path: PathBuf, source: io::Error },
     YamlParsing { source: serde_yaml::Error },
 }

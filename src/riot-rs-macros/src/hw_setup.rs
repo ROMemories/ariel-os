@@ -8,7 +8,7 @@ pub fn hw_setup(_args: TokenStream, _item: TokenStream) -> TokenStream {
 
     let riot_rs_crate = utils::riot_rs_crate();
 
-    let hwsetup_path = std::path::PathBuf::from(std::env::var("SETUP_FILE").unwrap());
+    let hwsetup_path = HwSetup::get_path_from_env().unwrap();
     let hwsetup = HwSetup::read_from_path(&hwsetup_path).unwrap();
     dbg!(&hwsetup);
 
