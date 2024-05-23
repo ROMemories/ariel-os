@@ -1,9 +1,10 @@
 use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
-use serde_yaml::Value as YamlValue;
 
 use crate::{derive_conditioned, peripherals::Peripherals, Conditioned};
+
+pub use serde_yaml::Number as YamlNumber;
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -54,11 +55,47 @@ derive_conditioned!(Sensor);
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct SensorConfig(HashMap<String, YamlValue>);
+pub struct SensorConfig(HashMap<String, SensorConfigValue>);
 
 impl SensorConfig {
-    pub fn iter(&self) -> impl Iterator<Item = (&String, &YamlValue)> {
+    pub fn iter(&self) -> impl Iterator<Item = (&String, &SensorConfigValue)> {
         self.0.iter()
+    }
+}
+
+// TODO: add a TypePath variant and provide a custom Deserialize implementation
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum SensorConfigValue {
+    String(String),
+    Number(YamlNumber), // TODO: replace this with our own Number type
+    Bool(bool),
+}
+
+#[derive(Debug)]
+pub enum StringOrTypePath<'a> {
+    String(&'a str),
+    TypePath(&'a str),
+}
+
+impl<'a> StringOrTypePath<'a> {
+    #[must_use]
+    pub fn from(value: &'a str) -> Self {
+        let is_type_path_config_string =
+            value.len() >= 2 && value.starts_with('@') && !value.starts_with("@@");
+
+        if is_type_path_config_string {
+            #[expect(
+                clippy::indexing_slicing,
+                reason = "a type path string always has at least two bytes"
+            )]
+            StringOrTypePath::TypePath(&value[1..])
+        } else if let Some(stripped) = value.strip_prefix('@') {
+            // Discard the first @
+            StringOrTypePath::String(stripped)
+        } else {
+            StringOrTypePath::String(value)
+        }
     }
 }
 

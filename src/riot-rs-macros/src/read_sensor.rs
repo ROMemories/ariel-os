@@ -7,7 +7,7 @@
 #[proc_macro]
 pub fn await_read_sensor_value(input: TokenStream) -> TokenStream {
     use quote::quote;
-    use riot_rs_hwsetup::{HwSetup, sensors::Sensor};
+    use riot_rs_hwsetup::{sensors::{Sensor, StringOrTypePath}, HwSetup};
     use syn::Ident;
 
     let sensor_ident: Ident = syn::parse_macro_input!(input);
@@ -17,7 +17,14 @@ pub fn await_read_sensor_value(input: TokenStream) -> TokenStream {
     dbg!(&hwsetup);
 
     let sensor_type_list = hwsetup.sensors().iter().map(Sensor::driver);
-    let sensor_type_list = sensor_type_list.map(utils::parse_type_path);
+    let sensor_type_list = sensor_type_list.map(|driver| {
+        let driver = match StringOrTypePath::from(driver) {
+            StringOrTypePath::TypePath(type_path) => type_path,
+            _ => panic!("`driver` must start with an @"),
+        };
+
+        utils::parse_type_path(driver)
+    });
     // FIXME: filter this type list based on context and enabled features
 
     let riot_rs_crate = utils::riot_rs_crate();

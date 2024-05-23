@@ -34,9 +34,8 @@ mod hw_setup {
     use quote::{format_ident, quote};
     use riot_rs_hwsetup::{
         peripherals::PullResistor,
-        sensors::{Sensor, SensorBus, SensorConfig},
+        sensors::{Sensor, SensorBus, SensorConfig, SensorConfigValue, StringOrTypePath, YamlNumber},
     };
-    use serde_yaml::Value as YamlValue;
 
     use crate::utils;
 
@@ -45,11 +44,15 @@ mod hw_setup {
 
         let sensor_name_static = format_ident!("{sensor_name}");
         let sensor_ref = format_ident!("{sensor_name}_REF");
-        let sensor_type = utils::parse_type_path(sensor_setup.driver());
         let sensor_label = sensor_setup.label();
 
+        let driver = match StringOrTypePath::from(sensor_setup.driver()) {
+            StringOrTypePath::TypePath(type_path) => type_path,
+            _ => panic!("`driver` must start with an @"),
+        };
+        let sensor_type = utils::parse_type_path(driver);
         // Path of the module containing the sensor driver
-        let sensor_mod = utils::parse_parent_module_path(sensor_setup.driver());
+        let sensor_mod = utils::parse_parent_module_path(driver);
         let sensor_mod = utils::parse_type_path(&sensor_mod);
 
         let spawner_fn = format_ident!("{sensor_name}_init");
@@ -152,25 +155,12 @@ mod hw_setup {
                 let field = format_ident!("{k}");
 
                 let value = match v {
-                    YamlValue::String(s) => {
-                        if is_type_path_config_string(s) {
-                            // NOTE(no-panic): a type path string always has at least two bytes
-                            utils::parse_type_path(&s[1..])
-                        } else {
-                            let s = if s.starts_with('@') {
-                                // Discard the first @
-                                // NOTE(no-panic): that string has at least one byte as it starts
-                                // with @
-                                &s[1..]
-                            } else {
-                                s
-                            };
-                            quote! { #s }
-                        }
-                    }
-                    YamlValue::Bool(b) => utils::bool_as_token(*b),
-                    YamlValue::Number(n) => yaml_number_to_tokens(n),
-                    _ => unimplemented!(), // TODO: proper error message
+                    SensorConfigValue::String(s) => match StringOrTypePath::from(s) {
+                        StringOrTypePath::TypePath(type_path) => utils::parse_type_path(type_path),
+                        StringOrTypePath::String(string) => quote! { #string },
+                    },
+                    SensorConfigValue::Bool(b) => utils::bool_as_token(*b),
+                    SensorConfigValue::Number(n) => yaml_number_to_tokens(n),
                 };
 
                 quote! { config.#field = #value; }
@@ -182,11 +172,7 @@ mod hw_setup {
         }
     }
 
-    fn is_type_path_config_string(string: &str) -> bool {
-        string.len() >= 2 && string.starts_with('@') && !string.starts_with("@@")
-    }
-
-    fn yaml_number_to_tokens(number: &serde_yaml::Number) -> proc_macro2::TokenStream {
+    fn yaml_number_to_tokens(number: &YamlNumber) -> proc_macro2::TokenStream {
         // TODO: is there a simpler way to do this?
         if number.is_u64() {
             let n = number.as_u64();

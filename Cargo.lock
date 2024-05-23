@@ -2626,7 +2626,6 @@ dependencies = [
  "riot-rs",
  "riot-rs-hwsetup",
  "riot-rs-interrupts",
- "serde_yaml",
  "syn 2.0.52",
  "trybuild",
 ]
