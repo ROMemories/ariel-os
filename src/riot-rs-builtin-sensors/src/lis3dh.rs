@@ -8,8 +8,8 @@ use riot_rs_embassy::Spawner;
 use riot_rs_sensors::{
     label::Label,
     sensor::{
-        Category, Labels, NotificationReceiver, PhysicalUnits, PhysicalValue, PhysicalValues,
-        ReadingError, ReadingResult, ThresholdKind, ValueScales,
+        Category, Labels, MeasurementError, NotificationReceiver, PhysicalUnits, PhysicalValue,
+        PhysicalValues, ReadingError, ReadingResult, ThresholdKind, ValueScales,
     },
     PhysicalUnit, Sensor,
 };
@@ -149,7 +149,7 @@ impl<I2C: embedded_hal_async::i2c::I2c + Send> Sensor for Lis3dh<I2C> {
         // FIXME: specify the measurement error
         Ok(PhysicalValues::One([PhysicalValue::new(
             (data.z * 100.) as i32,
-            None,
+            MeasurementError::Unknown,
         )]))
     }
 

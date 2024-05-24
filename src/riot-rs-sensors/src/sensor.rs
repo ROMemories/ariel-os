@@ -117,13 +117,13 @@ impl Reading for PhysicalValues {
 #[derive(Debug, Copy, Clone, serde::Serialize)]
 pub struct PhysicalValue {
     value: i32,
-    error: Option<MeasurementError>,
+    error: MeasurementError,
 }
 
 impl PhysicalValue {
     /// Creates a new value.
     #[must_use]
-    pub const fn new(value: i32, error: Option<MeasurementError>) -> Self {
+    pub const fn new(value: i32, error: MeasurementError) -> Self {
         Self { value, error }
     }
 
@@ -161,10 +161,17 @@ impl PhysicalValue {
 /// # ;
 /// ```
 #[derive(Debug, Copy, Clone, serde::Serialize)]
-pub struct MeasurementError {
-    pub deviation: i16, // FIXME: rename this and provide a clear definition (3-sigma precision?)
-    pub bias: i16,
-    pub scale: i8,
+pub enum MeasurementError {
+    /// Unknown measurement error.
+    Unknown,
+    /// No measurement error (e.g., boolean values).
+    None,
+    /// Measurement error symmetrical around the [`bias`](MeasurementError::bias).
+    Symmetrical {
+        deviation: i16, // FIXME: rename this and provide a clear definition (3-sigma precision?)
+        bias: i16,
+        scale: i8,
+    },
 }
 
 #[derive(Debug, Copy, Clone)]

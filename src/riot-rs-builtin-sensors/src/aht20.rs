@@ -8,8 +8,8 @@ use riot_rs_embassy::Spawner;
 use riot_rs_sensors::{
     label::Label,
     sensor::{
-        Category, Labels, NotificationReceiver, PhysicalUnits, PhysicalValue, PhysicalValues,
-        ReadingError, ReadingResult, ThresholdKind, ValueScales,
+        Category, Labels, MeasurementError, NotificationReceiver, PhysicalUnits, PhysicalValue,
+        PhysicalValues, ReadingError, ReadingResult, ThresholdKind, ValueScales,
     },
     PhysicalUnit, Sensor,
 };
@@ -98,9 +98,15 @@ impl<I2C: embedded_hal_async::i2c::I2c + Send> Sensor for Aht20<I2C> {
         // FIXME: dumb scaling, take precision into account
         // FIXME: specify the measurement error
         Ok(PhysicalValues::Two([
-            PhysicalValue::new((data.relative_humidity * 100.) as i32, None),
+            PhysicalValue::new(
+                (data.relative_humidity * 100.) as i32,
+                MeasurementError::Unknown,
+            ),
             // Celsius typo in the library
-            PhysicalValue::new((data.temperature.celcius() * 100.) as i32, None),
+            PhysicalValue::new(
+                (data.temperature.celcius() * 100.) as i32,
+                MeasurementError::Unknown,
+            ),
         ]))
     }
 

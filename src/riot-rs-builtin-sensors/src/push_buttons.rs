@@ -9,8 +9,8 @@ use riot_rs_sensors::{
     categories::push_button::{PushButtonReading, PushButtonSensor},
     label::Label,
     sensor::{
-        Category, Labels, Notification, NotificationReceiver, PhysicalUnits, PhysicalValue,
-        PhysicalValues, ReadingError, ReadingResult, ThresholdKind, ValueScales,
+        Category, Labels, MeasurementError, Notification, NotificationReceiver, PhysicalUnits,
+        PhysicalValue, PhysicalValues, ReadingError, ReadingResult, ThresholdKind, ValueScales,
     },
     PhysicalUnit, Reading, Sensor,
 };
@@ -83,7 +83,7 @@ impl<I: 'static + InputPin + Send> Sensor for GenericPushButton<I> {
 
         Ok(PhysicalValues::One([PhysicalValue::new(
             i32::from(is_pressed),
-            None,
+            MeasurementError::None,
         )]))
     }
 

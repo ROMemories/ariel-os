@@ -99,7 +99,7 @@ impl InternalTemp {
 
 impl Sensor for InternalTemp {
     async fn read(&self) -> ReadingResult<PhysicalValues> {
-        const ERROR: MeasurementError = MeasurementError {
+        const ERROR: MeasurementError = MeasurementError::Symmetrical {
             deviation: 5,
             bias: 0,
             scale: 0,
@@ -119,7 +119,7 @@ impl Sensor for InternalTemp {
         let reading = self.temp.lock().await.as_mut().unwrap().read().await;
         let temp: i32 = (100 * reading).lossy_into();
 
-        Ok(PhysicalValues::One([PhysicalValue::new(temp, Some(ERROR))]))
+        Ok(PhysicalValues::One([PhysicalValue::new(temp, ERROR)]))
     }
 
     fn set_enabled(&self, enabled: bool) {
