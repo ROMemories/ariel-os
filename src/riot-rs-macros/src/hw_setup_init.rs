@@ -6,8 +6,12 @@ pub fn hw_setup_init(_args: TokenStream, _item: TokenStream) -> TokenStream {
     // TODO: check that the item is indeed just a function declaration
     let fn_name = format_ident!("codegened_init");
 
-    let hwsetup_path = HwSetup::get_path_from_env().unwrap();
-    let hwsetup = HwSetup::read_from_path(&hwsetup_path).unwrap();
+    // Allow tooling to run without passing a setup file
+    let hwsetup = if let Ok(hwsetup_path) = HwSetup::get_path_from_env() {
+        HwSetup::read_from_path(&hwsetup_path).unwrap()
+    } else {
+        HwSetup::default()
+    };
 
     let i2c_buses = hw_setup_init::generate_i2c_bus(hwsetup.buses().i2c());
     let spi_buses = hw_setup_init::generate_spi_bus(hwsetup.buses().spi());

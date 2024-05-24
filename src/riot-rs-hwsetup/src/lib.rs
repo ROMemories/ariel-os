@@ -19,7 +19,7 @@ use crate::{buses::Buses, sensors::Sensor};
 
 const PATH_ENV_VAR: &str = "SETUP_FILE";
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct HwSetup {
     buses: Buses,
