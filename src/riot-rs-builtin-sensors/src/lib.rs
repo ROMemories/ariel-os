@@ -6,4 +6,5 @@
 
 pub mod aht20;
 pub mod lis3dh;
+mod lis3dh_spi;
 pub mod push_buttons;

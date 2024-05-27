@@ -182,13 +182,22 @@ mod hw_setup_init {
                             #[cfg(all(#(#cfg_conds),*))]
                             {
                                 let mut config = arch::spi::Config::default();
+                                config.mode = arch::spi::MODE_3; // FIXME
                                 // FIXME: set the config
 
+                                // FIXME: support on/when on sck/miso/mosi
+                                let spi_peripheral = peripherals.#spi_peripheral.take().unwrap();
+                                let sck_peripheral = peripherals.#sck_peripheral.take().unwrap();
+                                let miso_peripheral = peripherals.#miso_peripheral.take().unwrap();
+                                let mosi_peripheral = peripherals.#mosi_peripheral.take().unwrap();
+
+                                // FIXME: make sure that the order MISO/MOSI/SCK is the same for
+                                // all archs
                                 let spi = arch::spi::Spi::new(
-                                    peripherals.#spi_peripheral.take().unwrap(),
-                                    peripherals.#sck_peripheral.take().unwrap(),
-                                    peripherals.#miso_peripheral.take().unwrap(),
-                                    peripherals.#mosi_peripheral.take().unwrap(),
+                                    spi_peripheral,
+                                    sck_peripheral,
+                                    miso_peripheral,
+                                    mosi_peripheral,
                                     config,
                                 );
 

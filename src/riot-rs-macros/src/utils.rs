@@ -80,6 +80,17 @@ pub fn parse_parent_module_path(path: &str) -> String {
         .join("::")
 }
 
+pub fn parse_type_name_from_type_path(path: &str) -> &str {
+    // FIXME: is this robust enough? could we parse with syn first?
+    path.split("::<")
+        .next()
+        .unwrap()
+        .rsplit("::")
+        .take(1)
+        .next()
+        .unwrap()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -91,6 +102,16 @@ mod tests {
                 "riot_rs::builtin_sensors::lis3dh::Lis3dh::<riot_rs::embassy::arch::i2c::I2c>",
             ),
             "riot_rs::builtin_sensors::lis3dh",
+        );
+    }
+
+    #[test]
+    fn test_parse_type_name_from_type_path() {
+        assert_eq!(
+            parse_type_name_from_type_path(
+                "riot_rs::builtin_sensors::lis3dh::Lis3dh::<riot_rs::embassy::arch::i2c::I2c>",
+            ),
+            "Lis3dh",
         );
     }
 }

@@ -50,34 +50,55 @@ mod hw_setup {
             StringOrTypePath::TypePath(type_path) => type_path,
             _ => panic!("`driver` must start with an @"),
         };
-        let sensor_type = utils::parse_type_path(driver);
+        let mut sensor_type = utils::parse_type_path(driver);
+        let sensor_type_alias_name = sensor_type_alias_name(sensor_name, driver);
         // Path of the module containing the sensor driver
-        let sensor_mod = utils::parse_parent_module_path(driver);
-        let sensor_mod = utils::parse_type_path(&sensor_mod);
+        let sensor_mod = utils::parse_type_path(&utils::parse_parent_module_path(driver));
 
         let spawner_fn = format_ident!("{sensor_name}_init");
 
-        let cfg_conds = utils::parse_cfg_conditionals(sensor_setup);
-
-        let one_shot_peripheral_struct_ident = format_ident!("{sensor_name}Peripherals");
-        let mut use_one_shot_peripheral_struct = false;
         let mut peripheral = None;
+        let mut sensor_inits = Vec::new();
 
-        // FIXME: these are not mutually exclusive
-        let sensor_init = if let Some(SensorBus::I2c(i2cs)) = sensor_setup.bus() {
+        // A sensor can only use one bus
+        if let Some(SensorBus::I2c(i2cs)) = sensor_setup.bus() {
             // FIXME: handle conds
             let bus_name = i2cs.keys().next().unwrap();
             let i2c_bus_static = format_ident!("{}", super::i2c_bus_static(bus_name));
 
-            // FIXME: maybe do not even pass raw peripherals, always wrap them into embedded_hal
-            // types/arch types (including the internal temp sensor)
             // TODO: select the appropriate I2C instance
-            quote! {
+            let i2c_init = quote! {
                 let i2c_bus = #riot_rs_crate::embassy::#i2c_bus_static.get().unwrap();
                 let i2c_dev = #riot_rs_crate::embassy::arch::i2c::I2cDevice::new(i2c_bus);
                 #sensor_name_static.init(spawner, peripherals, i2c_dev, config);
-            }
-        } else if let Some(peripherals) = sensor_setup.peripherals() {
+            };
+            sensor_inits.push(i2c_init);
+        } else if let Some(SensorBus::Spi(spis)) = sensor_setup.bus() {
+            // FIXME: handle conds
+            let bus_name = spis.keys().next().unwrap();
+            let spi_bus_static = format_ident!("{}", super::spi_bus_static(bus_name));
+
+            // FIXME: handle conds
+            let cs = spis.values().next().unwrap().cs().first().unwrap();
+            peripheral = Some(format_ident!("{}", cs.pin()));
+
+            // TODO: select the appropriate SPI instance
+            let spi_init = quote! {
+                let spi_bus = #riot_rs_crate::embassy::#spi_bus_static.get().unwrap();
+                // FIXME: depends on the arch (e.g., rp)
+                let cs_output = #riot_rs_crate::embassy::arch::gpio::Output::new(
+                    peripherals.p,
+                    #riot_rs_crate::embassy::arch::gpio::Level::High,
+                    #riot_rs_crate::embassy::arch::gpio::OutputDrive::Standard,
+                );
+                let spi_dev = #riot_rs_crate::embassy::arch::spi::SpiDevice::new(spi_bus, cs_output);
+
+                #sensor_name_static.init(spawner, spi_dev, config);
+            };
+            sensor_inits.push(spi_init);
+        }
+
+        if let Some(peripherals) = sensor_setup.peripherals() {
             // FIXME: handle multiple GPIOs
             // FIXME: handle multiple peripheral types
             let input = peripherals.inputs().next().unwrap();
@@ -91,26 +112,32 @@ mod hw_setup {
 
             peripheral = Some(format_ident!("{}", input.pin()));
 
-            use_one_shot_peripheral_struct = true;
-
-            quote! {
+            let gpio_init = quote! {
                 let pull = #riot_rs_crate::embassy::arch::gpio::Pull::#pull_setting;
                 let input = #riot_rs_crate::embassy::arch::gpio::Input::new(peripherals.p, pull);
 
                 #sensor_name_static.init(spawner, input, config);
-            }
-        } else {
-            quote! {
+            };
+            sensor_inits.push(gpio_init);
+        }
+
+        if sensor_inits.is_empty() {
+            let only_init = quote! {
                 #sensor_name_static.init(spawner, peripherals, config);
-            }
-        };
+            };
+            sensor_inits.push(only_init);
+        }
 
-        let (peripheral_struct, one_shot_peripheral_struct) = if use_one_shot_peripheral_struct {
-            let peripheral = peripheral.unwrap();
+        let cfg_conds = utils::parse_cfg_conditionals(sensor_setup);
 
+        let (peripheral_struct, one_shot_peripheral_struct) = if let Some(peripheral) = peripheral {
+            let one_shot_peripheral_struct_ident = format_ident!("{sensor_name}Peripherals");
+
+            // TODO: make this work for multiple peripherals, with a HashMap
             (
                 quote! { #one_shot_peripheral_struct_ident },
                 quote! {
+                    #[cfg(all(#(#cfg_conds),*))]
                     #riot_rs_crate::embassy::define_peripherals!(#one_shot_peripheral_struct_ident {
                         p: #peripheral
                     });
@@ -123,10 +150,14 @@ mod hw_setup {
         let sensor_config = generate_sensor_config(sensor_setup.with());
 
         let expanded = quote! {
+            /// Type alias of this sensor instance
+            #[cfg(all(#(#cfg_conds),*))]
+            pub type #sensor_type_alias_name = #sensor_type;
+
             // Instantiate the sensor driver
             // FIXME: does this work with zero cfg_conds?
             #[cfg(all(#(#cfg_conds),*))]
-            pub static #sensor_name_static: #sensor_type = #sensor_type::new(#sensor_label);
+            pub static #sensor_name_static: #sensor_type_alias_name = #sensor_type_alias_name::new(#sensor_label);
 
             // Store a static reference in the sensor distributed slice
             #[cfg(all(#(#cfg_conds),*))]
@@ -140,13 +171,19 @@ mod hw_setup {
             fn #spawner_fn(spawner: Spawner, peripherals: #peripheral_struct) {
                 let mut config = #sensor_mod::Config::default();
                 #sensor_config
-                #sensor_init
+
+                #(#sensor_inits)*
             }
 
             #one_shot_peripheral_struct
         };
 
         TokenStream::from(expanded)
+    }
+
+    fn sensor_type_alias_name(sensor_name: &str, driver: &str) -> syn::Ident {
+        let sensor_type_name = utils::parse_type_name_from_type_path(driver);
+        format_ident!("{sensor_type_name}_{sensor_name}")
     }
 
     fn generate_sensor_config(with: Option<&SensorConfig>) -> proc_macro2::TokenStream {

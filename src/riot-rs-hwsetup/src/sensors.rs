@@ -122,10 +122,17 @@ derive_conditioned!(SensorBusI2c);
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct SensorBusSpi {
+    cs: Vec<crate::buses::spi::Pin>,
     on: Option<String>,
     when: Option<String>,
-    // TODO: we may want to add additional per-sensor configuration later (e.g., I2C frequency
-    // configuration)
+    // TODO: we may want to add additional per-sensor configuration later
+}
+
+impl SensorBusSpi {
+    #[must_use]
+    pub fn cs(&self) -> &[crate::buses::spi::Pin] {
+        &self.cs
+    }
 }
 
 derive_conditioned!(SensorBusSpi);
