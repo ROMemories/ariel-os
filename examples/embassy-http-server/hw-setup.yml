@@ -1,28 +1,28 @@
 buses: # TODO: rename this? Shared communication interfaces
   i2c:
-    # - name: I2C0
-    #   peripheral:
-    #     TWISPI0:
-    #       on: nrf52840
-    #       sda:
-    #         - pin: P0_30
-    #           on: nrf52840dk
-    #           pull_up: false
-    #       scl:
-    #         - pin: P0_31
-    #           on: nrf52840dk
-    #           pull_up: false
-    #       frequency: !K100
-    #
-    #     I2C0:
-    #       on: rp2040
-    #       sda:
-    #         - pin: P0_30  # FIXME: not an RP2040 pin
-    #           pull_up: false
-    #       scl:
-    #         - pin: P0_31  # FIXME: not an RP2040 pin
-    #           pull_up: false
-    #       frequency: !K100
+    - name: I2C0
+      peripheral:
+        TWISPI0:
+          on: nrf52840
+          sda:
+            - pin: P0_03
+              on: nrf52840dk
+              pull_up: false
+          scl:
+            - pin: P0_04
+              on: nrf52840dk
+              pull_up: false
+          frequency: !K100
+
+        I2C0:
+          on: rp2040
+          sda:
+            - pin: P0_30  # FIXME: not an RP2040 pin
+              pull_up: false
+          scl:
+            - pin: P0_31  # FIXME: not an RP2040 pin
+              pull_up: false
+          frequency: !K100
   spi:
     - name: SPI0
       peripheral:
@@ -57,8 +57,18 @@ sensors:
         pull: !up  # FIXME
 
   - name: ACCEL
+    driver: '@riot_rs::builtin_sensors::lis3dh::Lis3dhI2c'
+    label: 'i2c'
+    with:
+      mode: '@riot_rs::builtin_sensors::lis3dh::Mode::Normal'
+      enable_z_axis: true
+    bus:
+      !i2c
+      I2C0:
+
+  - name: ACCEL_SPI
     driver: '@riot_rs::builtin_sensors::lis3dh::Lis3dhSpi'
-    label: 'accel'
+    label: 'spi'
     with:
       mode: '@riot_rs::builtin_sensors::lis3dh::Mode::Normal'
       enable_z_axis: true
