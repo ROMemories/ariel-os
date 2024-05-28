@@ -119,7 +119,7 @@ impl Sensor for InternalTemp {
         let reading = self.temp.lock().await.as_mut().unwrap().read().await;
         let temp: i32 = (100 * reading).lossy_into();
 
-        Ok(PhysicalValues::One([PhysicalValue::new(temp, ERROR)]))
+        Ok(PhysicalValues::V1([PhysicalValue::new(temp, ERROR)]))
     }
 
     fn set_enabled(&self, enabled: bool) {
@@ -163,11 +163,11 @@ impl Sensor for InternalTemp {
     }
 
     fn value_scales(&self) -> ValueScales {
-        ValueScales::One([-2])
+        ValueScales::V1([-2])
     }
 
     fn reading_labels(&self) -> Labels {
-        Labels::One([Label::Main])
+        Labels::V1([Label::Main])
     }
 
     fn label(&self) -> &'static str {
@@ -175,7 +175,7 @@ impl Sensor for InternalTemp {
     }
 
     fn units(&self) -> PhysicalUnits {
-        PhysicalUnits::One([PhysicalUnit::Celsius])
+        PhysicalUnits::V1([PhysicalUnit::Celsius])
     }
 
     fn display_name(&self) -> Option<&'static str> {

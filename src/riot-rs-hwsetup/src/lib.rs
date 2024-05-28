@@ -10,6 +10,7 @@ pub mod sensors;
 use std::{
     env, fs,
     io::{self, Read},
+    num::NonZeroU8,
     path::{Path, PathBuf},
 };
 
@@ -23,7 +24,7 @@ const PATH_ENV_VAR: &str = "SETUP_FILE";
 #[serde(deny_unknown_fields)]
 pub struct HwSetup {
     buses: Buses,
-    sensors: Vec<Sensor>,
+    sensors: Sensors,
 }
 
 impl HwSetup {
@@ -72,8 +73,37 @@ impl HwSetup {
     }
 
     #[must_use]
-    pub fn sensors(&self) -> &[Sensor] {
+    pub fn sensors(&self) -> &Sensors {
         &self.sensors
+    }
+}
+
+#[derive(Debug, Default, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Sensors {
+    #[serde(default)]
+    max_reading_value_count: Option<MaxReadingValueCount>,
+    connected: Vec<Sensor>,
+}
+
+impl Sensors {
+    #[must_use]
+    pub fn max_reading_value_count(&self) -> NonZeroU8 {
+        self.max_reading_value_count.unwrap_or_default().0
+    }
+
+    #[must_use]
+    pub fn connected(&self) -> &[Sensor] {
+        &self.connected
+    }
+}
+
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+pub struct MaxReadingValueCount(NonZeroU8);
+
+impl Default for MaxReadingValueCount {
+    fn default() -> Self {
+        Self(NonZeroU8::new(3).unwrap())
     }
 }
 

@@ -81,7 +81,7 @@ impl<I: 'static + InputPin + Send> Sensor for GenericPushButton<I> {
         // inputs
         let is_pressed = reading;
 
-        Ok(PhysicalValues::One([PhysicalValue::new(
+        Ok(PhysicalValues::V1([PhysicalValue::new(
             i32::from(is_pressed),
             MeasurementError::None,
         )]))
@@ -113,15 +113,15 @@ impl<I: 'static + InputPin + Send> Sensor for GenericPushButton<I> {
 
     fn value_scales(&self) -> ValueScales {
         // TODO: should we introduce a ValueScales::None instead?
-        ValueScales::One([0])
+        ValueScales::V1([0])
     }
 
     fn units(&self) -> PhysicalUnits {
-        PhysicalUnits::One([PhysicalUnit::Bool])
+        PhysicalUnits::V1([PhysicalUnit::Bool])
     }
 
     fn reading_labels(&self) -> Labels {
-        Labels::One([Label::Main])
+        Labels::V1([Label::Main])
     }
 
     fn label(&self) -> &'static str {

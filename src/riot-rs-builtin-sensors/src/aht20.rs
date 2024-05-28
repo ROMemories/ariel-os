@@ -97,7 +97,7 @@ impl<I2C: embedded_hal_async::i2c::I2c + Send> Sensor for Aht20<I2C> {
         #[allow(clippy::cast_possible_truncation)]
         // FIXME: dumb scaling, take precision into account
         // FIXME: specify the measurement error
-        Ok(PhysicalValues::Two([
+        Ok(PhysicalValues::V2([
             PhysicalValue::new(
                 (data.relative_humidity * 100.) as i32,
                 MeasurementError::Unknown,
@@ -138,15 +138,15 @@ impl<I2C: embedded_hal_async::i2c::I2c + Send> Sensor for Aht20<I2C> {
     }
 
     fn value_scales(&self) -> ValueScales {
-        ValueScales::Two([-2, -2]) // FIXME
+        ValueScales::V2([-2, -2]) // FIXME
     }
 
     fn units(&self) -> PhysicalUnits {
-        PhysicalUnits::Two([PhysicalUnit::Percent, PhysicalUnit::Celsius])
+        PhysicalUnits::V2([PhysicalUnit::Percent, PhysicalUnit::Celsius])
     }
 
     fn reading_labels(&self) -> Labels {
-        Labels::Two([Label::Humidity, Label::Temperature])
+        Labels::V2([Label::Humidity, Label::Temperature])
     }
 
     fn label(&self) -> &'static str {

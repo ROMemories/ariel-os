@@ -2669,6 +2669,7 @@ dependencies = [
  "embedded-hal 1.0.0",
  "heapless 0.8.0",
  "linkme",
+ "riot-rs-macros",
  "serde",
  "static_cell",
 ]

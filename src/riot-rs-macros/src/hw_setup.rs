@@ -14,6 +14,7 @@ pub fn hw_setup(_args: TokenStream, _item: TokenStream) -> TokenStream {
 
     let sensors = hwsetup
         .sensors()
+        .connected()
         .iter()
         .map(|sensor| hw_setup::generate_sensor(&riot_rs_crate, sensor));
 

@@ -91,23 +91,7 @@ pub trait Reading: core::fmt::Debug {
     }
 }
 
-// TODO: add a timestamp?
-// TODO: introduce a method exposing labels for each physical value?
-// FIXME: what to do about 3-axis accelerator+magnetometer+gyroscope (9 values)?
-#[derive(Debug, Copy, Clone, serde::Serialize)]
-pub enum PhysicalValues {
-    One([PhysicalValue; 1]),
-    Two([PhysicalValue; 2]),
-    Three([PhysicalValue; 3]),
-}
-
-impl Reading for PhysicalValues {
-    fn value(&self) -> PhysicalValue {
-        match self {
-            Self::One([v]) | Self::Two([v, ..]) | Self::Three([v, ..]) => *v,
-        }
-    }
-}
+riot_rs_macros::define_count_adjusted_enums!();
 
 /// Represents a value obtained from a sensor.
 ///
@@ -172,57 +156,6 @@ pub enum MeasurementError {
         bias: i16,
         scale: i8,
     },
-}
-
-#[derive(Debug, Copy, Clone)]
-pub enum ValueScales {
-    One([i8; 1]),
-    Two([i8; 2]),
-    Three([i8; 3]),
-}
-
-impl ValueScales {
-    pub fn iter(&self) -> impl Iterator<Item = i8> + '_ {
-        match self {
-            Self::One(v) => v.iter().copied(),
-            Self::Two(v) => v.iter().copied(),
-            Self::Three(v) => v.iter().copied(),
-        }
-    }
-}
-
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub enum PhysicalUnits {
-    One([PhysicalUnit; 1]),
-    Two([PhysicalUnit; 2]),
-    Three([PhysicalUnit; 3]),
-}
-
-impl PhysicalUnits {
-    pub fn iter(&self) -> impl Iterator<Item = PhysicalUnit> + '_ {
-        match self {
-            Self::One(v) => v.iter().copied(),
-            Self::Two(v) => v.iter().copied(),
-            Self::Three(v) => v.iter().copied(),
-        }
-    }
-}
-
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub enum Labels {
-    One([Label; 1]),
-    Two([Label; 2]),
-    Three([Label; 3]),
-}
-
-impl Labels {
-    pub fn iter(&self) -> impl Iterator<Item = Label> + '_ {
-        match self {
-            Self::One(v) => v.iter().copied(),
-            Self::Two(v) => v.iter().copied(),
-            Self::Three(v) => v.iter().copied(),
-        }
-    }
 }
 
 // Built upon https://doc.riot-os.org/group__drivers__saul.html#ga8f2dfec7e99562dbe5d785467bb71bbb

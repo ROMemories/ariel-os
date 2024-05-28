@@ -5,6 +5,7 @@ mod utils;
 use proc_macro::TokenStream;
 
 include!("config.rs");
+include!("define_count_adjusted_enums.rs");
 include!("hw_setup.rs");
 include!("hw_setup_init.rs");
 include!("read_sensor.rs");

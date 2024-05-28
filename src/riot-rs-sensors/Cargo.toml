@@ -15,5 +15,6 @@ embassy-sync = { workspace = true }
 embedded-hal = { workspace = true }
 heapless = { workspace = true }
 linkme = { workspace = true }
+riot-rs-macros = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 static_cell = { workspace = true }

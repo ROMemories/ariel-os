@@ -7,7 +7,10 @@
 #[proc_macro]
 pub fn await_read_sensor_value(input: TokenStream) -> TokenStream {
     use quote::quote;
-    use riot_rs_hwsetup::{sensors::{Sensor, StringOrTypePath}, HwSetup};
+    use riot_rs_hwsetup::{
+        sensors::{Sensor, StringOrTypePath},
+        HwSetup,
+    };
     use syn::Ident;
 
     let sensor_ident: Ident = syn::parse_macro_input!(input);
@@ -16,7 +19,7 @@ pub fn await_read_sensor_value(input: TokenStream) -> TokenStream {
     let hwsetup = HwSetup::read_from_path(&hwsetup_path).unwrap();
     dbg!(&hwsetup);
 
-    let sensor_type_list = hwsetup.sensors().iter().map(Sensor::driver);
+    let sensor_type_list = hwsetup.sensors().connected().iter().map(Sensor::driver);
     let sensor_type_list = sensor_type_list.map(|driver| {
         let driver = match StringOrTypePath::from(driver) {
             StringOrTypePath::TypePath(type_path) => type_path,

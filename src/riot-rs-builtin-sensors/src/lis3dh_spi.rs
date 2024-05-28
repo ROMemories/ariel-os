@@ -32,7 +32,18 @@ pub struct Lis3dh<SPI: embedded_hal_async::spi::SpiBus + 'static> {
     // TODO: consider using MaybeUninit?
     accel: Mutex<
         CriticalSectionRawMutex,
-        Option<InnerLis3dh<Lis3dhSPI<SpiDevice<'static, CriticalSectionRawMutex, SPI, riot_rs_embassy::arch::gpio::Output<'static>>>>>,
+        Option<
+            InnerLis3dh<
+                Lis3dhSPI<
+                    SpiDevice<
+                        'static,
+                        CriticalSectionRawMutex,
+                        SPI,
+                        riot_rs_embassy::arch::gpio::Output<'static>,
+                    >,
+                >,
+            >,
+        >,
     >,
 }
 
@@ -54,7 +65,12 @@ impl<SPI: embedded_hal_async::spi::SpiBus> Lis3dh<SPI> {
         &'static self,
         _spawner: Spawner,
         // peripherals: Peripherals,
-        spi: SpiDevice<'static, CriticalSectionRawMutex, SPI, riot_rs_embassy::arch::gpio::Output<'static>>,
+        spi: SpiDevice<
+            'static,
+            CriticalSectionRawMutex,
+            SPI,
+            riot_rs_embassy::arch::gpio::Output<'static>,
+        >,
         config: Config,
     ) {
         if !self.initialized.load(Ordering::Acquire) {
@@ -97,8 +113,7 @@ impl<SPI: embedded_hal_async::spi::SpiBus> Lis3dh<SPI> {
     }
 }
 
-impl<SPI: embedded_hal_async::spi::SpiBus + Send> Sensor for Lis3dh<SPI>
-{
+impl<SPI: embedded_hal_async::spi::SpiBus + Send> Sensor for Lis3dh<SPI> {
     async fn read(&self) -> ReadingResult<PhysicalValues> {
         if !self.enabled.load(Ordering::Acquire) {
             return Err(ReadingError::Disabled);
@@ -118,10 +133,11 @@ impl<SPI: embedded_hal_async::spi::SpiBus + Send> Sensor for Lis3dh<SPI>
         #[allow(clippy::cast_possible_truncation)]
         // FIXME: dumb scaling, take precision into account
         // FIXME: specify the measurement error
-        Ok(PhysicalValues::One([PhysicalValue::new(
-            (data.z * 100.) as i32,
-            MeasurementError::Unknown,
-        )]))
+        let x = PhysicalValue::new((data.x * 100.) as i32, MeasurementError::Unknown);
+        let y = PhysicalValue::new((data.y * 100.) as i32, MeasurementError::Unknown);
+        let z = PhysicalValue::new((data.z * 100.) as i32, MeasurementError::Unknown);
+
+        Ok(PhysicalValues::V3([x, y, z]))
     }
 
     fn set_enabled(&self, enabled: bool) {
@@ -152,16 +168,20 @@ impl<SPI: embedded_hal_async::spi::SpiBus + Send> Sensor for Lis3dh<SPI>
     }
 
     fn value_scales(&self) -> ValueScales {
-        ValueScales::One([-2])
+        ValueScales::V3([-2, -2, -2])
     }
 
     fn units(&self) -> PhysicalUnits {
         // FIXME: what's the actual unit?
-        PhysicalUnits::One([PhysicalUnit::AccelG])
+        PhysicalUnits::V3([
+            PhysicalUnit::AccelG,
+            PhysicalUnit::AccelG,
+            PhysicalUnit::AccelG,
+        ])
     }
 
     fn reading_labels(&self) -> Labels {
-        Labels::One([Label::Main])
+        Labels::V3([Label::X, Label::Y, Label::Z])
     }
 
     fn label(&self) -> &'static str {

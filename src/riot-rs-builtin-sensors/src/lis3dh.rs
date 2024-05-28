@@ -14,8 +14,8 @@ use riot_rs_sensors::{
     PhysicalUnit, Sensor,
 };
 
-pub use lis3dh_async::{Mode, SlaveAddr as Address};
 pub use crate::lis3dh_spi::Lis3dhSpi;
+pub use lis3dh_async::{Mode, SlaveAddr as Address};
 
 // FIXME: what's the best way to instantiate sensor driver configuration?
 #[derive(Debug)]
@@ -148,10 +148,11 @@ impl<I2C: embedded_hal_async::i2c::I2c + Send> Sensor for Lis3dh<I2C> {
         #[allow(clippy::cast_possible_truncation)]
         // FIXME: dumb scaling, take precision into account
         // FIXME: specify the measurement error
-        Ok(PhysicalValues::One([PhysicalValue::new(
-            (data.z * 100.) as i32,
-            MeasurementError::Unknown,
-        )]))
+        let x = PhysicalValue::new((data.x * 100.) as i32, MeasurementError::Unknown);
+        let y = PhysicalValue::new((data.y * 100.) as i32, MeasurementError::Unknown);
+        let z = PhysicalValue::new((data.z * 100.) as i32, MeasurementError::Unknown);
+
+        Ok(PhysicalValues::V3([x, y, z]))
     }
 
     fn set_enabled(&self, enabled: bool) {
@@ -182,16 +183,20 @@ impl<I2C: embedded_hal_async::i2c::I2c + Send> Sensor for Lis3dh<I2C> {
     }
 
     fn value_scales(&self) -> ValueScales {
-        ValueScales::One([-2])
+        ValueScales::V3([-2, -2, -2])
     }
 
     fn units(&self) -> PhysicalUnits {
         // FIXME: what's the actual unit?
-        PhysicalUnits::One([PhysicalUnit::AccelG])
+        PhysicalUnits::V3([
+            PhysicalUnit::AccelG,
+            PhysicalUnit::AccelG,
+            PhysicalUnit::AccelG,
+        ])
     }
 
     fn reading_labels(&self) -> Labels {
-        Labels::One([Label::Main])
+        Labels::V3([Label::X, Label::Y, Label::Z])
     }
 
     fn label(&self) -> &'static str {
