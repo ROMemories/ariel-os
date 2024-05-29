@@ -37,7 +37,9 @@ buses: # TODO: rename this? Shared communication interfaces
           mosi:
             - pin: P0_30
               on: nrf52840dk  # FIXME
+          frequency: !M2
           mode: !Mode3
+          bit_order: !MsbFirst
 
 sensors:
   # max_reading_value_count: 9

@@ -88,12 +88,7 @@ mod hw_setup_init {
                     .map(|(name, peripheral)| {
                         let cfg_conds = crate::utils::parse_cfg_conditionals(peripheral);
 
-                        // TODO: is this the best place to do this conversion?
-                        let frequency = match peripheral.frequency() {
-                            Frequency::K100 => quote! { arch::i2c::Frequency::K100 },
-                            Frequency::K250 => quote! { arch::i2c::Frequency::K250 },
-                            Frequency::K400 => quote! { arch::i2c::Frequency::K400 },
-                        };
+                        let frequency = i2c_frequency(peripheral.frequency());
 
                         // FIXME: support on/when on sda/scl
                         let sda_pullup =
@@ -143,6 +138,17 @@ mod hw_setup_init {
             .collect::<Vec<_>>()
     }
 
+    fn i2c_frequency(frequency: buses::i2c::Frequency) -> TokenStream {
+        use buses::i2c::Frequency;
+
+        // TODO: is this the best place to do this conversion?
+        match frequency {
+            Frequency::K100 => quote! { arch::i2c::Frequency::K100 },
+            Frequency::K250 => quote! { arch::i2c::Frequency::K250 },
+            Frequency::K400 => quote! { arch::i2c::Frequency::K400 },
+        }
+    }
+
     pub fn generate_spi_bus(spi_setup: &[buses::spi::Bus]) -> Vec<Bus> {
         spi_setup
             .iter()
@@ -166,6 +172,10 @@ mod hw_setup_init {
                     .map(|(name, peripheral)| {
                         let cfg_conds = crate::utils::parse_cfg_conditionals(peripheral);
 
+                        let frequency = spi_frequency(peripheral.frequency());
+                        let mode = spi_mode(peripheral.mode());
+                        let bit_order = spi_bit_order(peripheral.bit_order());
+
                         // FIXME: test what happens when trying to use a peripheral that doesn't exist or that is
                         // already used
                         // FIXME: support on/when on sck/miso/mosi
@@ -182,8 +192,10 @@ mod hw_setup_init {
                             #[cfg(all(#(#cfg_conds),*))]
                             {
                                 let mut config = arch::spi::Config::default();
-                                config.mode = arch::spi::MODE_3; // FIXME
-                                // FIXME: set the config
+                                config.frequency = #frequency;
+                                config.mode = #mode;
+                                config.bit_order = #bit_order;
+                                // TODO: driver strengths
 
                                 // FIXME: support on/when on sck/miso/mosi
                                 let spi_peripheral = peripherals.#spi_peripheral.take().unwrap();
@@ -213,5 +225,42 @@ mod hw_setup_init {
                 }
             })
             .collect::<Vec<_>>()
+    }
+
+    fn spi_frequency(frequency: buses::spi::Frequency) -> TokenStream {
+        use buses::spi::Frequency;
+
+        // TODO: is this the best place to do this conversion?
+        match frequency {
+            Frequency::K125 => quote! { arch::spi::Frequency::K125 },
+            Frequency::K250 => quote! { arch::spi::Frequency::K250 },
+            Frequency::K500 => quote! { arch::spi::Frequency::K500 },
+            Frequency::M1 => quote! { arch::spi::Frequency::M1 },
+            Frequency::M2 => quote! { arch::spi::Frequency::M2 },
+            Frequency::M4 => quote! { arch::spi::Frequency::M4 },
+            Frequency::M8 => quote! { arch::spi::Frequency::M8 },
+            Frequency::M16 => quote! { arch::spi::Frequency::M16 },
+            Frequency::M32 => quote! { arch::spi::Frequency::M32 },
+        }
+    }
+
+    fn spi_mode(mode: buses::spi::Mode) -> TokenStream {
+        use buses::spi::Mode;
+
+        match mode {
+            Mode::Mode0 => quote! { arch::spi::MODE_0 },
+            Mode::Mode1 => quote! { arch::spi::MODE_1 },
+            Mode::Mode2 => quote! { arch::spi::MODE_2 },
+            Mode::Mode3 => quote! { arch::spi::MODE_3 },
+        }
+    }
+
+    fn spi_bit_order(bit_order: buses::spi::BitOrder) -> TokenStream {
+        use buses::spi::BitOrder;
+
+        match bit_order {
+            BitOrder::MsbFirst => quote! { arch::spi::BitOrder::MSB_FIRST },
+            BitOrder::LsbFirst => quote! { arch::spi::BitOrder::LSB_FIRST },
+        }
     }
 }

@@ -136,10 +136,12 @@ pub mod spi {
     pub struct BusPeripheral {
         on: Option<String>,
         when: Option<String>,
-        sck: Vec<Pin>, // FIXME: require at least one element
+        sck: Vec<Pin>,  // FIXME: require at least one element
         miso: Vec<Pin>, // FIXME: require at least one element
         mosi: Vec<Pin>, // FIXME: require at least one element
+        frequency: Frequency,
         mode: Mode,
+        bit_order: BitOrder,
     }
 
     impl BusPeripheral {
@@ -156,6 +158,21 @@ pub mod spi {
         #[must_use]
         pub fn mosi(&self) -> &[Pin] {
             &self.mosi
+        }
+
+        #[must_use]
+        pub fn frequency(&self) -> Frequency {
+            self.frequency
+        }
+
+        #[must_use]
+        pub fn mode(&self) -> Mode {
+            self.mode
+        }
+
+        #[must_use]
+        pub fn bit_order(&self) -> BitOrder {
+            self.bit_order
         }
     }
 
@@ -177,10 +194,29 @@ pub mod spi {
     }
 
     #[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize)]
+    pub enum Frequency {
+        K125,
+        K250,
+        K500,
+        M1,
+        M2,
+        M4,
+        M8,
+        M16,
+        M32,
+    }
+
+    #[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize)]
     pub enum Mode {
         Mode0,
         Mode1,
         Mode2,
         Mode3,
+    }
+
+    #[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize)]
+    pub enum BitOrder {
+        MsbFirst,
+        LsbFirst,
     }
 }
