@@ -18,7 +18,7 @@ pub trait Sensor: Any + Send + Sync {
     /// [`riot_rs::await_read_sensor!()`](riot_rs_macros::await_read_sensor!) macro must be used
     /// instead of calling this method directly, this macro requires a  properly configured setup
     /// file.
-    fn read(&self) -> impl Future<Output = ReadingResult<PhysicalValues>>
+    fn read(&self) -> impl Future<Output = ReadingResult<impl Reading>>
     where
         Self: Sized;
 
@@ -43,15 +43,6 @@ pub trait Sensor: Any + Send + Sync {
 
     // FIXME: update this doc comment
     /// The base-10 exponent used for all readings returned by the sensor.
-    ///
-    /// The actual physical value is [`value()`](PhysicalValue::value) ×
-    /// 10^[`value_scale`](Sensor::value_scales).
-    /// For instance, in the case of a temperature sensor, if [`value()`](PhysicalValue::value)
-    /// returns `2225` and [`value_scale`](Sensor::value_scales) returns `-2`, it means that the
-    /// temperature measured and returned by the hardware sensor is `22.25` (the sensor accuracy
-    /// and precision must additionally be taken into account).
-    ///
-    /// This is required to avoid handling floats.
     // TODO: rename this?
     #[must_use]
     fn value_scales(&self) -> ValueScales;
@@ -90,9 +81,18 @@ impl dyn Sensor {
     }
 }
 
+/// Implemented on types returned by [`Sensor::read()`].
+///
+/// [`PhysicalValues`] implements this trait, and should usually be used by sensor driver
+/// implementors.
 pub trait Reading: core::fmt::Debug {
+    /// Returns the [`PhysicalValue`] of a sensor reading.
     fn value(&self) -> PhysicalValue;
 
+    /// Returns an iterator over [`PhysicalValue`]s of a sensor reading.
+    ///
+    /// The default implementation must be overridden on types containing multiple
+    /// [`PhysicalValue`]s.
     fn values(&self) -> impl ExactSizeIterator<Item = PhysicalValue> {
         [self.value()].into_iter()
     }
@@ -104,7 +104,16 @@ riot_rs_macros::define_count_adjusted_enums!();
 ///
 /// The [`Sensor::value_scales()`] must be taken into account using the following formula:
 ///
-/// <math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow><mi mathvariant="monospace">PhysicalValue::value()</mi></mrow><mo>·</mo><msup><mn>10</mn><mrow><mi mathvariant="monospace">Sensor::value_scale()</mi></mrow></msup></math>
+/// <math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow><mi mathvariant="monospace">PhysicalValue::value()</mi></mrow><mo>·</mo><msup><mn>10</mn><mrow><mi mathvariant="monospace">value_scale</mi></mrow></msup></math>
+///
+/// For instance, in the case of a temperature sensor, if [`PhysicalValue::value()`] returns `2225`
+/// and [value scale](Sensor::value_scales) is `-2`, it means that the temperature measured
+/// and returned by the hardware sensor is `22.25` (the [measurement error](PhysicalValue::error())
+/// must additionally be taken into account).
+///
+/// The unit of measurement can be obtained using [`Sensor::units()`].
+///
+/// This is required to avoid handling floats.
 #[derive(Debug, Copy, Clone, serde::Serialize)]
 pub struct PhysicalValue {
     value: i32,
@@ -123,6 +132,12 @@ impl PhysicalValue {
     pub fn value(&self) -> i32 {
         self.value
     }
+
+    /// Returns the measurement error.
+    #[must_use]
+    pub fn error(&self) -> MeasurementError {
+        self.error
+    }
 }
 
 /// Specifies the accuracy error of a measurement.
@@ -130,8 +145,7 @@ impl PhysicalValue {
 /// It is assumed that the accuracy error is symmetrical around a possibly non-zero bias.
 ///
 /// The unit of measurement is that of the sensor driver, as provided by [`Sensor::units()`].
-/// The [`scale`](MeasurementError.scale) is used for both
-/// [`deviation`](MeasurementError.deviation) and [`bias`](MeasurementError.bias).
+/// The `scale` is used for both `deviation` and `bias`.
 /// The accuracy error is thus given by the following formulas:
 ///
 /// <math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mo>+</mo><mo>(</mo><mrow><mi mathvariant="monospace">bias</mi></mrow><mo>+</mo><mrow><mi mathvariant="monospace">deviation</mi></mrow><mo>)</mo><mo>·</mo><msup><mn>10</mn><mrow><mi mathvariant="monospace">scale</mi></mrow></msup>/<mo>-</mo><mo>(</mo><mrow><mi mathvariant="monospace">bias</mi></mrow><mo>-</mo><mrow><mi mathvariant="monospace">deviation</mi></mrow><mo>)</mo><mo>·</mo><msup><mn>10</mn><mrow><mi mathvariant="monospace">scale</mi></mrow></msup></math>
@@ -220,6 +234,7 @@ pub type ReadingResult<R> = Result<R, ReadingError>;
 /// Panics if the concrete type of the sensor was not present in the list of types provided.
 // Should not be used by users directly, users should use the `riot_rs::await_sensor!()` proc-macro
 // instead.
+#[doc(hidden)]
 #[macro_export]
 macro_rules! _await_read_sensor {
     ($sensor:path, $first_sensor_type:path, $($sensor_type:path),* $(,)?) => {

@@ -3,13 +3,14 @@
 
 use crate::Sensor;
 
-// FIXME: this should not be part of the users' documentation, to force users to use
 // `Registry::sensors()` instead
 /// Stores references to registered sensors.
 ///
 /// To register a sensor, insert it to this [distributed slice](linkme).
 /// The sensor will need to be statically allocated, to be able to obtain a `'static` reference to
 /// it.
+// Exclude this from the users' documentation, to force users to use `Registry::sensors()` instead.
+#[doc(hidden)]
 #[linkme::distributed_slice]
 pub static SENSOR_REFS: [&'static dyn Sensor] = [..];
 

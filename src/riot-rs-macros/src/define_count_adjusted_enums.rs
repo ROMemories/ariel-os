@@ -51,6 +51,14 @@ pub fn define_count_adjusted_enums(_item: TokenStream) -> TokenStream {
 
     let expanded = quote! {
         // TODO: add a timestamp?
+        /// Values returned by a sensor.
+        ///
+        /// The order of [`PhysicalValue`]s is not significant, but is fixed.
+        ///
+        /// # Note
+        ///
+        /// This type is automatically generated, the number of variants is controlled by
+        /// `riot_rs_hwsetup::Sensors::max_reading_value_count()`.
         #[derive(Debug, Copy, Clone, serde::Serialize)]
         pub enum PhysicalValues {
             #(#physical_values_variants),*
@@ -70,6 +78,14 @@ pub fn define_count_adjusted_enums(_item: TokenStream) -> TokenStream {
             }
         }
 
+        /// Scaling values of [`PhysicalValues`] returned by [`Sensor::read()`].
+        ///
+        /// The order matches the one of [`PhysicalValues`].
+        ///
+        /// # Note
+        ///
+        /// This type is automatically generated, the number of variants is controlled by
+        /// `riot_rs_hwsetup::Sensors::max_reading_value_count()`.
         #[derive(Debug, Copy, Clone)]
         pub enum ValueScales {
             #(#value_scales_variants),*
@@ -88,6 +104,14 @@ pub fn define_count_adjusted_enums(_item: TokenStream) -> TokenStream {
             }
         }
 
+        /// Units of measurement of [`PhysicalValues`] returned by [`Sensor::read()`].
+        ///
+        /// The order matches the one of [`PhysicalValues`].
+        ///
+        /// # Note
+        ///
+        /// This type is automatically generated, the number of variants is controlled by
+        /// `riot_rs_hwsetup::Sensors::max_reading_value_count()`.
         #[derive(Debug, Copy, Clone, PartialEq, Eq)]
         pub enum PhysicalUnits {
             #(#physical_units_variants),*
@@ -106,6 +130,14 @@ pub fn define_count_adjusted_enums(_item: TokenStream) -> TokenStream {
             }
         }
 
+        /// [`Label`]s of [`PhysicalValues`] returned by [`Sensor::read()`].
+        ///
+        /// The order matches the one of [`PhysicalValues`].
+        ///
+        /// # Note
+        ///
+        /// This type is automatically generated, the number of variants is controlled by
+        /// `riot_rs_hwsetup::Sensors::max_reading_value_count()`.
         #[derive(Debug, Copy, Clone, PartialEq, Eq)]
         pub enum Labels {
             #(#labels_variants),*
