@@ -11,6 +11,7 @@ critical-section.workspace = true
 linkme.workspace = true
 static_cell.workspace = true
 cfg-if.workspace = true
+embedded-hal.workspace = true
 embedded-hal-async.workspace = true
 
 embassy-embedded-hal = { workspace = true }
