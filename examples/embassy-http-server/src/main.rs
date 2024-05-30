@@ -66,21 +66,21 @@ async fn web_task(
 
 #[riot_rs::spawner(autostart)]
 fn main(spawner: Spawner) {
-    // #[cfg(context = "nrf52")]
-    // {
-    //     use riot_rs::sensors::sensor::{PhysicalValue, ThresholdKind};
-    //     let threshold = PhysicalValue::new(2300);
-    //     sensors::TEMP_SENSOR.set_threshold(ThresholdKind::Lower, threshold);
-    //     sensors::TEMP_SENSOR.set_threshold_enabled(ThresholdKind::Lower, true);
-    // }
+    #[cfg(context = "nrf52")]
+    {
+        use riot_rs::sensors::sensor::{MeasurementError, PhysicalValue, ThresholdKind};
+        let threshold = PhysicalValue::new(2300, MeasurementError::Unknown);
+        sensors::TEMP_SENSOR.set_threshold(ThresholdKind::Lower, threshold);
+        sensors::TEMP_SENSOR.set_threshold_enabled(ThresholdKind::Lower, true);
+    }
 
     fn make_app() -> picoserve::Router<AppRouter, AppState> {
         let router = picoserve::Router::new().route("/", get(routes::index));
         let router = router.route("/api/sensors", get(routes::sensors));
-        // #[cfg(feature = "button-readings")]
-        // let router = router.route("/api/buttons", get(routes::buttons));
-        // #[cfg(context = "nrf52840")]
-        // let router = router.route("/api/temp", get(routes::temp));
+        #[cfg(feature = "button-readings")]
+        let router = router.route("/api/buttons", get(routes::buttons));
+        #[cfg(context = "nrf52840")]
+        let router = router.route("/api/temp", get(routes::temp));
         router
     }
 

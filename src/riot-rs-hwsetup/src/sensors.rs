@@ -11,7 +11,7 @@ pub use serde_yaml::Number as YamlNumber;
 pub struct Sensor {
     name: String,
     driver: String,
-    label: String,
+    label: Option<String>,
     on: Option<String>,
     when: Option<String>,
     with: Option<SensorConfig>,
@@ -31,8 +31,8 @@ impl Sensor {
     }
 
     #[must_use]
-    pub fn label(&self) -> &str {
-        &self.label
+    pub fn label(&self) -> Option<&str> {
+        self.label.as_deref()
     }
 
     #[must_use]

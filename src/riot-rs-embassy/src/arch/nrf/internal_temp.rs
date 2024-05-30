@@ -5,14 +5,11 @@ use embassy_executor::Spawner;
 use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, channel::Channel, mutex::Mutex};
 use embassy_time::{Duration, Timer};
 use riot_rs_sensors::{
-    categories::temperature::{TemperatureReading, TemperatureSensor},
-    label::Label,
     sensor::{
-        Category, Labels, MeasurementError, Notification, NotificationReceiver, PhysicalUnits,
-        PhysicalValue, PhysicalValues, ReadingError, ReadingResult, Sensor, ThresholdKind,
-        ValueScales,
+        Labels, MeasurementError, Notification, NotificationReceiver, PhysicalUnits, PhysicalValue,
+        PhysicalValues, ReadingError, ReadingResult, Sensor, ThresholdKind, ValueScales,
     },
-    PhysicalUnit, Reading,
+    Category, Label, PhysicalUnit, Reading,
 };
 
 use crate::arch::peripherals;
@@ -36,7 +33,7 @@ crate::define_peripherals!(Peripherals { temp: TEMP });
 pub struct InternalTemp {
     initialized: AtomicBool, // TODO: use an atomic bitset for initialized and enabled
     enabled: AtomicBool,
-    label: &'static str,
+    label: Option<&'static str>,
     // TODO: use a blocking mutex instead?
     temp: Mutex<CriticalSectionRawMutex, Option<embassy_nrf::temp::Temp<'static>>>,
     channel: Channel<CriticalSectionRawMutex, Notification, 1>,
@@ -48,7 +45,7 @@ pub struct InternalTemp {
 
 impl InternalTemp {
     #[must_use]
-    pub const fn new(label: &'static str) -> Self {
+    pub const fn new(label: Option<&'static str>) -> Self {
         Self {
             initialized: AtomicBool::new(false),
             enabled: AtomicBool::new(false),
@@ -72,8 +69,8 @@ impl InternalTemp {
             async fn temp_watcher(sensor: &'static InternalTemp) {
                 loop {
                     if sensor.lower_threshold_enabled.load(Ordering::Acquire) {
-                        if let Ok(value) = sensor.read_temperature().await {
-                            if value.temperature().value()
+                        if let Ok(value) = sensor.read().await {
+                            if value.value().value()
                                 > sensor.lower_threshold.load(Ordering::Acquire)
                             {
                                 // FIXME: should this be Lower or Higher?
@@ -158,8 +155,8 @@ impl Sensor for InternalTemp {
         self.channel.receiver()
     }
 
-    fn category(&self) -> Category {
-        Category::Temperature
+    fn categories(&self) -> &'static [Category] {
+        &[Category::Temperature]
     }
 
     fn value_scales(&self) -> ValueScales {
@@ -170,8 +167,8 @@ impl Sensor for InternalTemp {
         Labels::V1([Label::Main])
     }
 
-    fn label(&self) -> &'static str {
-        &self.label
+    fn label(&self) -> Option<&'static str> {
+        self.label
     }
 
     fn units(&self) -> PhysicalUnits {
@@ -188,13 +185,5 @@ impl Sensor for InternalTemp {
 
     fn version(&self) -> u8 {
         0
-    }
-}
-
-impl TemperatureSensor for InternalTemp {
-    async fn read_temperature(&self) -> ReadingResult<TemperatureReading> {
-        self.read()
-            .await
-            .map(|values| TemperatureReading::new(values.value()))
     }
 }

@@ -1,13 +1,17 @@
 use picoserve::response::{IntoResponse, Json};
-use riot_rs::sensors::categories::push_button::PushButtonSensor;
+use riot_rs::sensors::{PhysicalUnit, Reading, Sensor};
 
 pub async fn buttons() -> impl IntoResponse {
+    let reading = crate::sensors::BUTTON_1.read().await.unwrap().value();
+
+    let is_pressed = match crate::sensors::BUTTON_1.units().first() {
+        PhysicalUnit::ActiveOne => reading.value() == 1,
+        PhysicalUnit::ActiveZero => reading.value() == 0,
+        _ => unreachable!(),
+    };
+
     Json(JsonButtons {
-        button1: crate::sensors::BUTTON_1
-            .read_press_state()
-            .await
-            .unwrap()
-            .is_pressed(),
+        button1: is_pressed,
     })
     // Json(JsonButtons {
     //     button1: buttons.button1.is_low(),

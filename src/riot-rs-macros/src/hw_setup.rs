@@ -45,7 +45,8 @@ mod hw_setup {
 
         let sensor_name_static = format_ident!("{sensor_name}");
         let sensor_ref = format_ident!("{sensor_name}_REF");
-        let sensor_label = sensor_setup.label();
+        let sensor_label = sensor_setup.label().unwrap(); // FIXME: pass the Option to the sensor
+                                                          // directly
 
         let driver = match StringOrTypePath::from(sensor_setup.driver()) {
             StringOrTypePath::TypePath(type_path) => type_path,
@@ -158,7 +159,7 @@ mod hw_setup {
             // Instantiate the sensor driver
             // FIXME: does this work with zero cfg_conds?
             #[cfg(all(#(#cfg_conds),*))]
-            pub static #sensor_name_static: #sensor_type_alias_name = #sensor_type_alias_name::new(#sensor_label);
+            pub static #sensor_name_static: #sensor_type_alias_name = #sensor_type_alias_name::new(Some(#sensor_label));
 
             // Store a static reference in the sensor distributed slice
             #[cfg(all(#(#cfg_conds),*))]

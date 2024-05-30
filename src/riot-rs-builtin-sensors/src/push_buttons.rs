@@ -6,15 +6,14 @@ use embedded_hal::digital::InputPin;
 use riot_rs_embassy::Spawner;
 
 use riot_rs_sensors::{
-    categories::push_button::{PushButtonReading, PushButtonSensor},
-    label::Label,
     sensor::{
-        Category, Labels, MeasurementError, Notification, NotificationReceiver, PhysicalUnits,
-        PhysicalValue, PhysicalValues, ReadingError, ReadingResult, ThresholdKind, ValueScales,
+        Labels, MeasurementError, Notification, NotificationReceiver, PhysicalUnits, PhysicalValue,
+        PhysicalValues, ReadingError, ReadingResult, ThresholdKind, ValueScales,
     },
-    PhysicalUnit, Reading, Sensor,
+    Category, Label, PhysicalUnit, Reading, Sensor,
 };
 
+// TODO: allow to set whether this is active low or active high
 #[derive(Debug)]
 pub struct Config {}
 
@@ -31,15 +30,15 @@ pub type PushButton = GenericPushButton<riot_rs_embassy::arch::gpio::Input<'stat
 pub struct GenericPushButton<I: InputPin> {
     initialized: AtomicBool, // TODO: use an atomic bitset for initialized and enabled
     enabled: AtomicBool,
-    label: &'static str,
+    label: Option<&'static str>,
     // buttons: [Option<Button>; N], // TODO: maybe use MaybeUninit
     button: Mutex<CriticalSectionRawMutex, Option<I>>, // TODO: maybe use MaybeUninit
     channel: Channel<CriticalSectionRawMutex, Notification, 1>,
 }
 
-impl<I: InputPin> GenericPushButton<I> {
+impl<I: InputPin + 'static> GenericPushButton<I> {
     #[allow(clippy::new_without_default)]
-    pub const fn new(label: &'static str) -> Self {
+    pub const fn new(label: Option<&'static str>) -> Self {
         Self {
             initialized: AtomicBool::new(false),
             enabled: AtomicBool::new(false),
@@ -64,7 +63,7 @@ impl<I: InputPin> GenericPushButton<I> {
     }
 }
 
-impl<I: 'static + InputPin + Send> Sensor for GenericPushButton<I> {
+impl<I: InputPin + Send + 'static> Sensor for GenericPushButton<I> {
     async fn read(&self) -> ReadingResult<PhysicalValues> {
         //     self.read().await.map(|v| v.value())
         // }
@@ -107,8 +106,8 @@ impl<I: 'static + InputPin + Send> Sensor for GenericPushButton<I> {
         self.channel.receiver()
     }
 
-    fn category(&self) -> Category {
-        Category::PushButton
+    fn categories(&self) -> &'static [Category] {
+        &[Category::PushButton]
     }
 
     fn value_scales(&self) -> ValueScales {
@@ -117,15 +116,15 @@ impl<I: 'static + InputPin + Send> Sensor for GenericPushButton<I> {
     }
 
     fn units(&self) -> PhysicalUnits {
-        PhysicalUnits::V1([PhysicalUnit::Bool])
+        PhysicalUnits::V1([PhysicalUnit::ActiveOne])
     }
 
     fn reading_labels(&self) -> Labels {
         Labels::V1([Label::Main])
     }
 
-    fn label(&self) -> &'static str {
-        &self.label
+    fn label(&self) -> Option<&'static str> {
+        self.label
     }
 
     fn display_name(&self) -> Option<&'static str> {
@@ -138,14 +137,5 @@ impl<I: 'static + InputPin + Send> Sensor for GenericPushButton<I> {
 
     fn version(&self) -> u8 {
         0
-    }
-}
-
-impl<I: 'static + InputPin + Send> PushButtonSensor for GenericPushButton<I> {
-    // FIXME: rename this
-    async fn read_press_state(&self) -> ReadingResult<PushButtonReading> {
-        self.read()
-            .await
-            .map(|values| PushButtonReading::new(values.value()))
     }
 }

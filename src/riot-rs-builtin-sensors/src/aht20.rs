@@ -6,12 +6,11 @@ use embedded_aht20::Aht20 as InnerAht20;
 use portable_atomic::{AtomicBool, Ordering};
 use riot_rs_embassy::Spawner;
 use riot_rs_sensors::{
-    label::Label,
     sensor::{
-        Category, Labels, MeasurementError, NotificationReceiver, PhysicalUnits, PhysicalValue,
+        Labels, MeasurementError, NotificationReceiver, PhysicalUnits, PhysicalValue,
         PhysicalValues, ReadingError, ReadingResult, ThresholdKind, ValueScales,
     },
-    PhysicalUnit, Sensor,
+    Category, Label, PhysicalUnit, Sensor,
 };
 
 // FIXME: what's the best way to instantiate sensor driver configuration?
@@ -32,7 +31,7 @@ pub type Aht20I2c = Aht20<riot_rs_embassy::arch::i2c::I2c>;
 pub struct Aht20<I2C: embedded_hal_async::i2c::I2c + 'static> {
     initialized: AtomicBool, // TODO: use an atomic bitset for initialized and enabled
     enabled: AtomicBool,
-    label: &'static str,
+    label: Option<&'static str>,
     // TODO: consider using MaybeUninit?
     ht: Mutex<
         CriticalSectionRawMutex,
@@ -43,7 +42,7 @@ pub struct Aht20<I2C: embedded_hal_async::i2c::I2c + 'static> {
 impl<I2C: embedded_hal_async::i2c::I2c> Aht20<I2C> {
     #[expect(clippy::new_without_default)]
     #[must_use]
-    pub const fn new(label: &'static str) -> Self {
+    pub const fn new(label: Option<&'static str>) -> Self {
         Self {
             initialized: AtomicBool::new(false),
             enabled: AtomicBool::new(false),
@@ -133,8 +132,12 @@ impl<I2C: embedded_hal_async::i2c::I2c + Send> Sensor for Aht20<I2C> {
         todo!()
     }
 
-    fn category(&self) -> Category {
-        Category::Accelerometer // FIXME
+    fn categories(&self) -> &'static [Category] {
+        &[
+            Category::HumidityTemperature,
+            Category::Humidity,
+            Category::Temperature,
+        ]
     }
 
     fn value_scales(&self) -> ValueScales {
@@ -149,8 +152,8 @@ impl<I2C: embedded_hal_async::i2c::I2c + Send> Sensor for Aht20<I2C> {
         Labels::V2([Label::Humidity, Label::Temperature])
     }
 
-    fn label(&self) -> &'static str {
-        &self.label
+    fn label(&self) -> Option<&'static str> {
+        self.label
     }
 
     fn display_name(&self) -> Option<&'static str> {

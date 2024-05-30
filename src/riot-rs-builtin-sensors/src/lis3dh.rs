@@ -6,12 +6,11 @@ use lis3dh_async::{Configuration, DataRate, Lis3dh as InnerLis3dh, Lis3dhI2C};
 use portable_atomic::{AtomicBool, Ordering};
 use riot_rs_embassy::Spawner;
 use riot_rs_sensors::{
-    label::Label,
     sensor::{
-        Category, Labels, MeasurementError, NotificationReceiver, PhysicalUnits, PhysicalValue,
+        Labels, MeasurementError, NotificationReceiver, PhysicalUnits, PhysicalValue,
         PhysicalValues, ReadingError, ReadingResult, ThresholdKind, ValueScales,
     },
-    PhysicalUnit, Sensor,
+    Category, Label, PhysicalUnit, Sensor,
 };
 
 pub use crate::lis3dh_spi::Lis3dhSpi;
@@ -56,7 +55,7 @@ pub type Lis3dhI2c = Lis3dh<riot_rs_embassy::arch::i2c::I2c>;
 pub struct Lis3dh<I2C: embedded_hal_async::i2c::I2c + 'static> {
     initialized: AtomicBool, // TODO: use an atomic bitset for initialized and enabled
     enabled: AtomicBool,
-    label: &'static str,
+    label: Option<&'static str>,
     // TODO: consider using MaybeUninit?
     accel: Mutex<
         CriticalSectionRawMutex,
@@ -69,7 +68,7 @@ pub struct Lis3dh<I2C: embedded_hal_async::i2c::I2c + 'static> {
 impl<I2C: embedded_hal_async::i2c::I2c> Lis3dh<I2C> {
     #[expect(clippy::new_without_default)]
     #[must_use]
-    pub const fn new(label: &'static str) -> Self {
+    pub const fn new(label: Option<&'static str>) -> Self {
         Self {
             initialized: AtomicBool::new(false),
             enabled: AtomicBool::new(false),
@@ -178,8 +177,8 @@ impl<I2C: embedded_hal_async::i2c::I2c + Send> Sensor for Lis3dh<I2C> {
         todo!()
     }
 
-    fn category(&self) -> Category {
-        Category::Accelerometer
+    fn categories(&self) -> &'static [Category] {
+        &[Category::Accelerometer]
     }
 
     fn value_scales(&self) -> ValueScales {
@@ -199,8 +198,8 @@ impl<I2C: embedded_hal_async::i2c::I2c + Send> Sensor for Lis3dh<I2C> {
         Labels::V3([Label::X, Label::Y, Label::Z])
     }
 
-    fn label(&self) -> &'static str {
-        &self.label
+    fn label(&self) -> Option<&'static str> {
+        self.label
     }
 
     fn display_name(&self) -> Option<&'static str> {

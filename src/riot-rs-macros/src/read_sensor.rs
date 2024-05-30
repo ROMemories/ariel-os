@@ -5,15 +5,15 @@
 /// This macro panics when the `riot-rs` crate cannot be found as a dependency of the crate where
 /// this macro is used.
 #[proc_macro]
-pub fn await_read_sensor_value(input: TokenStream) -> TokenStream {
+pub fn await_read_sensor(input: TokenStream) -> TokenStream {
     use quote::quote;
     use riot_rs_hwsetup::{
         sensors::{Sensor, StringOrTypePath},
         HwSetup,
     };
-    use syn::Ident;
 
-    let sensor_ident: Ident = syn::parse_macro_input!(input);
+    let params = syn::parse_macro_input!(input as await_sensor::Params);
+    let sensor_ident = params.sensor_ident;
 
     let hwsetup_path = HwSetup::get_path_from_env().unwrap();
     let hwsetup = HwSetup::read_from_path(&hwsetup_path).unwrap();
@@ -35,10 +35,32 @@ pub fn await_read_sensor_value(input: TokenStream) -> TokenStream {
     // FIXME: we should generate the macro used by users in this macro, instead of doing the
     // opposite, so that the hw config file only gets parsed once
 
-    // The `_read_sensor` macro expects a trailing comma
+    // The `_await_read_sensor` macro expects a trailing comma
     let expanded = quote! {
         #riot_rs_crate::sensors::_await_read_sensor!(#sensor_ident, #(#sensor_type_list),* ,)
     };
 
     TokenStream::from(expanded)
+}
+
+mod await_sensor {
+    use syn::{
+        parse::{Parse, ParseStream},
+        ExprPath,
+    };
+
+    #[derive(Debug)]
+    pub struct Params {
+        pub sensor_ident: ExprPath,
+    }
+
+    impl Parse for Params {
+        fn parse(input: ParseStream) -> syn::Result<Self> {
+            let sensor_ident = input.parse()?;
+
+            Ok(Self {
+                sensor_ident,
+            })
+        }
+    }
 }

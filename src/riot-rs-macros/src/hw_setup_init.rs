@@ -63,8 +63,6 @@ mod hw_setup_init {
     }
 
     pub fn generate_i2c_bus(i2c_setup: &[buses::i2c::Bus]) -> Vec<Bus> {
-        use buses::i2c::Frequency;
-
         i2c_setup
             .iter()
             .map(|bus| {

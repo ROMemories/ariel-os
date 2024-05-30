@@ -1,7 +1,9 @@
-/// Label of a [`PhysicalValue`](crate::PhysicalValue) "dimension".
+/// Label of a [`PhysicalValue`](crate::sensor::PhysicalValue) part of a
+/// [`PhysicalValues`](crate::sensor::PhysicalValues) set.
 ///
-/// [`Label::Main`] is used for sensors returning a single [`PhysicalValue`]; even if a label
-/// exists for the physical value the sensor measures, the [`Label::Main`] variant must be used.
+/// [`Label::Main`] must be used for sensors returning a single
+/// [`PhysicalValue`](crate::sensor::PhysicalValue); even if a more specific label exists for the
+/// physical value.
 /// Other labels are reserved for sensors measuring multiple physical values.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, serde::Serialize)]
 pub enum Label {

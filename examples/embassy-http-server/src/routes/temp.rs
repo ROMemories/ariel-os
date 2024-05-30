@@ -1,17 +1,15 @@
 use picoserve::response::{IntoResponse, Json};
-use riot_rs::sensors::{categories::temperature::TemperatureSensor, PhysicalUnit, Sensor};
-
-use crate::sensors::TEMP_SENSOR;
+use riot_rs::sensors::{Category, PhysicalUnit, Reading, REGISTRY};
 
 pub async fn temp() -> impl IntoResponse {
-    let temp = TEMP_SENSOR
-        .read_temperature()
-        .await
-        .unwrap()
-        .temperature()
-        .value();
-    let temp = temp as f32 / 10i32.pow((-TEMP_SENSOR.value_scale()) as u32) as f32;
-    let unit = TEMP_SENSOR.unit();
+    let temp_sensor = REGISTRY
+        .sensors()
+        .find(|s| s.categories().contains(&Category::Temperature) && s.label() == Some("internal"))
+        .unwrap();
+    let reading = riot_rs::await_read_sensor!(temp_sensor).unwrap().value();
+    let temp =
+        reading.value() as f32 / 10i32.pow((-temp_sensor.value_scales().first()) as u32) as f32;
+    let unit = temp_sensor.units().first();
 
     Json(JsonTemp { temp, unit })
 }

@@ -81,6 +81,11 @@ pub fn define_count_adjusted_enums(_item: TokenStream) -> TokenStream {
                     #(#values_iter),*
                 }
             }
+
+            pub fn first(&self) -> i8 {
+                // NOTE(no-panic): there is always at least one value.
+                self.iter().next().unwrap()
+            }
         }
 
         #[derive(Debug, Copy, Clone, PartialEq, Eq)]
@@ -94,6 +99,11 @@ pub fn define_count_adjusted_enums(_item: TokenStream) -> TokenStream {
                     #(#values_iter),*
                 }
             }
+
+            pub fn first(&self) -> PhysicalUnit {
+                // NOTE(no-panic): there is always at least one value.
+                self.iter().next().unwrap()
+            }
         }
 
         #[derive(Debug, Copy, Clone, PartialEq, Eq)]
@@ -106,6 +116,11 @@ pub fn define_count_adjusted_enums(_item: TokenStream) -> TokenStream {
                 match self {
                     #(#values_iter),*
                 }
+            }
+
+            pub fn first(&self) -> Label {
+                // NOTE(no-panic): there is always at least one value.
+                self.iter().next().unwrap()
             }
         }
     };

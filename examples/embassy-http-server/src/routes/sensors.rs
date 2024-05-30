@@ -1,27 +1,29 @@
 use picoserve::response::IntoResponse;
-use riot_rs::sensors::{Reading, Sensor, REGISTRY};
+use riot_rs::sensors::{Reading, REGISTRY};
 
 pub async fn sensors() -> impl IntoResponse {
     for sensor in REGISTRY.sensors() {
-        if let (Ok(values), value_scales, units, display_name, label, reading_labels) =
-            riot_rs::await_read_sensor_value!(sensor)
-        {
-            for (i, value) in values.values().enumerate() {
-                let value_scale = value_scales.iter().nth(i).unwrap();
-                let unit = units.iter().nth(i).unwrap();
-                let reading_label = reading_labels.iter().nth(i).unwrap();
-                let value = value.value() as f32 / 10i32.pow((-value_scale) as u32) as f32;
-                riot_rs::debug::println!(
-                    "{} ({}): {} {} ({})",
-                    display_name.unwrap(),
-                    label,
-                    value,
-                    unit,
-                    reading_label
-                );
+        match riot_rs::await_read_sensor!(sensor) {
+            Ok(values) => {
+                for (i, value) in values.values().enumerate() {
+                    let value_scale = sensor.value_scales().iter().nth(i).unwrap();
+                    let unit = sensor.units().iter().nth(i).unwrap();
+                    let reading_label = sensor.reading_labels().iter().nth(i).unwrap();
+                    let value = value.value() as f32 / 10i32.pow((-value_scale) as u32) as f32;
+                    riot_rs::debug::println!(
+                        "{} ({}): {} {} ({})",
+                        sensor.display_name().unwrap_or("unknown"),
+                        sensor.label().unwrap_or("no label"),
+                        value,
+                        unit,
+                        reading_label
+                    );
+                }
             }
-        } else {
-            return "Error reading sensor";
+            Err(err) => {
+                riot_rs::debug::println!("error while reading sensor value: {}", err);
+                return "Error reading sensor";
+            }
         }
     }
 
