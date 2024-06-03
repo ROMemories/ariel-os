@@ -44,8 +44,6 @@ mod hw_setup_init {
     use quote::{format_ident, quote};
     use riot_rs_hwsetup::buses;
 
-    use crate::utils;
-
     #[derive(Debug, Clone)]
     pub struct Bus {
         instantiation: TokenStream,
@@ -89,10 +87,26 @@ mod hw_setup_init {
                         let frequency = i2c_frequency(peripheral.frequency());
 
                         // FIXME: support on/when on sda/scl
-                        let sda_pullup =
-                            utils::bool_as_token(peripheral.sda().first().unwrap().pull_up());
-                        let scl_pullup =
-                            utils::bool_as_token(peripheral.scl().first().unwrap().pull_up());
+                        let sda_pullup = if peripheral.sda().first().unwrap().pull_up() {
+                            quote! { config.sda_pullup = true; }
+                        } else {
+                            quote! {}
+                        };
+                        let scl_pullup = if peripheral.scl().first().unwrap().pull_up() {
+                            quote! { config.scl_pullup = true; }
+                        } else {
+                            quote! {}
+                        };
+
+                        let config = quote! {
+                            let mut config = arch::i2c::Config::default();
+                            config.frequency = #frequency;
+                            #sda_pullup
+                            #scl_pullup
+                            // FIXME: use configuration
+                            // config.sda_high_drive = false;
+                            // config.scl_high_drive = false;
+                        };
 
                         // FIXME: test what happens when trying to use a peripheral that doesn't exist or that is
                         // already used
@@ -107,13 +121,7 @@ mod hw_setup_init {
                         quote! {
                             #[cfg(all(#(#cfg_conds),*))]
                             {
-                                let mut config = arch::i2c::Config::default();
-                                config.frequency = #frequency;
-                                config.sda_pullup = #sda_pullup;
-                                config.scl_pullup = #scl_pullup;
-                                // FIXME: use configuration
-                                config.sda_high_drive = false;
-                                config.scl_high_drive = false;
+                                #config
 
                                 let i2c = arch::i2c::I2c::new(
                                     peripherals.#i2c_peripheral.take().unwrap(),
@@ -172,7 +180,15 @@ mod hw_setup_init {
 
                         let frequency = spi_frequency(peripheral.frequency());
                         let mode = spi_mode(peripheral.mode());
-                        let bit_order = spi_bit_order(peripheral.bit_order());
+                        let bit_order =
+                            if let Some(bit_order) = peripheral.bit_order() {
+                                let bit_order = spi_bit_order(bit_order);
+                                quote! {
+                                    config.bit_order = #bit_order;
+                                }
+                            } else {
+                                quote! {}
+                            };
 
                         // FIXME: test what happens when trying to use a peripheral that doesn't exist or that is
                         // already used
@@ -192,7 +208,7 @@ mod hw_setup_init {
                                 let mut config = arch::spi::Config::default();
                                 config.frequency = #frequency;
                                 config.mode = #mode;
-                                config.bit_order = #bit_order;
+                                #bit_order
                                 // TODO: driver strengths
 
                                 // FIXME: support on/when on sck/miso/mosi
@@ -201,6 +217,8 @@ mod hw_setup_init {
                                 let miso_peripheral = peripherals.#miso_peripheral.take().unwrap();
                                 let mosi_peripheral = peripherals.#mosi_peripheral.take().unwrap();
 
+                                // FIXME: how to select DMA channels? expose to the user? what if
+                                // we don't have enough of them left?
                                 // FIXME: make sure that the order MISO/MOSI/SCK is the same for
                                 // all archs
                                 let spi = arch::spi::Spi::new(
@@ -208,6 +226,10 @@ mod hw_setup_init {
                                     sck_peripheral,
                                     miso_peripheral,
                                     mosi_peripheral,
+                                    #[cfg(context = "rp")]
+                                    peripherals.DMA_CH0.take().unwrap(),
+                                    #[cfg(context = "rp")]
+                                    peripherals.DMA_CH1.take().unwrap(),
                                     config,
                                 );
 
@@ -246,10 +268,10 @@ mod hw_setup_init {
         use buses::spi::Mode;
 
         match mode {
-            Mode::Mode0 => quote! { arch::spi::MODE_0 },
-            Mode::Mode1 => quote! { arch::spi::MODE_1 },
-            Mode::Mode2 => quote! { arch::spi::MODE_2 },
-            Mode::Mode3 => quote! { arch::spi::MODE_3 },
+            Mode::Mode0 => quote! { arch::spi::Mode::Mode0 },
+            Mode::Mode1 => quote! { arch::spi::Mode::Mode1 },
+            Mode::Mode2 => quote! { arch::spi::Mode::Mode2 },
+            Mode::Mode3 => quote! { arch::spi::Mode::Mode3 },
         }
     }
 
@@ -257,8 +279,8 @@ mod hw_setup_init {
         use buses::spi::BitOrder;
 
         match bit_order {
-            BitOrder::MsbFirst => quote! { arch::spi::BitOrder::MSB_FIRST },
-            BitOrder::LsbFirst => quote! { arch::spi::BitOrder::LSB_FIRST },
+            BitOrder::MsbFirst => quote! { arch::spi::BitOrder::MsbFirst },
+            BitOrder::LsbFirst => quote! { arch::spi::BitOrder::LsbFirst },
         }
     }
 }

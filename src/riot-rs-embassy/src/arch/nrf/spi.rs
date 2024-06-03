@@ -2,12 +2,61 @@ use embassy_nrf::{
     bind_interrupts,
     gpio::Pin as GpioPin,
     peripherals,
-    spim::{InterruptHandler, Spim},
+    spim::{InterruptHandler, Spim, MODE_0, MODE_1, MODE_2, MODE_3},
 };
 
 pub use embassy_embedded_hal::shared_bus::asynch::spi::SpiDevice;
-// FIXME: maybe we should provide our own config type, unified across archs
-pub use embassy_nrf::spim::{BitOrder, Config, Frequency, Mode, MODE_0, MODE_1, MODE_2, MODE_3};
+pub use embassy_nrf::spim::Frequency;
+
+#[non_exhaustive]
+pub struct Config {
+    pub frequency: Frequency,
+    pub mode: Mode,
+    pub bit_order: BitOrder,
+}
+
+impl Default for Config {
+    fn default() -> Self {
+        Self {
+            frequency: Frequency::M1,
+            mode: Mode::Mode0,
+            bit_order: BitOrder::MsbFirst,
+        }
+    }
+}
+
+pub enum Mode {
+    Mode0,
+    Mode1,
+    Mode2,
+    Mode3,
+}
+
+// https://en.wikipedia.org/wiki/Serial_Peripheral_Interface#Mode_numbers
+impl From<Mode> for embassy_nrf::spim::Mode {
+    fn from(mode: Mode) -> Self {
+        match mode {
+            Mode::Mode0 => MODE_0,
+            Mode::Mode1 => MODE_1,
+            Mode::Mode2 => MODE_2,
+            Mode::Mode3 => MODE_3,
+        }
+    }
+}
+
+pub enum BitOrder {
+    MsbFirst,
+    LsbFirst,
+}
+
+impl From<BitOrder> for embassy_nrf::spim::BitOrder {
+    fn from(bit_order: BitOrder) -> Self {
+        match bit_order {
+            BitOrder::MsbFirst => embassy_nrf::spim::BitOrder::MSB_FIRST,
+            BitOrder::LsbFirst => embassy_nrf::spim::BitOrder::LSB_FIRST,
+        }
+    }
+}
 
 bind_interrupts!(
     struct Irqs {
@@ -29,7 +78,19 @@ impl Spi {
         mosi_pin: impl GpioPin,
         config: Config,
     ) -> Self {
-        let spim = Spim::new(spim_peripheral, Irqs, sck_pin, miso_pin, mosi_pin, config);
+        let mut spi_config = embassy_nrf::spim::Config::default();
+        spi_config.frequency = config.frequency;
+        spi_config.mode = config.mode.into();
+        spi_config.bit_order = config.bit_order.into();
+
+        let spim = Spim::new(
+            spim_peripheral,
+            Irqs,
+            sck_pin,
+            miso_pin,
+            mosi_pin,
+            spi_config,
+        );
 
         Self { spim }
     }

@@ -1,6 +1,6 @@
 // FIXME: feature-gate this?
-pub mod i2c;
 pub mod gpio;
+pub mod i2c;
 // FIXME: feature-gate this?
 pub mod spi;
 

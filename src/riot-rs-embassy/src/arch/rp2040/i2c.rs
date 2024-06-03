@@ -1,14 +1,37 @@
 use embassy_rp::{
     bind_interrupts,
-    gpio::Pin as GpioPin,
     i2c::{InterruptHandler, SclPin, SdaPin},
-    peripherals, Peripheral,
+    peripherals,
 };
 use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, mutex::Mutex};
-use embedded_hal_async::i2c::{Operation, SevenBitAddress};
+use embedded_hal_async::i2c::Operation;
 
-// FIXME: maybe we should provide our own config type, unified across archs
-pub use embassy_rp::i2c::Config;
+// TODO: factor this out (across archs)?
+pub use embassy_embedded_hal::shared_bus::asynch::i2c::I2cDevice;
+
+// We do not provide configuration for internal pull-ups as the RP2040 datasheet mentions in
+// section 4.3.1.3 that the GPIO used should have pull-ups enabled.
+#[non_exhaustive]
+pub struct Config {
+    pub frequency: Frequency,
+}
+
+impl Default for Config {
+    fn default() -> Self {
+        Self {
+            frequency: Frequency::K100,
+        }
+    }
+}
+
+// Possible values are copied from embassy-nrf
+// TODO: check how well this matches the RP2040 capabilities
+#[repr(u32)]
+pub enum Frequency {
+    K100 = 100_000,
+    K250 = 250_000,
+    K400 = 400_000,
+}
 
 bind_interrupts!(
     struct Irqs {
@@ -32,7 +55,11 @@ impl I2c {
         scl_pin: impl SclPin<peripherals::I2C0>,
         config: Config,
     ) -> Self {
-        let i2c = embassy_rp::i2c::I2c::new_async(i2c_peripheral, scl_pin, sda_pin, Irqs, config);
+        let mut i2c_config = embassy_rp::i2c::Config::default();
+        i2c_config.frequency = config.frequency as u32;
+
+        let i2c =
+            embassy_rp::i2c::I2c::new_async(i2c_peripheral, scl_pin, sda_pin, Irqs, i2c_config);
 
         Self {
             i2c: Mutex::new(i2c),

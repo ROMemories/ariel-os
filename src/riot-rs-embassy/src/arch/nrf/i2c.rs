@@ -6,9 +6,29 @@ use embassy_nrf::{
 };
 use embedded_hal_async::i2c::{Operation, SevenBitAddress};
 
-// FIXME: maybe we should provide our own config type, unified across archs
 pub use embassy_embedded_hal::shared_bus::asynch::i2c::I2cDevice;
-pub use embassy_nrf::twim::{Config, Frequency};
+pub use embassy_nrf::twim::Frequency;
+
+#[non_exhaustive]
+pub struct Config {
+    pub frequency: Frequency,
+    pub sda_pullup: bool,
+    pub scl_pullup: bool,
+    pub sda_high_drive: bool,
+    pub scl_high_drive: bool,
+}
+
+impl Default for Config {
+    fn default() -> Self {
+        Self {
+            frequency: Frequency::K100,
+            sda_pullup: false,
+            scl_pullup: false,
+            sda_high_drive: false,
+            scl_high_drive: false,
+        }
+    }
+}
 
 // FIXME: does this prevent us from binding another interrupt handler to the same interrupt (e.g.,
 // for SPI), elsewhere?
@@ -31,7 +51,14 @@ impl I2c {
         scl_pin: impl GpioPin,
         config: Config,
     ) -> Self {
-        let twim = Twim::new(twim_peripheral, Irqs, sda_pin, scl_pin, config);
+        let mut twim_config = embassy_nrf::twim::Config::default();
+        twim_config.frequency = config.frequency;
+        twim_config.sda_pullup = config.sda_pullup;
+        twim_config.scl_pullup = config.scl_pullup;
+        twim_config.sda_high_drive = config.sda_high_drive;
+        twim_config.scl_high_drive = config.scl_high_drive;
+
+        let twim = Twim::new(twim_peripheral, Irqs, sda_pin, scl_pin, twim_config);
 
         Self { twim }
     }
