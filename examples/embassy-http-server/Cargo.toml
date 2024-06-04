@@ -18,6 +18,7 @@ picoserve = { version = "0.8.0", default-features = false, features = [
 ] }
 riot-rs = { path = "../../src/riot-rs", features = ["override-network-config"] }
 riot-rs-boards = { path = "../../src/riot-rs-boards" }
+riot-rs-builtin-sensors = { path = "../../src/riot-rs-builtin-sensors" }
 serde = { version = "1.0", default-features = false }
 static_cell = { workspace = true }
 

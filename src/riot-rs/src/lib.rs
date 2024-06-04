@@ -12,10 +12,6 @@ pub mod buildinfo;
 #[cfg(feature = "bench")]
 #[doc(inline)]
 pub use riot_rs_bench as bench;
-// FIXME: feature-gate this?
-// FIXME: rename this
-#[doc(inline)]
-pub use riot_rs_builtin_sensors as builtin_sensors;
 #[doc(inline)]
 pub use riot_rs_debug as debug;
 #[doc(inline)]

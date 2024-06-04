@@ -57,7 +57,7 @@ sensors:
       on: nrf52
 
     - name: BUTTON_1
-      driver: '@riot_rs::builtin_sensors::push_buttons::PushButton'
+      driver: '@riot_rs_builtin_sensors::push_buttons::PushButton'
       label: 'btn1'
       on: nrf52840dk
       when: button-readings
@@ -68,20 +68,20 @@ sensors:
           pull: !up  # FIXME
 
     - name: ACCEL
-      driver: '@riot_rs::builtin_sensors::lis3dh::Lis3dhI2c'
+      driver: '@riot_rs_builtin_sensors::lis3dh::Lis3dhI2c'
       label: 'i2c'
       with:
-        mode: '@riot_rs::builtin_sensors::lis3dh::Mode::Normal'
+        mode: '@riot_rs_builtin_sensors::lis3dh::Mode::Normal'
         enable_z_axis: true
       bus:
         !i2c
         I2C0:
 
     - name: ACCEL_SPI
-      driver: '@riot_rs::builtin_sensors::lis3dh::Lis3dhSpi'
+      driver: '@riot_rs_builtin_sensors::lis3dh::Lis3dhSpi'
       label: 'spi'
       with:
-        mode: '@riot_rs::builtin_sensors::lis3dh::Mode::Normal'
+        mode: '@riot_rs_builtin_sensors::lis3dh::Mode::Normal'
         enable_z_axis: true
       bus:
         !spi
@@ -93,7 +93,7 @@ sensors:
               on: rp2040
 
   # - name: HUMID_TEMP
-  #   driver: riot_rs::builtin_sensors::aht20::Aht20I2c
+  #   driver: riot_rs_builtin_sensors::aht20::Aht20I2c
   #   label: 'indoor'
   #   bus:
   #     !i2c
