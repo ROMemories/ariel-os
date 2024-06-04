@@ -3,7 +3,7 @@ use riot_rs::sensors::{Reading, REGISTRY};
 
 pub async fn sensors() -> impl IntoResponse {
     for sensor in REGISTRY.sensors() {
-        match riot_rs::await_read_sensor!(sensor) {
+        match riot_rs::sensors::read!(sensor).await {
             Ok(values) => {
                 for (i, value) in values.values().enumerate() {
                     let value_scale = sensor.value_scales().iter().nth(i).unwrap();

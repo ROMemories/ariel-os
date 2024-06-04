@@ -52,14 +52,14 @@ mod hw_setup {
             StringOrTypePath::TypePath(type_path) => type_path,
             _ => panic!("`driver` must start with an @"),
         };
-        let mut sensor_type = utils::parse_type_path(driver);
+        let sensor_type = utils::parse_type_path(driver);
         let sensor_type_alias_name = sensor_type_alias_name(sensor_name, driver);
         // Path of the module containing the sensor driver
         let sensor_mod = utils::parse_type_path(&utils::parse_parent_module_path(driver));
 
         let spawner_fn = format_ident!("{sensor_name}_init");
 
-        let mut peripheral = None;
+        let mut peripheral_defs = Vec::new();
         let mut sensor_inits = Vec::new();
 
         // A sensor can only use one bus
@@ -80,9 +80,14 @@ mod hw_setup {
             let bus_name = spis.keys().next().unwrap();
             let spi_bus_static = format_ident!("{}", super::spi_bus_static(bus_name));
 
-            // FIXME: handle conds
-            let cs = spis.values().next().unwrap().cs().first().unwrap();
-            peripheral = Some(format_ident!("{}", cs.pin()));
+            for cs in spis.values().next().unwrap().chip_selects() {
+                let cs_cfg_conds = utils::parse_cfg_conditionals(cs);
+                let cs_pin = format_ident!("{}", cs.pin());
+                peripheral_defs.push(quote! {
+                    #[cfg(all(#(#cs_cfg_conds),*))]
+                    p: #cs_pin
+                });
+            }
 
             // TODO: select the appropriate SPI instance
             let spi_init = quote! {
@@ -91,6 +96,7 @@ mod hw_setup {
                 let cs_output = #riot_rs_crate::embassy::arch::gpio::Output::new(
                     peripherals.p,
                     #riot_rs_crate::embassy::arch::gpio::Level::High,
+                    #[cfg(context = "nrf")]
                     #riot_rs_crate::embassy::arch::gpio::OutputDrive::Standard,
                 );
                 let spi_dev = #riot_rs_crate::embassy::arch::spi::SpiDevice::new(spi_bus, cs_output);
@@ -112,7 +118,8 @@ mod hw_setup {
                 PullResistor::None => quote! { None },
             };
 
-            peripheral = Some(format_ident!("{}", input.pin()));
+            let input_pin = format_ident!("{}", input.pin());
+            peripheral_defs.push(quote! { p: #input_pin });
 
             let gpio_init = quote! {
                 let pull = #riot_rs_crate::embassy::arch::gpio::Pull::#pull_setting;
@@ -132,7 +139,7 @@ mod hw_setup {
 
         let cfg_conds = utils::parse_cfg_conditionals(sensor_setup);
 
-        let (peripheral_struct, one_shot_peripheral_struct) = if let Some(peripheral) = peripheral {
+        let (peripheral_struct_path, one_shot_peripheral_struct) = if !peripheral_defs.is_empty() {
             let one_shot_peripheral_struct_ident = format_ident!("{sensor_name}Peripherals");
 
             // TODO: make this work for multiple peripherals, with a HashMap
@@ -141,7 +148,7 @@ mod hw_setup {
                 quote! {
                     #[cfg(all(#(#cfg_conds),*))]
                     #riot_rs_crate::embassy::define_peripherals!(#one_shot_peripheral_struct_ident {
-                        p: #peripheral
+                        #(#peripheral_defs),*
                     });
                 },
             )
@@ -170,7 +177,7 @@ mod hw_setup {
             // Set the sensor initialization to run at startup
             #[cfg(all(#(#cfg_conds),*))]
             #[#riot_rs_crate::spawner(autostart, peripherals)]
-            fn #spawner_fn(spawner: Spawner, peripherals: #peripheral_struct) {
+            fn #spawner_fn(spawner: Spawner, peripherals: #peripheral_struct_path) {
                 let mut config = #sensor_mod::Config::default();
                 #sensor_config
 

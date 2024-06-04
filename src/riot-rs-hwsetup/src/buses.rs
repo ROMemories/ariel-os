@@ -78,6 +78,7 @@ pub mod i2c {
     #[serde(deny_unknown_fields)]
     pub struct Pin {
         pin: String,
+        #[serde(default)]
         pull_up: bool,
         on: Option<String>,
         when: Option<String>,
@@ -141,7 +142,7 @@ pub mod spi {
         mosi: Vec<Pin>, // FIXME: require at least one element
         frequency: Frequency,
         mode: Mode,
-        bit_order: BitOrder,
+        bit_order: Option<BitOrder>,
     }
 
     impl BusPeripheral {
@@ -171,7 +172,7 @@ pub mod spi {
         }
 
         #[must_use]
-        pub fn bit_order(&self) -> BitOrder {
+        pub fn bit_order(&self) -> Option<BitOrder> {
             self.bit_order
         }
     }
@@ -192,6 +193,8 @@ pub mod spi {
             &self.pin
         }
     }
+
+    derive_conditioned!(Pin);
 
     #[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize)]
     pub enum Frequency {

@@ -1,11 +1,11 @@
-/// Reads a sensor from a sensor trait object.
+/// Calls [`Sensor::read()`] on a sensor trait object.
 ///
 /// # Panics
 ///
 /// This macro panics when the `riot-rs` crate cannot be found as a dependency of the crate where
 /// this macro is used.
 #[proc_macro]
-pub fn await_read_sensor(input: TokenStream) -> TokenStream {
+pub fn read_sensor(input: TokenStream) -> TokenStream {
     use quote::quote;
     use riot_rs_hwsetup::{
         sensors::{Sensor, StringOrTypePath},
@@ -19,16 +19,20 @@ pub fn await_read_sensor(input: TokenStream) -> TokenStream {
     let hwsetup = HwSetup::read_from_path(&hwsetup_path).unwrap();
     dbg!(&hwsetup);
 
-    let sensor_type_list = hwsetup.sensors().connected().iter().map(Sensor::driver);
-    let sensor_type_list = sensor_type_list.map(|driver| {
-        let driver = match StringOrTypePath::from(driver) {
-            StringOrTypePath::TypePath(type_path) => type_path,
-            _ => panic!("`driver` must start with an @"),
-        };
+    let sensor_type_list = hwsetup.sensors().connected().iter().map(|sensor_setup| {
+        match StringOrTypePath::from(sensor_setup.driver()) {
+            StringOrTypePath::TypePath(type_path) => {
+                let cfg_conds = utils::parse_cfg_conditionals(sensor_setup);
+                let type_path = utils::parse_type_path(type_path);
 
-        utils::parse_type_path(driver)
+                quote! {
+                    #[cfg(all(#(#cfg_conds),*))]
+                    #type_path
+                }
+            },
+            _ => panic!("`driver` must start with an @"),
+        }
     });
-    // FIXME: filter this type list based on context and enabled features
 
     let riot_rs_crate = utils::riot_rs_crate();
 
@@ -37,7 +41,7 @@ pub fn await_read_sensor(input: TokenStream) -> TokenStream {
 
     // The `_await_read_sensor` macro expects a trailing comma
     let expanded = quote! {
-        #riot_rs_crate::sensors::_await_read_sensor!(#sensor_ident, #(#sensor_type_list),* ,)
+        #riot_rs_crate::sensors::_read_sensor!(#sensor_ident, #(#sensor_type_list),* ,)
     };
 
     TokenStream::from(expanded)
@@ -58,9 +62,7 @@ mod await_sensor {
         fn parse(input: ParseStream) -> syn::Result<Self> {
             let sensor_ident = input.parse()?;
 
-            Ok(Self {
-                sensor_ident,
-            })
+            Ok(Self { sensor_ident })
         }
     }
 }

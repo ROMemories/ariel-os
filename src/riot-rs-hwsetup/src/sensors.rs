@@ -130,7 +130,7 @@ pub struct SensorBusSpi {
 
 impl SensorBusSpi {
     #[must_use]
-    pub fn cs(&self) -> &[crate::buses::spi::Pin] {
+    pub fn chip_selects(&self) -> &[crate::buses::spi::Pin] {
         &self.cs
     }
 }

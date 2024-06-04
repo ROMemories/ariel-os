@@ -15,7 +15,7 @@ pub trait Sensor: Any + Send + Sync {
     /// Returns the sensor reading.
     ///
     /// As this method is non-dispatchable, the
-    /// [`riot_rs::await_read_sensor!()`](riot_rs_macros::await_read_sensor!) macro must be used
+    /// [`riot_rs::read_sensor!()`](riot_rs_macros::read_sensor!) macro must be used
     /// instead of calling this method directly, this macro requires a  properly configured setup
     /// file.
     fn read(&self) -> impl Future<Output = ReadingResult<impl Reading>>
@@ -219,39 +219,47 @@ impl core::error::Error for ReadingError {}
 
 pub type ReadingResult<R> = Result<R, ReadingError>;
 
-/// Returns the result of calling the method `$method` on the sensor concrete type.
+/// Returns the result of calling [`Sensor::read()`] on the sensor concrete type.
 ///
 /// Downcasts the provided sensor (which must be implementing the [`Sensor`] trait) to its concrete
-/// type, and calls the async, non-dispatchable `Sensor::$method()` method on it.
-/// This is in particular required to call [`Sensor::read()`] on a `dyn Sensor` trait object because
-/// [`Sensor::read()`] is non-dispatchable and can therefore only be called on a concrete type.
+/// type, and calls the async, non-dispatchable `Sensor::read()` method on it.
 ///
-/// This macro needs to be provided with the sensor, the method to call and with the list of
-/// existing sensor concrete types.
+/// This macro needs to be provided with the sensor and with the list of existing sensor concrete
+/// types (at least one).
 ///
 /// # Panics
 ///
 /// Panics if the concrete type of the sensor was not present in the list of types provided.
-// Should not be used by users directly, users should use the `riot_rs::await_sensor!()` proc-macro
+// Should not be used by users directly, users should use the `riot_rs::read_sensor!()` proc-macro
 // instead.
 #[doc(hidden)]
 #[macro_export]
-macro_rules! _await_read_sensor {
-    ($sensor:path, $first_sensor_type:path, $($sensor_type:path),* $(,)?) => {
+macro_rules! _read_sensor {
+    (
+        $sensor:path,
+        $(
+            $(#[$sensor_attr:meta])*
+            $sensor_type:path
+        ),*
+        $(,)?
+    ) => {
         {
-            use $crate::Sensor;
+            use $crate::{sensor::ReadingResult, Sensor};
+
             // As `Sensor::read()` is non-dispatchable, we have to downcast
-            if let Some(sensor) = $sensor.downcast_ref::<$first_sensor_type>() {
-                sensor.read().await
-            }
-            $(
-            else if let Some(sensor) = $sensor.downcast_ref::<$sensor_type>() {
-                sensor.read().await
-            }
-            )*
-            else {
+            async fn __read_sensor(sensor: &dyn Sensor) -> ReadingResult<impl Reading> {
+                $(
+                $(#[$sensor_attr])*
+                if let Some(sensor) = sensor.downcast_ref::<$sensor_type>() {
+                    return sensor.read().await;
+                }
+                )*
+
+                // Every possible sensor concrete types must have been provided.
                 unreachable!();
             }
+
+            __read_sensor($sensor)
         }
     };
 }
