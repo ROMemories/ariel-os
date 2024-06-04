@@ -1,21 +1,21 @@
 #[proc_macro]
 pub fn define_count_adjusted_enums(_item: TokenStream) -> TokenStream {
-    use quote::{format_ident, quote};
-    use riot_rs_hwsetup::HwSetup;
+    use quote::quote;
 
-    // Allow tooling to run without passing a setup file
-    let hwsetup = if let Ok(hwsetup_path) = HwSetup::get_path_from_env() {
-        HwSetup::read_from_path(&hwsetup_path).unwrap()
-    } else {
-        HwSetup::default()
-    };
+    #[allow(clippy::wildcard_imports)]
+    use define_count_adjusted_enum::*;
 
-    fn variant_name(index: usize) -> syn::Ident {
-        format_ident!("V{index}")
-    }
-
-    let count = usize::from(u8::from(hwsetup.sensors().max_reading_value_count()));
-    dbg!(&count);
+    // The order of these feature-gated statements is important as these features are not meant to
+    // be mutually exclusive.
+    let count = 1;
+    #[cfg(feature = "max-reading-value-min-count-2")]
+    let count = 2;
+    #[cfg(feature = "max-reading-value-min-count-3")]
+    let count = 3;
+    #[cfg(feature = "max-reading-value-min-count-9")]
+    let count = 9;
+    #[cfg(feature = "max-reading-value-min-count-12")]
+    let count = 12;
 
     let physical_values_variants = (1..=count).map(|i| {
         let variant = variant_name(i);
@@ -160,4 +160,8 @@ pub fn define_count_adjusted_enums(_item: TokenStream) -> TokenStream {
     TokenStream::from(expanded)
 }
 
-mod define_count_adjusted_enum {}
+mod define_count_adjusted_enum {
+    pub fn variant_name(index: usize) -> syn::Ident {
+        quote::format_ident!("V{index}")
+    }
+}

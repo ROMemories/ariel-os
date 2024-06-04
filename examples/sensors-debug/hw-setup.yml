@@ -50,7 +50,6 @@ buses: # TODO: rename this? Shared communication interfaces
           mode: !Mode3
 
 sensors:
-  # max_reading_value_count: 9
   connected:
     - name: TEMP_SENSOR
       driver: '@riot_rs::embassy::arch::internal_temp::InternalTemp'

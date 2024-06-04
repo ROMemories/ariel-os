@@ -18,3 +18,12 @@ linkme = { workspace = true }
 riot-rs-macros = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 static_cell = { workspace = true }
+
+[features]
+# These features could be codegened
+max-reading-value-min-count-2 = ["riot-rs-macros/max-reading-value-min-count-2"]
+max-reading-value-min-count-3 = ["riot-rs-macros/max-reading-value-min-count-3"]
+max-reading-value-min-count-9 = ["riot-rs-macros/max-reading-value-min-count-9"]
+max-reading-value-min-count-12 = [
+  "riot-rs-macros/max-reading-value-min-count-12",
+]

@@ -17,7 +17,9 @@ embedded-hal = { workspace = true }
 embedded-hal-async = { workspace = true }
 portable-atomic = { workspace = true }
 riot-rs-embassy = { workspace = true } # TODO: is this ok?
-riot-rs-sensors = { workspace = true }
+riot-rs-sensors = { workspace = true, features = [
+  "max-reading-value-min-count-3",
+] }
 
 # Sensor drivers
 lis3dh-async = { version = "0.9.2" }
