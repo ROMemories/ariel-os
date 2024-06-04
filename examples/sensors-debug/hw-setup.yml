@@ -1,0 +1,101 @@
+buses: # TODO: rename this? Shared communication interfaces
+  i2c:
+    - name: I2C0
+      peripheral:
+        TWISPI0:
+          on: nrf52840
+          sda:
+            - pin: P0_03
+              on: nrf52840dk
+              pull_up: false
+          scl:
+            - pin: P0_04
+              on: nrf52840dk
+              pull_up: false
+          frequency: !K100
+
+        I2C0:
+          on: rp2040
+          sda:
+            - pin: PIN_4
+          scl:
+            - pin: PIN_5
+          frequency: !K100
+  spi:
+    - name: SPI0
+      peripheral:
+        SPI2:
+          on: nrf52840
+          sck:
+            - pin: P0_31
+              on: nrf52840dk
+          miso:
+            - pin: P0_29
+              on: nrf52840dk
+          mosi:
+            - pin: P0_30
+              on: nrf52840dk
+          frequency: !M2
+          mode: !Mode3
+          bit_order: !MsbFirst
+        SPI0:
+          on: rp2040
+          sck:
+            - pin: PIN_18
+          miso:
+            - pin: PIN_16
+          mosi:
+            - pin: PIN_19
+          frequency: !M2
+          mode: !Mode3
+
+sensors:
+  # max_reading_value_count: 9
+  connected:
+    - name: TEMP_SENSOR
+      driver: '@riot_rs::embassy::arch::internal_temp::InternalTemp'
+      label: 'internal'
+      on: nrf52
+
+    - name: BUTTON_1
+      driver: '@riot_rs::builtin_sensors::push_buttons::PushButton'
+      label: 'btn1'
+      on: nrf52840dk
+      when: button-readings
+      peripherals:
+        - !input
+          on: nrf52840dk
+          pin: P0_11
+          pull: !up  # FIXME
+
+    - name: ACCEL
+      driver: '@riot_rs::builtin_sensors::lis3dh::Lis3dhI2c'
+      label: 'i2c'
+      with:
+        mode: '@riot_rs::builtin_sensors::lis3dh::Mode::Normal'
+        enable_z_axis: true
+      bus:
+        !i2c
+        I2C0:
+
+    - name: ACCEL_SPI
+      driver: '@riot_rs::builtin_sensors::lis3dh::Lis3dhSpi'
+      label: 'spi'
+      with:
+        mode: '@riot_rs::builtin_sensors::lis3dh::Mode::Normal'
+        enable_z_axis: true
+      bus:
+        !spi
+        SPI0:
+          cs:
+            - pin: P0_28
+              on: nrf52840dk
+            - pin: PIN_17
+              on: rp2040
+
+  # - name: HUMID_TEMP
+  #   driver: riot_rs::builtin_sensors::aht20::Aht20I2c
+  #   label: 'indoor'
+  #   bus:
+  #     !i2c
+  #     I2C0:
