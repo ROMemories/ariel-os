@@ -17,11 +17,9 @@ buses: # TODO: rename this? Shared communication interfaces
         I2C0:
           on: rp2040
           sda:
-            - pin: P0_30  # FIXME: not an RP2040 pin
-              pull_up: false
+            - pin: PIN_4
           scl:
-            - pin: P0_31  # FIXME: not an RP2040 pin
-              pull_up: false
+            - pin: PIN_5
           frequency: !K100
   spi:
     - name: SPI0
@@ -30,16 +28,26 @@ buses: # TODO: rename this? Shared communication interfaces
           on: nrf52840
           sck:
             - pin: P0_31
-              on: nrf52840dk  # FIXME
+              on: nrf52840dk
           miso:
             - pin: P0_29
-              on: nrf52840dk  # FIXME
+              on: nrf52840dk
           mosi:
             - pin: P0_30
-              on: nrf52840dk  # FIXME
+              on: nrf52840dk
           frequency: !M2
           mode: !Mode3
           bit_order: !MsbFirst
+        SPI0:
+          on: rp2040
+          sck:
+            - pin: PIN_18
+          miso:
+            - pin: PIN_16
+          mosi:
+            - pin: PIN_19
+          frequency: !M2
+          mode: !Mode3
 
 sensors:
   # max_reading_value_count: 9
@@ -82,6 +90,8 @@ sensors:
           cs:
             - pin: P0_28
               on: nrf52840dk
+            - pin: PIN_20
+              on: rp2040
 
   # - name: HUMID_TEMP
   #   driver: riot_rs::builtin_sensors::aht20::Aht20I2c
