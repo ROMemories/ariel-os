@@ -1,11 +1,10 @@
-use embassy_embedded_hal::shared_bus::asynch::spi::SpiDevice;
 use embassy_futures::select::Either;
 use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, mutex::Mutex};
 use embassy_time::{Duration, Timer};
 use embedded_hal::digital::OutputPin;
 use lis3dh_async::{Configuration, DataRate, Lis3dh as InnerLis3dh, Lis3dhSPI};
 use portable_atomic::{AtomicBool, Ordering};
-use riot_rs_embassy::Spawner;
+use riot_rs_embassy::{arch, Spawner};
 use riot_rs_sensors::{
     sensor::{
         Labels, MeasurementError, NotificationReceiver, PhysicalUnits, PhysicalValue,
@@ -18,37 +17,16 @@ use crate::lis3dh::Config;
 
 pub use lis3dh_async::{Mode, SlaveAddr as Address};
 
-// riot_rs_embassy::define_peripherals!(Peripherals {});
-
-pub type Lis3dhSpi = Lis3dh<riot_rs_embassy::arch::spi::Spi>;
-
-// TODO: support SPI as well
-// TODO: could maybe use a OncelCell instead of an Option
-pub struct Lis3dh<SPI: embedded_hal_async::spi::SpiBus + 'static> {
+// TODO: could maybe use a OnceCell instead of an Option
+pub struct Lis3dhSpi {
     initialized: AtomicBool, // TODO: use an atomic bitset for initialized and enabled
     enabled: AtomicBool,
     label: Option<&'static str>,
     // TODO: consider using MaybeUninit?
-    accel: Mutex<
-        CriticalSectionRawMutex,
-        Option<
-            InnerLis3dh<
-                Lis3dhSPI<
-                    SpiDevice<
-                        'static,
-                        CriticalSectionRawMutex,
-                        SPI,
-                        riot_rs_embassy::arch::gpio::Output<'static>,
-                    >,
-                >,
-            >,
-        >,
-    >,
+    accel: Mutex<CriticalSectionRawMutex, Option<InnerLis3dh<Lis3dhSPI<arch::spi::SpiDevice>>>>,
 }
 
-// TODO: need to impl Lis3dhCore?
-
-impl<SPI: embedded_hal_async::spi::SpiBus> Lis3dh<SPI> {
+impl Lis3dhSpi {
     #[expect(clippy::new_without_default)]
     #[must_use]
     pub const fn new(label: Option<&'static str>) -> Self {
@@ -64,12 +42,7 @@ impl<SPI: embedded_hal_async::spi::SpiBus> Lis3dh<SPI> {
         &'static self,
         _spawner: Spawner,
         // peripherals: Peripherals,
-        spi: SpiDevice<
-            'static,
-            CriticalSectionRawMutex,
-            SPI,
-            riot_rs_embassy::arch::gpio::Output<'static>,
-        >,
+        spi: arch::spi::SpiDevice,
         config: Config,
     ) {
         if !self.initialized.load(Ordering::Acquire) {
@@ -112,7 +85,7 @@ impl<SPI: embedded_hal_async::spi::SpiBus> Lis3dh<SPI> {
     }
 }
 
-impl<SPI: embedded_hal_async::spi::SpiBus + Send> Sensor for Lis3dh<SPI> {
+impl Sensor for Lis3dhSpi {
     async fn read(&self) -> ReadingResult<PhysicalValues> {
         if !self.enabled.load(Ordering::Acquire) {
             return Err(ReadingError::Disabled);
@@ -199,8 +172,3 @@ impl<SPI: embedded_hal_async::spi::SpiBus + Send> Sensor for Lis3dh<SPI> {
         0
     }
 }
-
-// TODO: consider accelerometer.rs as well
-// impl Accelerometer for Lis3dh {
-//
-// }

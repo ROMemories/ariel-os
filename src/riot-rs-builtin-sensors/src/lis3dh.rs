@@ -1,13 +1,12 @@
-use embassy_embedded_hal::shared_bus::asynch::i2c::I2cDevice;
 use embassy_futures::select::Either;
 use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, mutex::Mutex};
 use embassy_time::{Duration, Timer};
 use lis3dh_async::{Configuration, DataRate, Lis3dh as InnerLis3dh, Lis3dhI2C};
 use portable_atomic::{AtomicBool, Ordering};
-use riot_rs_embassy::Spawner;
+use riot_rs_embassy::{arch, Spawner};
 use riot_rs_sensors::{
     sensor::{
-        Labels, MeasurementError, NotificationReceiver, PhysicalUnits, PhysicalValue,
+        Labels, MeasurementError, Notification, NotificationReceiver, PhysicalUnits, PhysicalValue,
         PhysicalValues, ReadingError, ReadingResult, ThresholdKind, ValueScales,
     },
     Category, Label, PhysicalUnit, Sensor,
@@ -48,24 +47,16 @@ impl Default for Config {
 
 riot_rs_embassy::define_peripherals!(Peripherals {});
 
-pub type Lis3dhI2c = Lis3dh<riot_rs_embassy::arch::i2c::I2c>;
-
-// TODO: support SPI as well
-// TODO: could maybe use a OncelCell instead of an Option
-pub struct Lis3dh<I2C: embedded_hal_async::i2c::I2c + 'static> {
+// TODO: could maybe use a OnceCell instead of an Option
+pub struct Lis3dhI2c {
     initialized: AtomicBool, // TODO: use an atomic bitset for initialized and enabled
     enabled: AtomicBool,
     label: Option<&'static str>,
     // TODO: consider using MaybeUninit?
-    accel: Mutex<
-        CriticalSectionRawMutex,
-        Option<InnerLis3dh<Lis3dhI2C<I2cDevice<'static, CriticalSectionRawMutex, I2C>>>>,
-    >,
+    accel: Mutex<CriticalSectionRawMutex, Option<InnerLis3dh<Lis3dhI2C<arch::i2c::I2cDevice>>>>,
 }
 
-// TODO: need to impl Lis3dhCore?
-
-impl<I2C: embedded_hal_async::i2c::I2c> Lis3dh<I2C> {
+impl Lis3dhI2c {
     #[expect(clippy::new_without_default)]
     #[must_use]
     pub const fn new(label: Option<&'static str>) -> Self {
@@ -81,7 +72,7 @@ impl<I2C: embedded_hal_async::i2c::I2c> Lis3dh<I2C> {
         &'static self,
         _spawner: Spawner,
         peripherals: Peripherals,
-        i2c: I2cDevice<'static, CriticalSectionRawMutex, I2C>,
+        i2c: arch::i2c::I2cDevice,
         config: Config,
     ) {
         if !self.initialized.load(Ordering::Acquire) {
@@ -127,7 +118,7 @@ impl<I2C: embedded_hal_async::i2c::I2c> Lis3dh<I2C> {
     }
 }
 
-impl<I2C: embedded_hal_async::i2c::I2c + Send> Sensor for Lis3dh<I2C> {
+impl Sensor for Lis3dhI2c {
     async fn read(&self) -> ReadingResult<PhysicalValues> {
         if !self.enabled.load(Ordering::Acquire) {
             return Err(ReadingError::Disabled);
@@ -214,8 +205,3 @@ impl<I2C: embedded_hal_async::i2c::I2c + Send> Sensor for Lis3dh<I2C> {
         0
     }
 }
-
-// TODO: consider accelerometer.rs as well
-// impl Accelerometer for Lis3dh {
-//
-// }

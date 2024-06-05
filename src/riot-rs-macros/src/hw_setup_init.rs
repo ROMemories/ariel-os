@@ -81,7 +81,7 @@ mod hw_setup_init {
                 let initializations = bus
                     .peripheral()
                     .iter()
-                    .map(|(name, peripheral)| {
+                    .map(|(peripheral_name, peripheral)| {
                         let cfg_conds = crate::utils::parse_cfg_conditionals(peripheral);
 
                         let frequency = i2c_frequency(peripheral.frequency());
@@ -116,18 +116,21 @@ mod hw_setup_init {
                         let scl_peripheral =
                             format_ident!("{}", peripheral.scl().first().unwrap().pin());
 
-                        let i2c_peripheral = format_ident!("{name}");
+                        let i2c_driver = format_ident!("I2c{peripheral_name}");
+                        let i2c_peripheral = format_ident!("{peripheral_name}");
 
                         quote! {
                             #[cfg(all(#(#cfg_conds),*))]
                             {
                                 #config
 
-                                let i2c = arch::i2c::I2c::new(
-                                    peripherals.#i2c_peripheral.take().unwrap(),
-                                    peripherals.#sda_peripheral.take().unwrap(),
-                                    peripherals.#scl_peripheral.take().unwrap(),
-                                    config,
+                                let i2c = arch::i2c::I2c::#i2c_peripheral(
+                                    arch::i2c::#i2c_driver::new(
+                                        peripherals.#i2c_peripheral.take().unwrap(),
+                                        peripherals.#sda_peripheral.take().unwrap(),
+                                        peripherals.#scl_peripheral.take().unwrap(),
+                                        config,
+                                    )
                                 );
 
                                 let _ = #i2c_bus_static.set(embassy_sync::mutex::Mutex::new(i2c));
@@ -175,7 +178,7 @@ mod hw_setup_init {
                 let initializations = bus
                     .peripheral()
                     .iter()
-                    .map(|(name, peripheral)| {
+                    .map(|(peripheral_name, peripheral)| {
                         let cfg_conds = crate::utils::parse_cfg_conditionals(peripheral);
 
                         let frequency = spi_frequency(peripheral.frequency());
@@ -200,7 +203,8 @@ mod hw_setup_init {
                         let mosi_peripheral =
                             format_ident!("{}", peripheral.mosi().first().unwrap().pin());
 
-                        let spi_peripheral = format_ident!("{name}");
+                        let spi_driver = format_ident!("Spi{peripheral_name}");
+                        let spi_peripheral = format_ident!("{peripheral_name}");
 
                         quote! {
                             #[cfg(all(#(#cfg_conds),*))]
@@ -221,16 +225,18 @@ mod hw_setup_init {
                                 // we don't have enough of them left?
                                 // FIXME: make sure that the order MISO/MOSI/SCK is the same for
                                 // all archs
-                                let spi = arch::spi::Spi::new(
-                                    spi_peripheral,
-                                    sck_peripheral,
-                                    miso_peripheral,
-                                    mosi_peripheral,
-                                    #[cfg(context = "rp")]
-                                    peripherals.DMA_CH0.take().unwrap(),
-                                    #[cfg(context = "rp")]
-                                    peripherals.DMA_CH1.take().unwrap(),
-                                    config,
+                                let spi = arch::spi::Spi::#spi_peripheral(
+                                    arch::spi::#spi_driver::new(
+                                        spi_peripheral,
+                                        sck_peripheral,
+                                        miso_peripheral,
+                                        mosi_peripheral,
+                                        #[cfg(context = "rp")]
+                                        peripherals.DMA_CH0.take().unwrap(),
+                                        #[cfg(context = "rp")]
+                                        peripherals.DMA_CH1.take().unwrap(),
+                                        config,
+                                    )
                                 );
 
                                 let _ = #spi_bus_static.set(embassy_sync::mutex::Mutex::new(spi));
