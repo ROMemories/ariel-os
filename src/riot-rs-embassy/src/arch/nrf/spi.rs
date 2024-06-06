@@ -120,11 +120,18 @@ macro_rules! define_spi_drivers {
     };
 }
 
+// FIXME: support other nRF archs
 // Define a driver per peripheral
+#[cfg(context = "nrf52840")]
 define_spi_drivers!(
     // FIXME
     // SPIM0_SPIS0_TWIM0_TWIS0_SPI0_TWI0 => TWISPI0,
     // SPIM1_SPIS1_TWIM1_TWIS1_SPI1_TWI1 => TWISPI1,
     SPIM2_SPIS2_SPI2 => SPI2,
     SPIM3 => SPI3,
+);
+#[cfg(context = "nrf5340")]
+define_spi_drivers!(
+    SERIAL2 => SERIAL2,
+    SERIAL3 => SERIAL3,
 );

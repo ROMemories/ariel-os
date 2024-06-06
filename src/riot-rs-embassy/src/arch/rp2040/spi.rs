@@ -116,7 +116,5 @@ macro_rules! define_spi_drivers {
     };
 }
 
-define_spi_drivers!(
-    SPI0,
-    SPI1,
-);
+// Define a driver per peripheral
+define_spi_drivers!(SPI0, SPI1);

@@ -13,7 +13,17 @@ buses: # TODO: rename this? Shared communication interfaces
               on: nrf52840dk
               pull_up: false
           frequency: !K100
-
+        SERIAL0:
+          on: nrf5340
+          sda:
+            - pin: P0_04
+              on: nrf5340dk
+              pull_up: false
+          scl:
+            - pin: P0_05
+              on: nrf5340dk
+              pull_up: false
+          frequency: !K100
         I2C0:
           on: rp2040
           sda:
@@ -23,6 +33,28 @@ buses: # TODO: rename this? Shared communication interfaces
           frequency: !K100
     - name: I2C1
       peripheral:
+        TWISPI1:
+          on: nrf52840
+          sda:
+            - pin: P0_02
+              on: nrf52840dk
+              pull_up: false
+          scl:
+            - pin: P0_26
+              on: nrf52840dk
+              pull_up: false
+          frequency: !K100
+        SERIAL1:
+          on: nrf5340
+          sda:
+            - pin: P0_01
+              on: nrf5340dk
+              pull_up: false
+          scl:
+            - pin: P1_02
+              on: nrf5340dk
+              pull_up: false
+          frequency: !K100
         I2C1:
           on: rp2040
           sda:
@@ -47,6 +79,20 @@ buses: # TODO: rename this? Shared communication interfaces
           frequency: !M2
           mode: !Mode3
           bit_order: !MsbFirst
+        SERIAL2:
+          on: nrf5340
+          sck:
+            - pin: P0_26
+              on: nrf5340dk
+          miso:
+            - pin: P0_07
+              on: nrf5340dk
+          mosi:
+            - pin: P0_25
+              on: nrf5340dk
+          frequency: !M2
+          mode: !Mode3
+          bit_order: !MsbFirst
         SPI0:
           on: rp2040
           sck:
@@ -59,17 +105,31 @@ buses: # TODO: rename this? Shared communication interfaces
           mode: !Mode3
     - name: SPI1
       peripheral:
-        SPI2:
+        SPI3:
           on: nrf52840
           sck:
-            - pin: P0_31
+            - pin: P1_15
               on: nrf52840dk
           miso:
-            - pin: P0_29
+            - pin: P1_13
               on: nrf52840dk
           mosi:
-            - pin: P0_30
+            - pin: P1_14
               on: nrf52840dk
+          frequency: !M2
+          mode: !Mode3
+          bit_order: !MsbFirst
+        SERIAL3:
+          on: nrf5340
+          sck:
+            - pin: P1_15
+              on: nrf5340dk
+          miso:
+            - pin: P1_13
+              on: nrf5340dk
+          mosi:
+            - pin: P1_14
+              on: nrf5340dk
           frequency: !M2
           mode: !Mode3
           bit_order: !MsbFirst
@@ -103,25 +163,25 @@ sensors:
           pin: P0_11
           pull: !up  # FIXME
 
-    - name: ACCEL
-      driver: '@riot_rs_builtin_sensors::lis3dh::Lis3dhI2c'
-      label: 'i2c'
-      with:
-        mode: '@riot_rs_builtin_sensors::lis3dh::Mode::Normal'
-        enable_z_axis: true
-      bus:
-        !i2c
-        I2C0:
-
-    - name: ACCEL2
-      driver: '@riot_rs_builtin_sensors::lis3dh::Lis3dhI2c'
-      label: 'i2c2'
-      with:
-        mode: '@riot_rs_builtin_sensors::lis3dh::Mode::Normal'
-        enable_z_axis: true
-      bus:
-        !i2c
-        I2C1:
+    # - name: ACCEL
+    #   driver: '@riot_rs_builtin_sensors::lis3dh::Lis3dhI2c'
+    #   label: 'i2c'
+    #   with:
+    #     mode: '@riot_rs_builtin_sensors::lis3dh::Mode::Normal'
+    #     enable_z_axis: true
+    #   bus:
+    #     !i2c
+    #     I2C0:
+    #
+    # - name: ACCEL2
+    #   driver: '@riot_rs_builtin_sensors::lis3dh::Lis3dhI2c'
+    #   label: 'i2c2'
+    #   with:
+    #     mode: '@riot_rs_builtin_sensors::lis3dh::Mode::Normal'
+    #     enable_z_axis: true
+    #   bus:
+    #     !i2c
+    #     I2C1:
 
     - name: ACCEL_SPI
       driver: '@riot_rs_builtin_sensors::lis3dh::Lis3dhSpi'
@@ -135,6 +195,8 @@ sensors:
           cs:
             - pin: P0_28
               on: nrf52840dk
+            - pin: P0_06
+              on: nrf5340dk
             - pin: PIN_17
               on: rp2040
 
@@ -148,8 +210,10 @@ sensors:
         !spi
         SPI1:
           cs:
-            - pin: P0_27
+            - pin: P1_12
               on: nrf52840dk
+            - pin: P1_12
+              on: nrf5340dk
             - pin: PIN_13
               on: rp2040
 
