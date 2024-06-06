@@ -5,6 +5,7 @@
 #![feature(used_with_arg)]
 
 pub mod define_peripherals;
+mod spi;
 
 cfg_if::cfg_if! {
     if #[cfg(context = "nrf")] {

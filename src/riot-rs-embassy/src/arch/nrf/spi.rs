@@ -7,6 +7,8 @@ use embassy_nrf::{
 };
 use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
 
+use crate::spi::impl_async_spibus_for_driver_enum;
+
 pub use embassy_nrf::spim::Frequency;
 
 // TODO: factor this out across archs?
@@ -68,7 +70,7 @@ macro_rules! define_spi_drivers {
         paste::paste! {
             $(
                 pub struct [<Spi $peripheral>] {
-                    i2c: Spim<'static, peripherals::$peripheral>,
+                    spim: Spim<'static, peripherals::$peripheral>,
                 }
 
                 impl [<Spi $peripheral>] {
@@ -100,33 +102,7 @@ macro_rules! define_spi_drivers {
                             spi_config,
                         );
 
-                        Self { i2c: spim }
-                    }
-                }
-
-                impl embedded_hal_async::spi::ErrorType for [<Spi $peripheral>] {
-                    type Error = embassy_nrf::spim::Error;
-                }
-
-                impl embedded_hal_async::spi::SpiBus for [<Spi $peripheral>] {
-                    async fn read(&mut self, words: &mut [u8]) -> Result<(), Self::Error> {
-                        self.i2c.read(words).await
-                    }
-
-                    async fn write(&mut self, data: &[u8]) -> Result<(), Self::Error> {
-                        self.i2c.write(data).await
-                    }
-
-                    async fn transfer(&mut self, rx: &mut [u8], tx: &[u8]) -> Result<(), Self::Error> {
-                        self.i2c.transfer(rx, tx).await
-                    }
-
-                    async fn transfer_in_place(&mut self, words: &mut [u8]) -> Result<(), Self::Error> {
-                        self.i2c.transfer_in_place(words).await
-                    }
-
-                    async fn flush(&mut self) -> Result<(), Self::Error> {
-                        self.i2c.flush().await
+                        Self { spim }
                     }
                 }
             )*
@@ -139,37 +115,7 @@ macro_rules! define_spi_drivers {
                 type Error = embassy_nrf::spim::Error;
             }
 
-            impl embedded_hal_async::spi::SpiBus for Spi {
-                async fn read(&mut self, words: &mut [u8]) -> Result<(), Self::Error> {
-                    match self {
-                        $( Self::$peripheral(spi) => spi.i2c.read(words).await, )*
-                    }
-                }
-
-                async fn write(&mut self, data: &[u8]) -> Result<(), Self::Error> {
-                    match self {
-                        $( Self::$peripheral(spi) => spi.i2c.write(data).await, )*
-                    }
-                }
-
-                async fn transfer(&mut self, rx: &mut [u8], tx: &[u8]) -> Result<(), Self::Error> {
-                    match self {
-                        $( Self::$peripheral(spi) => spi.i2c.transfer(rx, tx).await, )*
-                    }
-                }
-
-                async fn transfer_in_place(&mut self, words: &mut [u8]) -> Result<(), Self::Error> {
-                    match self {
-                        $( Self::$peripheral(spi) => spi.i2c.transfer_in_place(words).await, )*
-                    }
-                }
-
-                async fn flush(&mut self) -> Result<(), Self::Error> {
-                    match self {
-                        $( Self::$peripheral(spi) => spi.i2c.flush().await, )*
-                    }
-                }
-            }
+            impl_async_spibus_for_driver_enum!($( $peripheral ),*);
         }
     };
 }
