@@ -206,6 +206,15 @@ mod hw_setup_init {
                         let spi_driver = format_ident!("Spi{peripheral_name}");
                         let spi_peripheral = format_ident!("{peripheral_name}");
 
+                        // Only used on RP2040
+                        let (tx_dma_ch, rx_dma_ch) = {
+                            match peripheral_name.as_ref() {
+                                "SPI0" => (format_ident!("DMA_CH0"), format_ident!("DMA_CH1")),
+                                "SPI1" => (format_ident!("DMA_CH2"), format_ident!("DMA_CH3")),
+                                _ => (format_ident!("UNUSED"), format_ident!("UNUSED")),
+                            }
+                        };
+
                         quote! {
                             #[cfg(all(#(#cfg_conds),*))]
                             {
@@ -221,10 +230,6 @@ mod hw_setup_init {
                                 let miso_peripheral = peripherals.#miso_peripheral.take().unwrap();
                                 let mosi_peripheral = peripherals.#mosi_peripheral.take().unwrap();
 
-                                // FIXME: how to select DMA channels? expose to the user? what if
-                                // we don't have enough of them left?
-                                // FIXME: make sure that the order MISO/MOSI/SCK is the same for
-                                // all archs
                                 let spi = arch::spi::Spi::#spi_peripheral(
                                     arch::spi::#spi_driver::new(
                                         spi_peripheral,
@@ -232,9 +237,9 @@ mod hw_setup_init {
                                         miso_peripheral,
                                         mosi_peripheral,
                                         #[cfg(context = "rp")]
-                                        peripherals.DMA_CH0.take().unwrap(),
+                                        peripherals.#tx_dma_ch.take().unwrap(),
                                         #[cfg(context = "rp")]
-                                        peripherals.DMA_CH1.take().unwrap(),
+                                        peripherals.#rx_dma_ch.take().unwrap(),
                                         config,
                                     )
                                 );
