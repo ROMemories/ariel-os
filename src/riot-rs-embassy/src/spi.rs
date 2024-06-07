@@ -1,6 +1,6 @@
 macro_rules! impl_async_spibus_for_driver_enum {
-    ($( $peripheral:ident ),*) => {
-        impl embedded_hal_async::spi::SpiBus for Spi {
+    ($driver_enum:ident, $( $peripheral:ident ),*) => {
+        impl embedded_hal_async::spi::SpiBus for $driver_enum {
             async fn read(&mut self, words: &mut [u8]) -> Result<(), Self::Error> {
                 match self {
                     $( Self::$peripheral(spi) => spi.spim.read(words).await, )*

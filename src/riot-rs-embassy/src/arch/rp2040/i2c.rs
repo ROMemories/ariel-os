@@ -78,7 +78,7 @@ macro_rules! define_i2c_drivers {
                 type Error = embassy_rp::i2c::Error;
             }
 
-            impl_async_i2c_for_driver_enum!($( $peripheral ),*);
+            impl_async_i2c_for_driver_enum!(I2c, $( $peripheral ),*);
         }
     }
 }

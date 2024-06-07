@@ -111,7 +111,7 @@ macro_rules! define_spi_drivers {
                 type Error = embassy_rp::spi::Error;
             }
 
-            impl_async_spibus_for_driver_enum!($( $peripheral ),*);
+            impl_async_spibus_for_driver_enum!(Spi, $( $peripheral ),*);
         }
     };
 }
