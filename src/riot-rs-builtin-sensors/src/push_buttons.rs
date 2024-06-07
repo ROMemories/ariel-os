@@ -7,8 +7,8 @@ use riot_rs_embassy::Spawner;
 
 use riot_rs_sensors::{
     sensor::{
-        Labels, MeasurementError, Notification, NotificationReceiver, PhysicalUnits, PhysicalValue,
-        PhysicalValues, ReadingError, ReadingResult, ThresholdKind, ValueScales,
+        Labels, MeasurementError, PhysicalUnits, PhysicalValue,
+        PhysicalValues, ReadingError, ReadingResult, ValueScales,
     },
     Category, Label, PhysicalUnit, Reading, Sensor,
 };
@@ -33,7 +33,6 @@ pub struct GenericPushButton<I: InputPin> {
     label: Option<&'static str>,
     // buttons: [Option<Button>; N], // TODO: maybe use MaybeUninit
     button: Mutex<CriticalSectionRawMutex, Option<I>>, // TODO: maybe use MaybeUninit
-    channel: Channel<CriticalSectionRawMutex, Notification, 1>,
 }
 
 impl<I: InputPin + 'static> GenericPushButton<I> {
@@ -44,7 +43,6 @@ impl<I: InputPin + 'static> GenericPushButton<I> {
             enabled: AtomicBool::new(false),
             label,
             button: Mutex::new(None),
-            channel: Channel::new(),
         }
     }
 
@@ -95,15 +93,6 @@ impl<I: InputPin + Send + 'static> Sensor for GenericPushButton<I> {
 
     fn enabled(&self) -> bool {
         self.enabled.load(Ordering::Acquire)
-    }
-
-    fn set_threshold(&self, _kind: ThresholdKind, _value: PhysicalValue) {}
-
-    fn set_threshold_enabled(&self, _kind: ThresholdKind, _enabled: bool) {}
-
-    fn subscribe(&self) -> NotificationReceiver {
-        // TODO: receiver competes for notification: limit the number of receivers to 1?
-        self.channel.receiver()
     }
 
     fn categories(&self) -> &'static [Category] {

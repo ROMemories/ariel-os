@@ -22,21 +22,13 @@ pub trait Sensor: Any + Send + Sync {
     where
         Self: Sized;
 
+    // TODO: allow to sleep? set_mode() a u8 atomic
     /// Enables or disables the sensor driver.
     fn set_enabled(&self, enabled: bool);
 
     /// Returns whether the sensor driver is enabled.
     #[must_use]
     fn enabled(&self) -> bool;
-
-    // TODO: support some hysteresis
-    fn set_threshold(&self, kind: ThresholdKind, value: PhysicalValue);
-
-    // TODO: merge this with set_threshold?
-    fn set_threshold_enabled(&self, kind: ThresholdKind, enabled: bool);
-
-    #[must_use]
-    fn subscribe(&self) -> NotificationReceiver;
 
     #[must_use]
     fn categories(&self) -> &'static [Category];
@@ -178,25 +170,6 @@ pub enum MeasurementError {
         scale: i8,
     },
 }
-
-/// A notification provided by a sensor driver.
-// TODO: should we pass the value as well? that may be difficult because of the required generics
-#[derive(Debug, PartialEq, Eq, serde::Serialize)]
-#[non_exhaustive]
-pub enum Notification {
-    ReadingAvailable,
-    Threshold(ThresholdKind),
-}
-
-#[derive(Debug, Copy, Clone, PartialEq, Eq, serde::Serialize)]
-#[non_exhaustive]
-pub enum ThresholdKind {
-    Lower,
-    Higher,
-}
-
-// TODO: tune the channel size
-pub type NotificationReceiver<'a> = Receiver<'a, CriticalSectionRawMutex, Notification, 1>;
 
 /// Represents errors happening when accessing a sensor reading.
 // TODO: is it more useful to indicate the error nature or whether it is temporary or permanent?

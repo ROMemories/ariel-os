@@ -2,6 +2,7 @@
 
 #![no_std]
 #![feature(lint_reasons)]
+#![feature(type_alias_impl_trait)]
 #![deny(clippy::pedantic)]
 
 pub mod aht20;

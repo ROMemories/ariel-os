@@ -1,13 +1,13 @@
 use embassy_futures::select::Either;
-use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, mutex::Mutex};
+use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, channel::Channel, mutex::Mutex};
 use embassy_time::{Duration, Timer};
 use lis3dh_async::{Configuration, DataRate, Lis3dh as InnerLis3dh, Lis3dhI2C};
-use portable_atomic::{AtomicBool, Ordering};
+use portable_atomic::{AtomicBool, AtomicI32, Ordering};
 use riot_rs_embassy::{arch, Spawner};
 use riot_rs_sensors::{
     sensor::{
-        Labels, MeasurementError, Notification, NotificationReceiver, PhysicalUnits, PhysicalValue,
-        PhysicalValues, ReadingError, ReadingResult, ThresholdKind, ValueScales,
+        Labels, MeasurementError, PhysicalUnits, PhysicalValue,
+        PhysicalValues, Reading, ReadingError, ReadingResult, ValueScales,
     },
     Category, Label, PhysicalUnit, Sensor,
 };
@@ -154,18 +154,6 @@ impl Sensor for Lis3dhI2c {
 
     fn enabled(&self) -> bool {
         self.enabled.load(Ordering::Acquire)
-    }
-
-    fn set_threshold(&self, kind: ThresholdKind, value: PhysicalValue) {
-        todo!()
-    }
-
-    fn set_threshold_enabled(&self, kind: ThresholdKind, enabled: bool) {
-        todo!()
-    }
-
-    fn subscribe(&self) -> NotificationReceiver {
-        todo!()
     }
 
     fn categories(&self) -> &'static [Category] {

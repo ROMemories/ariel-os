@@ -7,8 +7,8 @@ use portable_atomic::{AtomicBool, Ordering};
 use riot_rs_embassy::Spawner;
 use riot_rs_sensors::{
     sensor::{
-        Labels, MeasurementError, NotificationReceiver, PhysicalUnits, PhysicalValue,
-        PhysicalValues, ReadingError, ReadingResult, ThresholdKind, ValueScales,
+        Labels, MeasurementError, PhysicalUnits, PhysicalValue,
+        PhysicalValues, ReadingError, ReadingResult, ValueScales,
     },
     Category, Label, PhysicalUnit, Sensor,
 };
@@ -118,18 +118,6 @@ impl<I2C: embedded_hal_async::i2c::I2c + Send> Sensor for Aht20<I2C> {
 
     fn enabled(&self) -> bool {
         self.enabled.load(Ordering::Acquire)
-    }
-
-    fn set_threshold(&self, kind: ThresholdKind, value: PhysicalValue) {
-        todo!()
-    }
-
-    fn set_threshold_enabled(&self, kind: ThresholdKind, enabled: bool) {
-        todo!()
-    }
-
-    fn subscribe(&self) -> NotificationReceiver {
-        todo!()
     }
 
     fn categories(&self) -> &'static [Category] {

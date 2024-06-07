@@ -39,6 +39,7 @@ impl Default for Config {
 
 macro_rules! define_i2c_drivers {
     ($( $interrupt:ident => $peripheral:ident ),* $(,)?) => {
+        // paste allows to create new identifiers by concatenation using `[<foo bar>]`.
         paste::paste! {
             $(
                 pub struct [<I2c $peripheral>] {

@@ -11,10 +11,14 @@ repository.workspace = true
 workspace = true
 
 [dependencies]
+embassy-executor = { workspace = true }
 embassy-sync = { workspace = true }
+embassy-time = { workspace = true }
 embedded-hal = { workspace = true }
 heapless = { workspace = true }
 linkme = { workspace = true }
+portable-atomic = { workspace = true }
+riot-rs-debug = { workspace = true } # TODO: debug only
 riot-rs-macros = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 static_cell = { workspace = true }
