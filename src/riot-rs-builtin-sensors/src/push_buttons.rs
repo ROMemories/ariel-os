@@ -7,8 +7,8 @@ use riot_rs_embassy::Spawner;
 
 use riot_rs_sensors::{
     sensor::{
-        Labels, MeasurementError, PhysicalUnits, PhysicalValue,
-        PhysicalValues, ReadingError, ReadingResult, ValueScales,
+        MeasurementError, PhysicalValue, PhysicalValues, ReadingError, ReadingInfo, ReadingInfos,
+        ReadingResult,
     },
     Category, Label, PhysicalUnit, Reading, Sensor,
 };
@@ -99,17 +99,8 @@ impl<I: InputPin + Send + 'static> Sensor for GenericPushButton<I> {
         &[Category::PushButton]
     }
 
-    fn value_scales(&self) -> ValueScales {
-        // TODO: should we introduce a ValueScales::None instead?
-        ValueScales::V1([0])
-    }
-
-    fn units(&self) -> PhysicalUnits {
-        PhysicalUnits::V1([PhysicalUnit::ActiveOne])
-    }
-
-    fn reading_labels(&self) -> Labels {
-        Labels::V1([Label::Main])
+    fn reading_infos(&self) -> ReadingInfos {
+        ReadingInfos::V1([ReadingInfo::new(Label::Main, 0, PhysicalUnit::ActiveOne)])
     }
 
     fn label(&self) -> Option<&'static str> {

@@ -7,8 +7,8 @@ use portable_atomic::{AtomicBool, Ordering};
 use riot_rs_embassy::Spawner;
 use riot_rs_sensors::{
     sensor::{
-        Labels, MeasurementError, PhysicalUnits, PhysicalValue,
-        PhysicalValues, ReadingError, ReadingResult, ValueScales,
+        MeasurementError, PhysicalValue, PhysicalValues, ReadingError, ReadingInfo, ReadingInfos,
+        ReadingResult,
     },
     Category, Label, PhysicalUnit, Sensor,
 };
@@ -128,16 +128,11 @@ impl<I2C: embedded_hal_async::i2c::I2c + Send> Sensor for Aht20<I2C> {
         ]
     }
 
-    fn value_scales(&self) -> ValueScales {
-        ValueScales::V2([-2, -2]) // FIXME
-    }
-
-    fn units(&self) -> PhysicalUnits {
-        PhysicalUnits::V2([PhysicalUnit::Percent, PhysicalUnit::Celsius])
-    }
-
-    fn reading_labels(&self) -> Labels {
-        Labels::V2([Label::Humidity, Label::Temperature])
+    fn reading_infos(&self) -> ReadingInfos {
+        ReadingInfos::V2([
+            ReadingInfo::new(Label::Humidity, -2, PhysicalUnit::Percent),
+            ReadingInfo::new(Label::Temperature, -2, PhysicalUnit::Celsius),
+        ])
     }
 
     fn label(&self) -> Option<&'static str> {

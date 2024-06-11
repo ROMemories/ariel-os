@@ -1,3 +1,4 @@
+#![feature(lint_reasons)]
 #![deny(clippy::pedantic)]
 
 mod utils;

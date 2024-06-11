@@ -33,18 +33,9 @@ pub trait Sensor: Any + Send + Sync {
     #[must_use]
     fn categories(&self) -> &'static [Category];
 
-    // FIXME: update this doc comment
-    /// The base-10 exponent used for all readings returned by the sensor.
-    // TODO: rename this?
+    // FIXME: rename this
     #[must_use]
-    fn value_scales(&self) -> ValueScales;
-
-    /// Returns the unit of measurement in which readings are returned.
-    #[must_use]
-    fn units(&self) -> PhysicalUnits;
-
-    #[must_use]
-    fn reading_labels(&self) -> Labels;
+    fn reading_infos(&self) -> ReadingInfos;
 
     /// String label of the sensor instance.
     ///
@@ -167,8 +158,41 @@ pub enum MeasurementError {
     Symmetrical {
         deviation: i16, // FIXME: rename this and provide a clear definition (3-sigma precision?)
         bias: i16,
-        scale: i8,
+        scale: i8, // FIXME: rename this to scaling
     },
+}
+
+#[derive(Debug, Copy, Clone, serde::Serialize)]
+pub struct ReadingInfo {
+    label: Label,
+    scaling: i8,
+    unit: PhysicalUnit,
+}
+
+impl ReadingInfo {
+    #[must_use]
+    pub fn new(label: Label, scaling: i8, unit: PhysicalUnit) -> Self {
+        Self {
+            label,
+            scaling,
+            unit,
+        }
+    }
+
+    #[must_use]
+    pub fn label(&self) -> Label {
+        self.label
+    }
+
+    #[must_use]
+    pub fn scaling(&self) -> i8 {
+        self.scaling
+    }
+
+    #[must_use]
+    pub fn unit(&self) -> PhysicalUnit {
+        self.unit
+    }
 }
 
 /// Represents errors happening when accessing a sensor reading.

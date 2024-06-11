@@ -21,17 +21,16 @@ async fn main() {
             match riot_rs::sensors::read!(sensor).await {
                 Ok(values) => {
                     for (i, value) in values.values().enumerate() {
-                        let value_scale = sensor.value_scales().iter().nth(i).unwrap();
-                        let unit = sensor.units().iter().nth(i).unwrap();
-                        let reading_label = sensor.reading_labels().iter().nth(i).unwrap();
-                        let value = value.value() as f32 / 10i32.pow((-value_scale) as u32) as f32;
+                        let reading_info = sensor.reading_infos().iter().nth(i).unwrap();
+                        let value = value.value() as f32
+                            / 10i32.pow((-reading_info.scaling()) as u32) as f32;
                         println!(
                             "{} ({}): {} {} ({})",
                             sensor.display_name().unwrap_or("unknown"),
                             sensor.label().unwrap_or("no label"),
                             value,
-                            unit,
-                            reading_label
+                            reading_info.unit(),
+                            reading_info.label(),
                         );
                     }
                 }

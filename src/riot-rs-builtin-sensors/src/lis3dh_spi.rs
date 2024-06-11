@@ -7,8 +7,8 @@ use portable_atomic::{AtomicBool, AtomicI32, Ordering};
 use riot_rs_embassy::{arch, Spawner};
 use riot_rs_sensors::{
     sensor::{
-        Labels, MeasurementError, PhysicalUnits, PhysicalValue,
-        PhysicalValues, Reading, ReadingError, ReadingResult, ValueScales,
+        MeasurementError, PhysicalValue, PhysicalValues, Reading, ReadingError, ReadingInfo,
+        ReadingInfos, ReadingResult,
     },
     Category, Label, PhysicalUnit, Sensor,
 };
@@ -127,21 +127,12 @@ impl Sensor for Lis3dhSpi {
         &[Category::Accelerometer]
     }
 
-    fn value_scales(&self) -> ValueScales {
-        ValueScales::V3([-2, -2, -2])
-    }
-
-    fn units(&self) -> PhysicalUnits {
-        // FIXME: what's the actual unit?
-        PhysicalUnits::V3([
-            PhysicalUnit::AccelG,
-            PhysicalUnit::AccelG,
-            PhysicalUnit::AccelG,
+    fn reading_infos(&self) -> ReadingInfos {
+        ReadingInfos::V3([
+            ReadingInfo::new(Label::X, -2, PhysicalUnit::AccelG),
+            ReadingInfo::new(Label::Y, -2, PhysicalUnit::AccelG),
+            ReadingInfo::new(Label::Z, -2, PhysicalUnit::AccelG),
         ])
-    }
-
-    fn reading_labels(&self) -> Labels {
-        Labels::V3([Label::X, Label::Y, Label::Z])
     }
 
     fn label(&self) -> Option<&'static str> {

@@ -6,8 +6,8 @@ use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, channel::Channe
 use embassy_time::{Duration, Timer};
 use riot_rs_sensors::{
     sensor::{
-        Labels, MeasurementError, Notification, NotificationReceiver, PhysicalUnits, PhysicalValue,
-        PhysicalValues, ReadingError, ReadingResult, Sensor, ThresholdKind, ValueScales,
+        Labels, MeasurementError, PhysicalUnits, PhysicalValue, PhysicalValues, ReadingError,
+        ReadingResult, Sensor, ValueScales,
     },
     Category, Label, PhysicalUnit, Reading,
 };

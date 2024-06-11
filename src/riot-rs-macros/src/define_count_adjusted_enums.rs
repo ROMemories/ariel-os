@@ -7,6 +7,7 @@ pub fn define_count_adjusted_enums(_item: TokenStream) -> TokenStream {
 
     // The order of these feature-gated statements is important as these features are not meant to
     // be mutually exclusive.
+    #[expect(unused_variables, reason = "overridden by feature selection")]
     let count = 1;
     #[cfg(feature = "max-reading-value-min-count-2")]
     let count = 2;
@@ -27,19 +28,9 @@ pub fn define_count_adjusted_enums(_item: TokenStream) -> TokenStream {
         quote! { Self::#variant(values) => *values.first().unwrap() }
     });
 
-    let value_scales_variants = (1..=count).map(|i| {
+    let reading_infos_variants = (1..=count).map(|i| {
         let variant = variant_name(i);
-        quote! { #variant([i8; #i]) }
-    });
-
-    let physical_units_variants = (1..=count).map(|i| {
-        let variant = variant_name(i);
-        quote! { #variant([PhysicalUnit; #i]) }
-    });
-
-    let labels_variants = (1..=count).map(|i| {
-        let variant = variant_name(i);
-        quote! { #variant([Label; #i]) }
+        quote! { #variant([ReadingInfo; #i]) }
     });
 
     let values_iter = (1..=count)
@@ -57,8 +48,7 @@ pub fn define_count_adjusted_enums(_item: TokenStream) -> TokenStream {
         ///
         /// # Note
         ///
-        /// This type is automatically generated, the number of variants is controlled by
-        /// `riot_rs_hwsetup::Sensors::max_reading_value_count()`.
+        /// This type is automatically generated, the number of variants is automatically adjusted.
         #[derive(Debug, Copy, Clone, serde::Serialize)]
         pub enum PhysicalValues {
             #(#physical_values_variants),*
@@ -78,79 +68,26 @@ pub fn define_count_adjusted_enums(_item: TokenStream) -> TokenStream {
             }
         }
 
-        /// Scaling values of [`PhysicalValues`] returned by [`Sensor::read()`].
+        /// Meta-data required to interpret values returned by [`Sensor::read()`].
         ///
         /// The order matches the one of [`PhysicalValues`].
         ///
         /// # Note
         ///
-        /// This type is automatically generated, the number of variants is controlled by
-        /// `riot_rs_hwsetup::Sensors::max_reading_value_count()`.
+        /// This type is automatically generated, the number of variants is automatically adjusted.
         #[derive(Debug, Copy, Clone)]
-        pub enum ValueScales {
-            #(#value_scales_variants),*
+        pub enum ReadingInfos {
+            #(#reading_infos_variants),*
         }
 
-        impl ValueScales {
-            pub fn iter(&self) -> impl Iterator<Item = i8> + '_ {
+        impl ReadingInfos {
+            pub fn iter(&self) -> impl Iterator<Item = ReadingInfo> + '_ {
                 match self {
                     #(#values_iter),*
                 }
             }
 
-            pub fn first(&self) -> i8 {
-                // NOTE(no-panic): there is always at least one value.
-                self.iter().next().unwrap()
-            }
-        }
-
-        /// Units of measurement of [`PhysicalValues`] returned by [`Sensor::read()`].
-        ///
-        /// The order matches the one of [`PhysicalValues`].
-        ///
-        /// # Note
-        ///
-        /// This type is automatically generated, the number of variants is controlled by
-        /// `riot_rs_hwsetup::Sensors::max_reading_value_count()`.
-        #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-        pub enum PhysicalUnits {
-            #(#physical_units_variants),*
-        }
-
-        impl PhysicalUnits {
-            pub fn iter(&self) -> impl Iterator<Item = PhysicalUnit> + '_ {
-                match self {
-                    #(#values_iter),*
-                }
-            }
-
-            pub fn first(&self) -> PhysicalUnit {
-                // NOTE(no-panic): there is always at least one value.
-                self.iter().next().unwrap()
-            }
-        }
-
-        /// [`Label`]s of [`PhysicalValues`] returned by [`Sensor::read()`].
-        ///
-        /// The order matches the one of [`PhysicalValues`].
-        ///
-        /// # Note
-        ///
-        /// This type is automatically generated, the number of variants is controlled by
-        /// `riot_rs_hwsetup::Sensors::max_reading_value_count()`.
-        #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-        pub enum Labels {
-            #(#labels_variants),*
-        }
-
-        impl Labels {
-            pub fn iter(&self) -> impl Iterator<Item = Label> + '_ {
-                match self {
-                    #(#values_iter),*
-                }
-            }
-
-            pub fn first(&self) -> Label {
+            pub fn first(&self) -> ReadingInfo {
                 // NOTE(no-panic): there is always at least one value.
                 self.iter().next().unwrap()
             }

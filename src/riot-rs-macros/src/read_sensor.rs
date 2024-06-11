@@ -1,4 +1,4 @@
-/// Calls [`Sensor::read()`] on a sensor trait object.
+/// Calls `Sensor::read()` on a sensor trait object.
 ///
 /// # Panics
 ///
