@@ -192,8 +192,10 @@ pub enum ReadingError {
 
 impl core::fmt::Display for ReadingError {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        // FIXME: update this
-        write!(f, "error when accessing a sensor reading")
+        match self {
+            Self::NonEnabled => write!(f, "sensor driver is not enabled"),
+            Self::SensorAccess => write!(f, "sensor device could not be accessed"),
+        }
     }
 }
 
