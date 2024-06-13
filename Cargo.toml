@@ -79,7 +79,7 @@ heapless = { version = "0.8.0", default-features = false }
 konst = { version = "0.3.8", default_features = false }
 ld-memory = { version = "0.2.9" }
 paste = { version = "1.0.15" }
-portable-atomic = { version = "1.6.0", default_features = true }
+portable-atomic = { version = "1.6.0", default_features = false }
 serde = { version = "1.0.198", default_features = false }
 serde_json = { version = "1.0.117" }
 serde_yaml = { version = "0.9.34" } # Replace with a maintained crate?

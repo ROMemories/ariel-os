@@ -3,7 +3,7 @@ use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, channel::Channe
 use embassy_time::{Duration, Timer};
 use embedded_hal::digital::OutputPin;
 use lis3dh_async::{Configuration, DataRate, Lis3dh as InnerLis3dh, Lis3dhSPI};
-use portable_atomic::{AtomicBool, AtomicI32, Ordering};
+use portable_atomic::{AtomicBool, Ordering};
 use riot_rs_embassy::{arch, Spawner};
 use riot_rs_sensors::{
     sensor::{

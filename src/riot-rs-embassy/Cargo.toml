@@ -37,6 +37,7 @@ riot-rs-utils = { workspace = true }
 
 fixed = "1.24.0"
 heapless = "0.8.0"
+portable-atomic.workspace = true
 once_cell = { version = "1.19.0", default-features = false, features = [
   "critical-section",
 ] }

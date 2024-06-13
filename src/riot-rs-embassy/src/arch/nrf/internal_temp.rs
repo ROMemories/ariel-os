@@ -1,5 +1,4 @@
-// FIXME: use portable_atomic's instead
-use core::sync::atomic::{AtomicBool, AtomicI32, Ordering};
+use portable_atomic::{AtomicBool, Ordering};
 
 use embassy_executor::Spawner;
 use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, channel::Channel, mutex::Mutex};
