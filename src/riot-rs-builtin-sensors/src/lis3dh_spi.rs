@@ -8,7 +8,7 @@ use riot_rs_embassy::{arch, Spawner};
 use riot_rs_sensors::{
     sensor::{
         AccuracyError, Mode, PhysicalValue, PhysicalValues, ReadingError, ReadingInfo,
-        ReadingInfos, ReadingResult, State,
+        ReadingInfos, ReadingResult, State, ModeSettingError,
     },
     Category, Label, PhysicalUnit, Sensor,
 };
@@ -110,12 +110,14 @@ impl Sensor for Lis3dhSpi {
         Ok(PhysicalValues::V3([x, y, z]))
     }
 
-    fn set_mode(&self, mode: Mode) {
-        if self.state.load(Ordering::Acquire) != State::Uninitialized as u8 {
-            let state = State::from(mode);
-            self.state.store(state as u8, Ordering::Release);
+    fn set_mode(&self, mode: Mode) -> Result<State, ModeSettingError>{
+        if self.state.load(Ordering::Acquire) == State::Uninitialized as u8 {
+            return Err(ModeSettingError::Uninitialized);
         }
-        // TODO: return an error otherwise?
+
+        let state = State::from(mode);
+        self.state.store(state as u8, Ordering::Release);
+        Ok(state)
     }
 
     fn state(&self) -> State {

@@ -8,7 +8,7 @@ use riot_rs_embassy::Spawner;
 use riot_rs_sensors::{
     sensor::{
         AccuracyError, Mode, PhysicalValue, PhysicalValues, ReadingError, ReadingInfo,
-        ReadingInfos, ReadingResult, State,
+        ReadingInfos, ReadingResult, State, ModeSettingError,
     },
     Category, Label, PhysicalUnit, Sensor,
 };
@@ -107,12 +107,14 @@ impl<I2C: embedded_hal_async::i2c::I2c + Send> Sensor for Aht20<I2C> {
         ]))
     }
 
-    fn set_mode(&self, mode: Mode) {
-        if self.state.load(Ordering::Acquire) != State::Uninitialized as u8 {
-            let state = State::from(mode);
-            self.state.store(state as u8, Ordering::Release);
+    fn set_mode(&self, mode: Mode) -> Result<State, ModeSettingError>{
+        if self.state.load(Ordering::Acquire) == State::Uninitialized as u8 {
+            return Err(ModeSettingError::Uninitialized);
         }
-        // TODO: return an error otherwise?
+
+        let state = State::from(mode);
+        self.state.store(state as u8, Ordering::Release);
+        Ok(state)
     }
 
     fn state(&self) -> State {

@@ -6,7 +6,7 @@ use embassy_time::{Duration, Timer};
 use riot_rs_sensors::{
     sensor::{
         AccuracyError, Mode, PhysicalValue, PhysicalValues, ReadingError, ReadingInfo,
-        ReadingInfos, ReadingResult, Sensor, State,
+        ReadingInfos, ReadingResult, Sensor, State, ModeSettingError,
     },
     Category, Label, PhysicalUnit,
 };
@@ -111,13 +111,14 @@ impl Sensor for InternalTemp {
         Ok(PhysicalValues::V1([PhysicalValue::new(temp, ERROR)]))
     }
 
-    fn set_mode(&self, mode: Mode) {
-        if self.state.load(Ordering::Acquire) != State::Uninitialized as u8 {
-            let state = State::from(mode);
-            self.state.store(state as u8, Ordering::Release);
+    fn set_mode(&self, mode: Mode) -> Result<State, ModeSettingError>{
+        if self.state.load(Ordering::Acquire) == State::Uninitialized as u8 {
+            return Err(ModeSettingError::Uninitialized);
         }
-        // TODO: return an error otherwise?
-    }
+
+        let state = State::from(mode);
+        self.state.store(state as u8, Ordering::Release);
+        Ok(state)
 
     fn set_threshold(&self, kind: ThresholdKind, value: PhysicalValue) {
         match kind {

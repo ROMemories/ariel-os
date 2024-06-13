@@ -55,10 +55,9 @@ pub trait Sensor: Any + Send + Sync {
     #[must_use]
     fn reading_infos(&self) -> ReadingInfos;
 
-    // FIXME: return an error?
-    /// Sets the sensor mode.
+    /// Sets the sensor mode and returns the previous state.
     /// Allows to put the sensor to sleep if supported.
-    fn set_mode(&self, mode: Mode);
+    fn set_mode(&self, mode: Mode) -> Result<State, ModeSettingError>;
 
     /// Returns the current sensor state.
     #[must_use]
@@ -140,6 +139,10 @@ impl TryFrom<u8> for State {
 
 #[derive(Debug)]
 pub struct TryFromIntError;
+
+pub enum ModeSettingError {
+    Uninitialized,
+}
 
 riot_rs_macros::define_count_adjusted_enums!();
 
