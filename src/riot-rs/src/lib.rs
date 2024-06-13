@@ -22,6 +22,7 @@ pub use riot_rs_embassy::{define_peripherals, group_peripherals};
 pub use riot_rs_random as random;
 #[doc(inline)]
 pub use riot_rs_rt as rt;
+#[cfg(feature = "sensors")]
 #[doc(inline)]
 pub use riot_rs_sensors as sensors;
 #[cfg(feature = "threading")]
