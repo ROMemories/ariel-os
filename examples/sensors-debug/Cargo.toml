@@ -8,7 +8,7 @@ publish = false
 [dependencies]
 embassy-executor = { workspace = true, default-features = false }
 embassy-time = { workspace = true, default-features = false }
-riot-rs = { path = "../../src/riot-rs", features = ["time"] }
+riot-rs = { path = "../../src/riot-rs", features = ["sensors", "time"] }
 riot-rs-boards = { path = "../../src/riot-rs-boards" }
 riot-rs-builtin-sensors = { path = "../../src/riot-rs-builtin-sensors" }
 

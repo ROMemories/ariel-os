@@ -44,7 +44,7 @@ pub fn define_count_adjusted_enums(_item: TokenStream) -> TokenStream {
         // TODO: add a timestamp?
         /// Values returned by a sensor.
         ///
-        /// The order of [`PhysicalValue`]s is not significant, but is fixed.
+        /// This type implements [`Reading`] to iterate over the values.
         ///
         /// # Note
         ///

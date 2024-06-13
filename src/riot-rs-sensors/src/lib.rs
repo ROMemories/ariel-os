@@ -1,6 +1,8 @@
 //! Provides a sensor abstraction layer.
 //!
-//! Sensors must implement the [`Sensor`] trait
+//! Sensors must implement the [`Sensor`] trait.
+//!
+//! Registered sensors can be accessed using [`REGISTRY::sensors()`](crate::registry::Registry::sensors).
 #![no_std]
 // Required by linkme
 #![feature(used_with_arg)]

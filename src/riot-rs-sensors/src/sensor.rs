@@ -1,4 +1,20 @@
 //! Provides a [`Sensor`] trait abstracting over implementation details of a sensor.
+//!
+//! To obtain a measurement and make sense of the result, two methods are required:
+//! [`Sensor::measure()`] and [`Sensor::reading_infos()`].
+//!
+//! - [`Sensor::measure()`] returns a [`PhysicalValues`], a data "tuple" containing values returned
+//! by the sensor device.
+//! - The [`ReadingInfos`] type, returned by [`Sensor::reading_infos()`], tells what physical value
+//! each value from that tuple corresponds to, using [`Label`].
+//! For instance, this allows to disambiguate the values provided by a temperature & humidity
+//! sensor.
+//! The [`ReadingInfos`] are fixed for a given sensor driver, allowing consumers to display
+//! information about the physical values a sensor measures without triggering a measurement.
+//!
+//! To avoid float handling, values returned by [`Sensor::measure()`] are integers, and a
+//! fixed scaling value is provided in [`ReadingInfo`], for each [`PhysicalValue`] returned.
+//! See [`PhysicalValue`] for more details.
 
 use core::{any::Any, future::Future};
 
@@ -11,10 +27,13 @@ use crate::{Category, Label, PhysicalUnit};
 // TODO: introduce a trait currently deferring to Any
 pub trait Sensor: Any + Send + Sync {
     // TODO: add a link to an explanation of the setup file
-    /// Trigger a measurement, wait for the result and return it asynchronously.
-    ///
+    /// Triggers a measurement, waits for the result and returns it asynchronously.
     /// Depending on the sensor and the driver configuration, this may use a sensor interrupt or
     /// data polling.
+    ///
+    /// Interpretation of the values returned requires data from [`Sensor::reading_infos()`] as
+    /// well.
+    /// See [the module level documentation](crate::sensor) for more.
     ///
     /// # Note
     ///
@@ -26,6 +45,11 @@ pub trait Sensor: Any + Send + Sync {
     where
         Self: Sized;
 
+    // FIXME: rename this
+    /// Provides information about the values returned by [`Sensor::measure()`].
+    #[must_use]
+    fn reading_infos(&self) -> ReadingInfos;
+
     // TODO: allow to sleep? set_mode() a u8 atomic
     /// Enables or disables the sensor driver.
     fn set_enabled(&self, enabled: bool);
@@ -34,12 +58,9 @@ pub trait Sensor: Any + Send + Sync {
     #[must_use]
     fn enabled(&self) -> bool;
 
+    /// Returns the categories the sensor is part of.
     #[must_use]
     fn categories(&self) -> &'static [Category];
-
-    // FIXME: rename this
-    #[must_use]
-    fn reading_infos(&self) -> ReadingInfos;
 
     /// String label of the sensor instance.
     ///
@@ -74,9 +95,14 @@ impl dyn Sensor {
 /// implementors.
 pub trait Reading: core::fmt::Debug {
     /// Returns the [`PhysicalValue`] of a sensor reading.
+    ///
+    /// This returns the first value returned by [`Reading::values()`].
     fn value(&self) -> PhysicalValue;
 
     /// Returns an iterator over [`PhysicalValue`]s of a sensor reading.
+    /// The order of [`PhysicalValue`]s is not significant, but is fixed.
+    ///
+    /// # For implementors
     ///
     /// The default implementation must be overridden on types containing multiple
     /// [`PhysicalValue`]s.
@@ -89,16 +115,17 @@ riot_rs_macros::define_count_adjusted_enums!();
 
 /// Represents a value obtained from a sensor.
 ///
-/// The [`Sensor::value_scales()`] must be taken into account using the following formula:
+/// The [scaling value](ReadingInfo::scaling()) obtained from the sensor with [`Sensor::reading_infos()`] must be taken into
+/// account using the following formula:
 ///
-/// <math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow><mi mathvariant="monospace">PhysicalValue::value()</mi></mrow><mo>·</mo><msup><mn>10</mn><mrow><mi mathvariant="monospace">value_scale</mi></mrow></msup></math>
+/// <math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow><mi mathvariant="monospace">PhysicalValue::value()</mi></mrow><mo>·</mo><msup><mn>10</mn><mrow><mi mathvariant="monospace">scaling</mi></mrow></msup></math>
 ///
 /// For instance, in the case of a temperature sensor, if [`PhysicalValue::value()`] returns `2225`
-/// and [value scale](Sensor::value_scales) is `-2`, it means that the temperature measured
-/// and returned by the hardware sensor is `22.25` (the [measurement error](PhysicalValue::error())
-/// must additionally be taken into account).
+/// and the scaling value is `-2`, this means that the temperature measured and returned by the
+/// hardware sensor is `22.25` (the [measurement error](PhysicalValue::error()) must additionally
+/// be taken into account).
 ///
-/// The unit of measurement can be obtained using [`Sensor::units()`].
+/// The unit of measurement can be obtained using [`ReadingInfo::unit()`].
 ///
 /// This is required to avoid handling floats.
 #[derive(Debug, Copy, Clone, serde::Serialize)]
@@ -131,11 +158,11 @@ impl PhysicalValue {
 ///
 /// It is assumed that the accuracy error is symmetrical around a possibly non-zero bias.
 ///
-/// The unit of measurement is that of the sensor driver, as provided by [`Sensor::units()`].
-/// The `scale` is used for both `deviation` and `bias`.
+/// The unit of measurement is provided by the [`ReadingInfo`] associated to the [`PhysicalValue`].
+/// The `scaling` value is used for both `deviation` and `bias`.
 /// The accuracy error is thus given by the following formulas:
 ///
-/// <math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mo>+</mo><mo>(</mo><mrow><mi mathvariant="monospace">bias</mi></mrow><mo>+</mo><mrow><mi mathvariant="monospace">deviation</mi></mrow><mo>)</mo><mo>·</mo><msup><mn>10</mn><mrow><mi mathvariant="monospace">scale</mi></mrow></msup>/<mo>-</mo><mo>(</mo><mrow><mi mathvariant="monospace">bias</mi></mrow><mo>-</mo><mrow><mi mathvariant="monospace">deviation</mi></mrow><mo>)</mo><mo>·</mo><msup><mn>10</mn><mrow><mi mathvariant="monospace">scale</mi></mrow></msup></math>
+/// <math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mo>+</mo><mo>(</mo><mrow><mi mathvariant="monospace">bias</mi></mrow><mo>+</mo><mrow><mi mathvariant="monospace">deviation</mi></mrow><mo>)</mo><mo>·</mo><msup><mn>10</mn><mrow><mi mathvariant="monospace">scaling</mi></mrow></msup>/<mo>-</mo><mo>(</mo><mrow><mi mathvariant="monospace">bias</mi></mrow><mo>-</mo><mrow><mi mathvariant="monospace">deviation</mi></mrow><mo>)</mo><mo>·</mo><msup><mn>10</mn><mrow><mi mathvariant="monospace">scaling</mi></mrow></msup></math>
 ///
 /// # Examples
 ///
@@ -148,7 +175,7 @@ impl PhysicalValue {
 /// MeasurementError {
 ///     deviation: 25,
 ///     bias: -20,
-///     scale: -2,
+///     scaling: -2,
 /// }
 /// # ;
 /// ```
@@ -162,10 +189,11 @@ pub enum MeasurementError {
     Symmetrical {
         deviation: i16, // FIXME: rename this and provide a clear definition (3-sigma precision?)
         bias: i16,
-        scale: i8, // FIXME: rename this to scaling
+        scaling: i8,
     },
 }
 
+/// Provides information about a [`PhysicalValue`].
 #[derive(Debug, Copy, Clone, serde::Serialize)]
 pub struct ReadingInfo {
     label: Label,

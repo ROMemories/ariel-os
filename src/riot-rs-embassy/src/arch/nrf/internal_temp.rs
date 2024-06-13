@@ -100,7 +100,7 @@ impl Sensor for InternalTemp {
         const ERROR: MeasurementError = MeasurementError::Symmetrical {
             deviation: 5,
             bias: 0,
-            scale: 0,
+            scaling: 0,
         };
 
         use fixed::traits::LossyInto;

@@ -1,12 +1,16 @@
 /// Label of a [`PhysicalValue`](crate::sensor::PhysicalValue) part of a
 /// [`PhysicalValues`](crate::sensor::PhysicalValues) set.
 ///
+/// # For sensor driver implementors
+///
 /// [`Label::Main`] must be used for sensors returning a single
-/// [`PhysicalValue`](crate::sensor::PhysicalValue); even if a more specific label exists for the
+/// [`PhysicalValue`](crate::sensor::PhysicalValue), even if a more specific label exists for the
 /// physical value.
+/// This allows consumers displaying the label to ignore it for sensors measuring a single physical value.
 /// Other labels are reserved for sensors measuring multiple physical values.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, serde::Serialize)]
 pub enum Label {
+    /// Used for sensors measuring a single physical value.
     Main,
     Humidity,
     Temperature,
