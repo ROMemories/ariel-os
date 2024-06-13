@@ -6,10 +6,10 @@ use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, channel::Channe
 use embassy_time::{Duration, Timer};
 use riot_rs_sensors::{
     sensor::{
-        MeasurementError, PhysicalValue, PhysicalValues, ReadingError, ReadingInfo, ReadingInfos,
+        AccuracyError, PhysicalValue, PhysicalValues, ReadingError, ReadingInfo, ReadingInfos,
         ReadingResult, Sensor,
     },
-    Category, Label, PhysicalUnit, Reading,
+    Category, Label, PhysicalUnit,
 };
 
 use crate::arch::peripherals;
@@ -97,7 +97,7 @@ impl InternalTemp {
 impl Sensor for InternalTemp {
     #[allow(refining_impl_trait)]
     async fn measure(&self) -> ReadingResult<PhysicalValues> {
-        const ERROR: MeasurementError = MeasurementError::Symmetrical {
+        const ERROR: AccuracyError = AccuracyError::Symmetrical {
             deviation: 5,
             bias: 0,
             scaling: 0,

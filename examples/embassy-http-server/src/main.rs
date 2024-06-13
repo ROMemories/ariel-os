@@ -68,8 +68,8 @@ async fn web_task(
 fn main(spawner: Spawner) {
     #[cfg(context = "nrf52")]
     {
-        use riot_rs::sensors::sensor::{MeasurementError, PhysicalValue, ThresholdKind};
-        let threshold = PhysicalValue::new(2300, MeasurementError::Unknown);
+        use riot_rs::sensors::sensor::{AccuracyError, PhysicalValue, ThresholdKind};
+        let threshold = PhysicalValue::new(2300, AccuracyError::Unknown);
         sensors::TEMP_SENSOR.set_threshold(ThresholdKind::Lower, threshold);
         sensors::TEMP_SENSOR.set_threshold_enabled(ThresholdKind::Lower, true);
     }

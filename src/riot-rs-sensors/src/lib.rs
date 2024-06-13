@@ -16,6 +16,7 @@
 mod category;
 mod label;
 mod physical_unit;
+mod physical_value;
 pub mod registry;
 pub mod sensor; // FIXME: this should be move to its own crate
 pub mod watcher;
@@ -23,7 +24,8 @@ pub mod watcher;
 pub use category::Category;
 pub use label::Label;
 pub use physical_unit::PhysicalUnit;
+pub use physical_value::Reading;
 pub use registry::{REGISTRY, SENSOR_REFS};
-pub use sensor::{Reading, Sensor};
+pub use sensor::Sensor;
 
 pub use riot_rs_macros::measure_sensor as measure;

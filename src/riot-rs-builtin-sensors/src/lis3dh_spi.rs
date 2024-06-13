@@ -7,8 +7,8 @@ use portable_atomic::{AtomicBool, AtomicI32, Ordering};
 use riot_rs_embassy::{arch, Spawner};
 use riot_rs_sensors::{
     sensor::{
-        MeasurementError, PhysicalValue, PhysicalValues, Reading, ReadingError, ReadingInfo,
-        ReadingInfos, ReadingResult,
+        AccuracyError, PhysicalValue, PhysicalValues, ReadingError, ReadingInfo, ReadingInfos,
+        ReadingResult,
     },
     Category, Label, PhysicalUnit, Sensor,
 };
@@ -106,9 +106,9 @@ impl Sensor for Lis3dhSpi {
         #[allow(clippy::cast_possible_truncation)]
         // FIXME: dumb scaling, take precision into account
         // FIXME: specify the measurement error
-        let x = PhysicalValue::new((data.x * 100.) as i32, MeasurementError::Unknown);
-        let y = PhysicalValue::new((data.y * 100.) as i32, MeasurementError::Unknown);
-        let z = PhysicalValue::new((data.z * 100.) as i32, MeasurementError::Unknown);
+        let x = PhysicalValue::new((data.x * 100.) as i32, AccuracyError::Unknown);
+        let y = PhysicalValue::new((data.y * 100.) as i32, AccuracyError::Unknown);
+        let z = PhysicalValue::new((data.z * 100.) as i32, AccuracyError::Unknown);
 
         Ok(PhysicalValues::V3([x, y, z]))
     }

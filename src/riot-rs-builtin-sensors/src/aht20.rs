@@ -7,7 +7,7 @@ use portable_atomic::{AtomicBool, Ordering};
 use riot_rs_embassy::Spawner;
 use riot_rs_sensors::{
     sensor::{
-        MeasurementError, PhysicalValue, PhysicalValues, ReadingError, ReadingInfo, ReadingInfos,
+        AccuracyError, PhysicalValue, PhysicalValues, ReadingError, ReadingInfo, ReadingInfos,
         ReadingResult,
     },
     Category, Label, PhysicalUnit, Sensor,
@@ -100,12 +100,12 @@ impl<I2C: embedded_hal_async::i2c::I2c + Send> Sensor for Aht20<I2C> {
         Ok(PhysicalValues::V2([
             PhysicalValue::new(
                 (data.relative_humidity * 100.) as i32,
-                MeasurementError::Unknown,
+                AccuracyError::Unknown,
             ),
             // Celsius typo in the library
             PhysicalValue::new(
                 (data.temperature.celcius() * 100.) as i32,
-                MeasurementError::Unknown,
+                AccuracyError::Unknown,
             ),
         ]))
     }

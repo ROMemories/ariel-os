@@ -7,10 +7,10 @@ use riot_rs_embassy::Spawner;
 
 use riot_rs_sensors::{
     sensor::{
-        MeasurementError, PhysicalValue, PhysicalValues, ReadingError, ReadingInfo, ReadingInfos,
+        AccuracyError, PhysicalValue, PhysicalValues, ReadingError, ReadingInfo, ReadingInfos,
         ReadingResult,
     },
-    Category, Label, PhysicalUnit, Reading, Sensor,
+    Category, Label, PhysicalUnit, Sensor,
 };
 
 // TODO: allow to set whether this is active low or active high
@@ -76,7 +76,7 @@ impl<I: InputPin + Send + 'static> Sensor for GenericPushButton<I> {
 
         Ok(PhysicalValues::V1([PhysicalValue::new(
             i32::from(is_pressed),
-            MeasurementError::None,
+            AccuracyError::None,
         )]))
     }
 
