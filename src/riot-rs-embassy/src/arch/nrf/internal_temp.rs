@@ -6,8 +6,8 @@ use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, channel::Channe
 use embassy_time::{Duration, Timer};
 use riot_rs_sensors::{
     sensor::{
-        Labels, MeasurementError, PhysicalUnits, PhysicalValue, PhysicalValues, ReadingError,
-        ReadingResult, Sensor, ValueScales,
+        MeasurementError, PhysicalValue, PhysicalValues, ReadingError, ReadingInfo, ReadingInfos,
+        ReadingResult, Sensor,
     },
     Category, Label, PhysicalUnit, Reading,
 };
@@ -159,20 +159,12 @@ impl Sensor for InternalTemp {
         &[Category::Temperature]
     }
 
-    fn value_scales(&self) -> ValueScales {
-        ValueScales::V1([-2])
-    }
-
-    fn reading_labels(&self) -> Labels {
-        Labels::V1([Label::Main])
+    fn reading_infos(&self) -> ReadingInfos {
+        ReadingInfos::V1([ReadingInfo::new(Label::Main, -2, PhysicalUnit::Celsius)])
     }
 
     fn label(&self) -> Option<&'static str> {
         self.label
-    }
-
-    fn units(&self) -> PhysicalUnits {
-        PhysicalUnits::V1([PhysicalUnit::Celsius])
     }
 
     fn display_name(&self) -> Option<&'static str> {
