@@ -3,12 +3,12 @@ use embassy_futures::select::Either;
 use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, mutex::Mutex};
 use embassy_time::{Delay, Duration, Timer};
 use embedded_aht20::Aht20 as InnerAht20;
-use portable_atomic::{AtomicBool, Ordering};
+use portable_atomic::{AtomicU8, Ordering};
 use riot_rs_embassy::Spawner;
 use riot_rs_sensors::{
     sensor::{
-        AccuracyError, PhysicalValue, PhysicalValues, ReadingError, ReadingInfo, ReadingInfos,
-        ReadingResult,
+        AccuracyError, Mode, PhysicalValue, PhysicalValues, ReadingError, ReadingInfo,
+        ReadingInfos, ReadingResult, State,
     },
     Category, Label, PhysicalUnit, Sensor,
 };
@@ -29,8 +29,7 @@ riot_rs_embassy::define_peripherals!(Peripherals {});
 pub type Aht20I2c = Aht20<riot_rs_embassy::arch::i2c::I2c>;
 
 pub struct Aht20<I2C: embedded_hal_async::i2c::I2c + 'static> {
-    initialized: AtomicBool, // TODO: use an atomic bitset for initialized and enabled
-    enabled: AtomicBool,
+    state: AtomicU8,
     label: Option<&'static str>,
     // TODO: consider using MaybeUninit?
     ht: Mutex<
@@ -44,8 +43,7 @@ impl<I2C: embedded_hal_async::i2c::I2c> Aht20<I2C> {
     #[must_use]
     pub const fn new(label: Option<&'static str>) -> Self {
         Self {
-            initialized: AtomicBool::new(false),
-            enabled: AtomicBool::new(false),
+            state: AtomicU8::new(State::Uninitialized as u8),
             label,
             ht: Mutex::new(None),
         }
@@ -58,7 +56,7 @@ impl<I2C: embedded_hal_async::i2c::I2c> Aht20<I2C> {
         i2c: I2cDevice<'static, CriticalSectionRawMutex, I2C>,
         config: Config,
     ) {
-        if !self.initialized.load(Ordering::Acquire) {
+        if self.state.load(Ordering::Acquire) == State::Uninitialized as u8 {
             let mut delay = Delay {}; // FIXME: set a delay? what does it even do?
                                       // TODO: it seems there is no alternate address, still allow users to set it?
                                       // FIXME: handle the error
@@ -70,8 +68,7 @@ impl<I2C: embedded_hal_async::i2c::I2c> Aht20<I2C> {
             let mut ht = self.ht.try_lock().unwrap();
             *ht = Some(driver);
 
-            self.initialized.store(true, Ordering::Release);
-            self.enabled.store(true, Ordering::Release);
+            self.state.store(State::Enabled as u8, Ordering::Release);
         }
     }
 }
@@ -79,8 +76,8 @@ impl<I2C: embedded_hal_async::i2c::I2c> Aht20<I2C> {
 impl<I2C: embedded_hal_async::i2c::I2c + Send> Sensor for Aht20<I2C> {
     #[allow(refining_impl_trait)]
     async fn measure(&self) -> ReadingResult<PhysicalValues> {
-        if !self.enabled.load(Ordering::Acquire) {
-            return Err(ReadingError::Disabled);
+        if self.state.load(Ordering::Acquire) == State::Enabled as u8 {
+            return Err(ReadingError::NonEnabled);
         }
 
         // TODO: maybe should check is_data_ready()?
@@ -110,15 +107,18 @@ impl<I2C: embedded_hal_async::i2c::I2c + Send> Sensor for Aht20<I2C> {
         ]))
     }
 
-    fn set_enabled(&self, enabled: bool) {
-        if self.initialized.load(Ordering::Acquire) {
-            self.enabled.store(enabled, Ordering::Release);
+    fn set_mode(&self, mode: Mode) {
+        if self.state.load(Ordering::Acquire) != State::Uninitialized as u8 {
+            let state = State::from(mode);
+            self.state.store(state as u8, Ordering::Release);
         }
         // TODO: return an error otherwise?
     }
 
-    fn enabled(&self) -> bool {
-        self.enabled.load(Ordering::Acquire)
+    fn state(&self) -> State {
+        let state = self.state.load(Ordering::Acquire);
+        // NOTE(no-panic): the state atomic is only written from a State
+        State::try_from(state).unwrap()
     }
 
     fn categories(&self) -> &'static [Category] {

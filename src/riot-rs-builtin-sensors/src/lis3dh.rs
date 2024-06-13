@@ -2,12 +2,12 @@ use embassy_futures::select::Either;
 use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, channel::Channel, mutex::Mutex};
 use embassy_time::{Duration, Timer};
 use lis3dh_async::{Configuration, DataRate, Lis3dh as InnerLis3dh, Lis3dhI2C};
-use portable_atomic::{AtomicBool, Ordering};
+use portable_atomic::{AtomicU8, Ordering};
 use riot_rs_embassy::{arch, Spawner};
 use riot_rs_sensors::{
     sensor::{
-        AccuracyError, PhysicalValue, PhysicalValues, ReadingError, ReadingInfo, ReadingInfos,
-        ReadingResult,
+        AccuracyError, Mode as SensorMode, PhysicalValue, PhysicalValues, ReadingError,
+        ReadingInfo, ReadingInfos, ReadingResult, State,
     },
     Category, Label, PhysicalUnit, Sensor,
 };
@@ -49,8 +49,7 @@ riot_rs_embassy::define_peripherals!(Peripherals {});
 
 // TODO: could maybe use a OnceCell instead of an Option
 pub struct Lis3dhI2c {
-    initialized: AtomicBool, // TODO: use an atomic bitset for initialized and enabled
-    enabled: AtomicBool,
+    state: AtomicU8,
     label: Option<&'static str>,
     // TODO: consider using MaybeUninit?
     accel: Mutex<CriticalSectionRawMutex, Option<InnerLis3dh<Lis3dhI2C<arch::i2c::I2cDevice>>>>,
@@ -61,8 +60,7 @@ impl Lis3dhI2c {
     #[must_use]
     pub const fn new(label: Option<&'static str>) -> Self {
         Self {
-            initialized: AtomicBool::new(false),
-            enabled: AtomicBool::new(false),
+            state: AtomicU8::new(State::Uninitialized as u8),
             label,
             accel: Mutex::new(None),
         }
@@ -75,7 +73,7 @@ impl Lis3dhI2c {
         i2c: arch::i2c::I2cDevice,
         config: Config,
     ) {
-        if !self.initialized.load(Ordering::Acquire) {
+        if self.state.load(Ordering::Acquire) == State::Uninitialized as u8 {
             // TODO: can this be made shorter?
             let mut lis3dh_config = Configuration::default();
             lis3dh_config.mode = config.mode;
@@ -112,8 +110,7 @@ impl Lis3dhI2c {
             let mut accel = self.accel.try_lock().unwrap();
             *accel = Some(driver);
 
-            self.initialized.store(true, Ordering::Release);
-            self.enabled.store(true, Ordering::Release);
+            self.state.store(State::Enabled as u8, Ordering::Release);
         }
     }
 }
@@ -121,8 +118,8 @@ impl Lis3dhI2c {
 impl Sensor for Lis3dhI2c {
     #[allow(refining_impl_trait)]
     async fn measure(&self) -> ReadingResult<PhysicalValues> {
-        if !self.enabled.load(Ordering::Acquire) {
-            return Err(ReadingError::Disabled);
+        if self.state.load(Ordering::Acquire) != State::Enabled as u8 {
+            return Err(ReadingError::NonEnabled);
         }
 
         // TODO: maybe should check is_data_ready()?
@@ -146,15 +143,18 @@ impl Sensor for Lis3dhI2c {
         Ok(PhysicalValues::V3([x, y, z]))
     }
 
-    fn set_enabled(&self, enabled: bool) {
-        if self.initialized.load(Ordering::Acquire) {
-            self.enabled.store(enabled, Ordering::Release);
+    fn set_mode(&self, mode: SensorMode) {
+        if self.state.load(Ordering::Acquire) != State::Uninitialized as u8 {
+            let state = State::from(mode);
+            self.state.store(state as u8, Ordering::Release);
         }
         // TODO: return an error otherwise?
     }
 
-    fn enabled(&self) -> bool {
-        self.enabled.load(Ordering::Acquire)
+    fn state(&self) -> State {
+        let state = self.state.load(Ordering::Acquire);
+        // NOTE(no-panic): the state atomic is only written from a State
+        State::try_from(state).unwrap()
     }
 
     fn categories(&self) -> &'static [Category] {

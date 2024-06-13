@@ -55,13 +55,14 @@ pub trait Sensor: Any + Send + Sync {
     #[must_use]
     fn reading_infos(&self) -> ReadingInfos;
 
-    // TODO: allow to sleep? set_mode() a u8 atomic
-    /// Enables or disables the sensor driver.
-    fn set_enabled(&self, enabled: bool);
+    // FIXME: return an error?
+    /// Sets the sensor mode.
+    /// Allows to put the sensor to sleep if supported.
+    fn set_mode(&self, mode: Mode);
 
-    /// Returns whether the sensor driver is enabled.
+    /// Returns the current sensor state.
     #[must_use]
-    fn enabled(&self) -> bool;
+    fn state(&self) -> State;
 
     /// Returns the categories the sensor is part of.
     #[must_use]
@@ -93,6 +94,52 @@ impl dyn Sensor {
         (self as &dyn Any).downcast_ref::<T>()
     }
 }
+
+/// Mode of a sensor driver.
+#[derive(Copy, Clone, PartialEq, Eq)]
+#[repr(u8)]
+pub enum Mode {
+    Disabled,
+    Enabled,
+    Sleeping,
+}
+
+/// State of a sensor driver.
+#[derive(Copy, Clone, PartialEq, Eq)]
+#[repr(u8)]
+pub enum State {
+    Uninitialized = 0,
+    Disabled = 1,
+    Enabled = 2,
+    Sleeping = 3,
+}
+
+impl From<Mode> for State {
+    fn from(mode: Mode) -> Self {
+        match mode {
+            Mode::Disabled => Self::Disabled,
+            Mode::Enabled => Self::Enabled,
+            Mode::Sleeping => Self::Sleeping,
+        }
+    }
+}
+
+impl TryFrom<u8> for State {
+    type Error = TryFromIntError;
+
+    fn try_from(int: u8) -> Result<Self, Self::Error> {
+        match int {
+            0 => Ok(State::Uninitialized),
+            1 => Ok(State::Disabled),
+            2 => Ok(State::Enabled),
+            3 => Ok(State::Sleeping),
+            _ => Err(TryFromIntError),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct TryFromIntError;
 
 riot_rs_macros::define_count_adjusted_enums!();
 
@@ -134,8 +181,8 @@ impl ReadingInfo {
 // TODO: is it more useful to indicate the error nature or whether it is temporary or permanent?
 #[derive(Debug)]
 pub enum ReadingError {
-    /// The sensor is disabled.
-    Disabled,
+    /// The sensor is not enabled (e.g., it may be disabled or sleeping).
+    NonEnabled,
     /// Cannot access the sensor (e.g., because of a bus error).
     SensorAccess,
 }

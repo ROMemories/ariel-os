@@ -1,12 +1,12 @@
-use portable_atomic::{AtomicBool, Ordering};
+use portable_atomic::{AtomicU8, Ordering};
 
 use embassy_executor::Spawner;
 use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, channel::Channel, mutex::Mutex};
 use embassy_time::{Duration, Timer};
 use riot_rs_sensors::{
     sensor::{
-        AccuracyError, PhysicalValue, PhysicalValues, ReadingError, ReadingInfo, ReadingInfos,
-        ReadingResult, Sensor,
+        AccuracyError, Mode, PhysicalValue, PhysicalValues, ReadingError, ReadingInfo,
+        ReadingInfos, ReadingResult, Sensor, State,
     },
     Category, Label, PhysicalUnit,
 };
@@ -30,8 +30,7 @@ impl Default for Config {
 crate::define_peripherals!(Peripherals { temp: TEMP });
 
 pub struct InternalTemp {
-    initialized: AtomicBool, // TODO: use an atomic bitset for initialized and enabled
-    enabled: AtomicBool,
+    state: AtomicU8,
     label: Option<&'static str>,
     // TODO: use a blocking mutex instead?
     temp: Mutex<CriticalSectionRawMutex, Option<embassy_nrf::temp::Temp<'static>>>,
@@ -46,8 +45,7 @@ impl InternalTemp {
     #[must_use]
     pub const fn new(label: Option<&'static str>) -> Self {
         Self {
-            initialized: AtomicBool::new(false),
-            enabled: AtomicBool::new(false),
+            state: AtomicU8::new(State::Uninitialized as u8),
             label,
             temp: Mutex::new(None),
             channel: Channel::new(),
@@ -57,7 +55,7 @@ impl InternalTemp {
     }
 
     pub fn init(&'static self, spawner: Spawner, peripherals: Peripherals, config: Config) {
-        if !self.initialized.load(Ordering::Acquire) {
+        if self.state.load(Ordering::Acquire) == State::Uninitialized as u8 {
             // We use `try_lock()` instead of `lock()` to not make this function async.
             // This mutex cannot be locked at this point as it is private and can only be
             // locked when the sensor has been initialized successfully.
@@ -87,8 +85,7 @@ impl InternalTemp {
             }
             spawner.spawn(temp_watcher(&self)).unwrap();
 
-            self.initialized.store(true, Ordering::Release);
-            self.enabled.store(true, Ordering::Release);
+            self.state.store(State::Enabled as u8, Ordering::Release);
         }
     }
 }
@@ -104,8 +101,8 @@ impl Sensor for InternalTemp {
 
         use fixed::traits::LossyInto;
 
-        if !self.enabled.load(Ordering::Acquire) {
-            return Err(ReadingError::Disabled);
+        if self.state.load(Ordering::Acquire) != State::Enabled as u8 {
+            return Err(ReadingError::NonEnabled);
         }
 
         let reading = self.temp.lock().await.as_mut().unwrap().read().await;
@@ -114,15 +111,12 @@ impl Sensor for InternalTemp {
         Ok(PhysicalValues::V1([PhysicalValue::new(temp, ERROR)]))
     }
 
-    fn set_enabled(&self, enabled: bool) {
-        if self.initialized.load(Ordering::Acquire) {
-            self.enabled.store(enabled, Ordering::Release);
+    fn set_mode(&self, mode: Mode) {
+        if self.state.load(Ordering::Acquire) != State::Uninitialized as u8 {
+            let state = State::from(mode);
+            self.state.store(state as u8, Ordering::Release);
         }
         // TODO: return an error otherwise?
-    }
-
-    fn enabled(&self) -> bool {
-        self.enabled.load(Ordering::Acquire)
     }
 
     fn set_threshold(&self, kind: ThresholdKind, value: PhysicalValue) {
@@ -148,6 +142,12 @@ impl Sensor for InternalTemp {
     fn subscribe(&self) -> NotificationReceiver {
         // TODO: receiver competes for notification: limit the number of receivers to 1?
         self.channel.receiver()
+    }
+
+    fn state(&self) -> State {
+        let state = self.state.load(Ordering::Acquire);
+        // NOTE(no-panic): the state atomic is only written from a State
+        State::try_from(state).unwrap()
     }
 
     fn categories(&self) -> &'static [Category] {
