@@ -77,7 +77,8 @@ impl<I2C: embedded_hal_async::i2c::I2c> Aht20<I2C> {
 }
 
 impl<I2C: embedded_hal_async::i2c::I2c + Send> Sensor for Aht20<I2C> {
-    async fn read(&self) -> ReadingResult<PhysicalValues> {
+    #[allow(refining_impl_trait)]
+    async fn measure(&self) -> ReadingResult<PhysicalValues> {
         if !self.enabled.load(Ordering::Acquire) {
             return Err(ReadingError::Disabled);
         }

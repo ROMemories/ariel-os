@@ -68,7 +68,7 @@ pub fn define_count_adjusted_enums(_item: TokenStream) -> TokenStream {
             }
         }
 
-        /// Meta-data required to interpret values returned by [`Sensor::read()`].
+        /// Meta-data required to interpret values returned by [`Sensor::measure()`].
         ///
         /// The order matches the one of [`PhysicalValues`].
         ///

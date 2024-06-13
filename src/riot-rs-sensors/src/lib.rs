@@ -24,4 +24,4 @@ pub use physical_unit::PhysicalUnit;
 pub use registry::{REGISTRY, SENSOR_REFS};
 pub use sensor::{Reading, Sensor};
 
-pub use riot_rs_macros::read_sensor as read;
+pub use riot_rs_macros::measure_sensor as measure;

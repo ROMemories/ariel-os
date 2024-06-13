@@ -10,15 +10,19 @@ use crate::{Category, Label, PhysicalUnit};
 /// Represents a device providing sensor readings.
 // TODO: introduce a trait currently deferring to Any
 pub trait Sensor: Any + Send + Sync {
-    // FIXME: clarify the semantics: should this always return new data (in which rename this to `measure`)?
     // TODO: add a link to an explanation of the setup file
-    /// Returns the sensor reading.
+    /// Trigger a measurement, wait for the result and return it asynchronously.
+    ///
+    /// Depending on the sensor and the driver configuration, this may use a sensor interrupt or
+    /// data polling.
+    ///
+    /// # Note
     ///
     /// As this method is non-dispatchable, the
-    /// [`riot_rs::read_sensor!()`](riot_rs_macros::read_sensor!) macro must be used
+    /// [`riot_rs::sensors::measure!()`](riot_rs_macros::measure_sensor!) macro must be used
     /// instead of calling this method directly, this macro requires a  properly configured setup
     /// file.
-    fn read(&self) -> impl Future<Output = ReadingResult<impl Reading>>
+    fn measure(&self) -> impl Future<Output = ReadingResult<impl Reading>>
     where
         Self: Sized;
 
@@ -64,7 +68,7 @@ impl dyn Sensor {
     }
 }
 
-/// Implemented on types returned by [`Sensor::read()`].
+/// Implemented on types returned by [`Sensor::measure()`].
 ///
 /// [`PhysicalValues`] implements this trait, and should usually be used by sensor driver
 /// implementors.
@@ -216,10 +220,10 @@ impl core::error::Error for ReadingError {}
 
 pub type ReadingResult<R> = Result<R, ReadingError>;
 
-/// Returns the result of calling [`Sensor::read()`] on the sensor concrete type.
+/// Returns the result of calling [`Sensor::measure()`] on the sensor concrete type.
 ///
 /// Downcasts the provided sensor (which must be implementing the [`Sensor`] trait) to its concrete
-/// type, and calls the async, non-dispatchable `Sensor::read()` method on it.
+/// type, and calls the async, non-dispatchable `Sensor::measure()` method on it.
 ///
 /// This macro needs to be provided with the sensor and with the list of existing sensor concrete
 /// types (at least one).
@@ -231,7 +235,7 @@ pub type ReadingResult<R> = Result<R, ReadingError>;
 // instead.
 #[doc(hidden)]
 #[macro_export]
-macro_rules! _read_sensor {
+macro_rules! _measure_sensor {
     (
         $sensor:path,
         $(
@@ -243,12 +247,12 @@ macro_rules! _read_sensor {
         {
             use $crate::{sensor::ReadingResult, Sensor};
 
-            // As `Sensor::read()` is non-dispatchable, we have to downcast
-            async fn __read_sensor(sensor: &dyn Sensor) -> ReadingResult<impl Reading> {
+            // As `Sensor::measure()` is non-dispatchable, we have to downcast
+            async fn __measure_sensor(sensor: &dyn Sensor) -> ReadingResult<impl Reading> {
                 $(
                 $(#[$sensor_attr])*
                 if let Some(sensor) = sensor.downcast_ref::<$sensor_type>() {
-                    return sensor.read().await;
+                    return sensor.measure().await;
                 }
                 )*
 
@@ -256,7 +260,7 @@ macro_rules! _read_sensor {
                 unreachable!();
             }
 
-            __read_sensor($sensor)
+            __measure_sensor($sensor)
         }
     };
 }

@@ -6,7 +6,7 @@ pub async fn temp() -> impl IntoResponse {
         .sensors()
         .find(|s| s.categories().contains(&Category::Temperature) && s.label() == Some("internal"))
         .unwrap();
-    let reading = riot_rs::sensors::read!(temp_sensor).await.unwrap().value();
+    let reading = riot_rs::sensors::measure!(temp_sensor).await.unwrap().value();
     let temp =
         reading.value() as f32 / 10i32.pow((-temp_sensor.value_scales().first()) as u32) as f32;
     let unit = temp_sensor.units().first();

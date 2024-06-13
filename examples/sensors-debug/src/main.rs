@@ -18,7 +18,7 @@ async fn main() {
     loop {
         println!("New measurements:");
         for sensor in REGISTRY.sensors() {
-            match riot_rs::sensors::read!(sensor).await {
+            match riot_rs::sensors::measure!(sensor).await {
                 Ok(values) => {
                     for (i, value) in values.values().enumerate() {
                         let reading_info = sensor.reading_infos().iter().nth(i).unwrap();

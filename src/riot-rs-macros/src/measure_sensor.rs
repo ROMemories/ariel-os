@@ -1,11 +1,11 @@
-/// Calls `Sensor::read()` on a sensor trait object.
+/// Calls `Sensor::measure()` on a sensor trait object.
 ///
 /// # Panics
 ///
 /// This macro panics when the `riot-rs` crate cannot be found as a dependency of the crate where
 /// this macro is used.
 #[proc_macro]
-pub fn read_sensor(input: TokenStream) -> TokenStream {
+pub fn measure_sensor(input: TokenStream) -> TokenStream {
     use quote::quote;
     use riot_rs_hwsetup::{
         sensors::{Sensor, StringOrTypePath},
@@ -17,7 +17,7 @@ pub fn read_sensor(input: TokenStream) -> TokenStream {
 
     let hwsetup_path = HwSetup::get_path_from_env().unwrap();
     let hwsetup = HwSetup::read_from_path(&hwsetup_path).unwrap();
-    dbg!(&hwsetup);
+    // dbg!(&hwsetup);
 
     let sensor_type_list = hwsetup.sensors().connected().iter().map(|sensor_setup| {
         match StringOrTypePath::from(sensor_setup.driver()) {
@@ -34,14 +34,18 @@ pub fn read_sensor(input: TokenStream) -> TokenStream {
         }
     });
 
-    let riot_rs_crate = utils::riot_rs_crate();
+    let sensors_mod = if let Some(riot_rs_crate) = utils::riot_rs_crate() {
+        quote! { #riot_rs_crate::sensors }
+    }else {
+        quote! { riot_rs_sensors }
+    };
 
     // FIXME: we should generate the macro used by users in this macro, instead of doing the
     // opposite, so that the hw config file only gets parsed once
 
-    // The `_await_read_sensor` macro expects a trailing comma
+    // The `_measure_sensor` macro expects a trailing comma
     let expanded = quote! {
-        #riot_rs_crate::sensors::_read_sensor!(#sensor_ident, #(#sensor_type_list),* ,)
+        #sensors_mod::_measure_sensor!(#sensor_ident, #(#sensor_type_list),* ,)
     };
 
     TokenStream::from(expanded)

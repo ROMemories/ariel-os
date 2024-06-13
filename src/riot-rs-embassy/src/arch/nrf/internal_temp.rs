@@ -95,18 +95,14 @@ impl InternalTemp {
 }
 
 impl Sensor for InternalTemp {
-    async fn read(&self) -> ReadingResult<PhysicalValues> {
+    #[allow(refining_impl_trait)]
+    async fn measure(&self) -> ReadingResult<PhysicalValues> {
         const ERROR: MeasurementError = MeasurementError::Symmetrical {
             deviation: 5,
             bias: 0,
             scale: 0,
         };
 
-        //     self.read().await.map(|v| v.value())
-        // }
-        //
-        // #[allow(refining_impl_trait)]
-        // async fn read(&self) -> ReadingResult<TemperatureReading> {
         use fixed::traits::LossyInto;
 
         if !self.enabled.load(Ordering::Acquire) {

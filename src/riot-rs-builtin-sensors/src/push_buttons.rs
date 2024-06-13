@@ -62,12 +62,8 @@ impl<I: InputPin + 'static> GenericPushButton<I> {
 }
 
 impl<I: InputPin + Send + 'static> Sensor for GenericPushButton<I> {
-    async fn read(&self) -> ReadingResult<PhysicalValues> {
-        //     self.read().await.map(|v| v.value())
-        // }
-        //
-        // #[allow(refining_impl_trait)]
-        // async fn read(&self) -> ReadingResult<PushButtonReading> {
+    #[allow(refining_impl_trait)]
+    async fn measure(&self) -> ReadingResult<PhysicalValues> {
         if !self.enabled.load(Ordering::Acquire) {
             return Err(ReadingError::Disabled);
         }

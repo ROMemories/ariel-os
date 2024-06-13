@@ -119,7 +119,8 @@ impl Lis3dhI2c {
 }
 
 impl Sensor for Lis3dhI2c {
-    async fn read(&self) -> ReadingResult<PhysicalValues> {
+    #[allow(refining_impl_trait)]
+    async fn measure(&self) -> ReadingResult<PhysicalValues> {
         if !self.enabled.load(Ordering::Acquire) {
             return Err(ReadingError::Disabled);
         }
