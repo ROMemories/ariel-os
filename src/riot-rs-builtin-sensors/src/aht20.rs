@@ -7,8 +7,8 @@ use portable_atomic::{AtomicU8, Ordering};
 use riot_rs_embassy::Spawner;
 use riot_rs_sensors::{
     sensor::{
-        AccuracyError, Mode, PhysicalValue, PhysicalValues, ReadingError, ReadingInfo,
-        ReadingInfos, ReadingResult, State, ModeSettingError,
+        AccuracyError, Mode, ModeSettingError, PhysicalValue, PhysicalValues, ReadingError,
+        ReadingInfo, ReadingInfos, ReadingResult, State,
     },
     Category, Label, PhysicalUnit, Sensor,
 };

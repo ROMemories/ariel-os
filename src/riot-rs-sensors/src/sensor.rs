@@ -18,10 +18,7 @@
 
 use core::{any::Any, future::Future};
 
-// TODO: use a zero-copy channel instead?
-use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, channel::Receiver};
-
-use crate::{Category, Label, PhysicalUnit};
+use crate::{interrupts::InterruptEventKind, Category, Label, PhysicalUnit};
 
 pub use crate::{
     physical_value::{AccuracyError, PhysicalValue},
@@ -54,6 +51,11 @@ pub trait Sensor: Any + Send + Sync {
     /// Provides information about the values returned by [`Sensor::measure()`].
     #[must_use]
     fn reading_infos(&self) -> ReadingInfos;
+
+    #[must_use]
+    fn available_interrupt_events(&self) -> &[InterruptEventKind] {
+        &[]
+    }
 
     /// Sets the sensor mode and returns the previous state.
     /// Allows to put the sensor to sleep if supported.

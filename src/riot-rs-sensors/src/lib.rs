@@ -14,6 +14,7 @@
 #![deny(clippy::pedantic)]
 
 mod category;
+pub mod interrupts;
 mod label;
 mod physical_unit;
 mod physical_value;

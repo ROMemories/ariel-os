@@ -10,6 +10,7 @@ mod sensors {}
 use embassy_time::{Duration, Timer};
 use riot_rs::{
     debug::println,
+    embassy::arch::{self, peripherals},
     sensors::{Reading, REGISTRY},
 };
 
@@ -41,6 +42,40 @@ async fn main() {
         }
 
         Timer::after(Duration::from_millis(1000)).await;
+    }
+}
+
+riot_rs::define_peripherals!(AccelInterruptsPeripherals { int1: PIN_22 });
+
+#[riot_rs::task(autostart, peripherals)]
+async fn accel_subscriber(peripherals: AccelInterruptsPeripherals) {
+    use riot_rs::sensors::interrupts::{
+        AccelerometerInterruptEvent, DeviceInterrupt, InterruptEvent, InterruptEventKind,
+    };
+
+    let event = InterruptEvent {
+        kind: InterruptEventKind::Accelerometer(AccelerometerInterruptEvent::Movement),
+        duration: None,
+    };
+
+    // TODO: codegen this, or make this part of the sensor init
+    let interrupt_pin = arch::gpio::Input::new(peripherals.int1, arch::gpio::Pull::None);
+    sensors::ACCEL
+        .register_interrupt_pin(interrupt_pin, DeviceInterrupt::Int1, event)
+        .await
+        .unwrap();
+
+    // let accel = REGISTRY
+    //     .sensors()
+    //     .find(|s| s.categories().contains(&riot_rs::sensors::Category::Accelerometer))
+    //     .unwrap();
+    loop {
+        println!("Waiting for movement");
+        sensors::ACCEL
+            .wait_for_interrupt_event(event)
+            .await
+            .unwrap();
+        println!("Moving!");
     }
 }
 
