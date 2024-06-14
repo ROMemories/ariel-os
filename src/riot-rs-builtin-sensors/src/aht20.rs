@@ -1,7 +1,7 @@
 use embassy_embedded_hal::shared_bus::asynch::i2c::I2cDevice;
 use embassy_futures::select::Either;
 use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, mutex::Mutex};
-use embassy_time::{Delay, Duration, Timer};
+use embassy_time::Delay;
 use embedded_aht20::Aht20 as InnerAht20;
 use portable_atomic::{AtomicU8, Ordering};
 use riot_rs_embassy::Spawner;

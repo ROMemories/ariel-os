@@ -16,6 +16,7 @@ embassy-futures = { workspace = true }
 embassy-time = { workspace = true }
 embedded-hal = { workspace = true }
 embedded-hal-async = { workspace = true }
+enum-iterator = { workspace = true }
 portable-atomic = { workspace = true }
 riot-rs-embassy = { workspace = true } # TODO: is this ok?
 riot-rs-debug = { workspace = true }
