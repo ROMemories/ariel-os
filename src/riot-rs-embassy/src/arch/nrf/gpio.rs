@@ -81,7 +81,7 @@ pub mod output {
         initial_state: PinState,
         drive_strength: DriveStrength,
         _speed: Speed, // Not supported by this architecture
-    ) -> Output<'static> {
+    ) -> OpenDrainOutput<'static> {
         // TODO: maybe factor this out with `new()`
         let initial_state: bool = initial_state.into();
         let initial_state = Level::from(initial_state);
