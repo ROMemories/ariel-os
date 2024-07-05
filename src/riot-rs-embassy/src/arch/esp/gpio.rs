@@ -1,11 +1,14 @@
 pub mod input {
-    use esp_hal::gpio::{Level, Pull};
+    use esp_hal::gpio::{Level, Pull, CreateErasedPin, InputPin};
 
     use crate::{arch::peripheral::Peripheral, gpio};
 
-    pub(crate) use esp_hal::gpio::{AnyInput as Input, Pin};
+    pub(crate) use esp_hal::gpio::AnyInput as Input;
 
     pub(crate) const SCHMITT_TRIGGER_AVAILABLE: bool = false;
+
+    // TODO: ask upstream whether it's acceptable to use `CreateErasedPin` in this scenario
+    pub(crate) trait Pin: InputPin + CreateErasedPin {}
 
     pub(crate) fn new(
         pin: impl Peripheral<P: Pin> + 'static,
@@ -39,17 +42,22 @@ pub mod input {
 }
 
 pub mod output {
-    use esp_hal::gpio::Level;
+    use esp_hal::gpio::{Level, OutputPin, CreateErasedPin};
 
     use crate::{
         arch::peripheral::Peripheral,
         gpio::{FromDriveStrength, FromSpeed, PinState},
     };
 
-    pub(crate) use esp_hal::gpio::{AnyOutput as Output, Pin};
+    pub(crate) use esp_hal::gpio::AnyOutput as Output;
 
-    pub(crate) const DRIVE_STRENGTH_AVAILABLE: bool = true;
+    // FIXME: ESP32 *does* support setting the drive strength, but esp-hal seems to currently make
+    // this impossible on `AnyOuput` (unlike on `Output`), because it internally uses an
+    // `ErasedPin`.
+    pub(crate) const DRIVE_STRENGTH_AVAILABLE: bool = false;
     pub(crate) const SPEED_AVAILABLE: bool = false;
+
+    pub(crate) trait Pin: OutputPin + CreateErasedPin {}
 
     pub(crate) fn new(
         pin: impl Peripheral<P: Pin> + 'static,
@@ -60,7 +68,8 @@ pub mod output {
         let initial_state: bool = initial_state.into();
         let initial_state = Level::from(initial_state);
         let mut output = Output::new(pin, initial_state);
-        output.set_drive_strength(drive_strength.into());
+        // TODO
+        // output.set_drive_strength(drive_strength.into());
         output
     }
 
