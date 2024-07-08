@@ -1,5 +1,47 @@
+use crate::arch;
+
+pub fn init(peripherals: &mut arch::OptionalPeripherals) {
+    let io = esp_hal::gpio::Io::new(
+        peripherals.GPIO.take().unwrap(),
+        peripherals.IO_MUX.take().unwrap(),
+    );
+    let pins = io.pins;
+
+    peripherals.Gpio0.replace(pins.gpio0);
+    peripherals.Gpio1.replace(pins.gpio1);
+    peripherals.Gpio2.replace(pins.gpio2);
+    peripherals.Gpio3.replace(pins.gpio3);
+    peripherals.Gpio4.replace(pins.gpio4);
+    peripherals.Gpio5.replace(pins.gpio5);
+    peripherals.Gpio6.replace(pins.gpio6);
+    peripherals.Gpio7.replace(pins.gpio7);
+    peripherals.Gpio8.replace(pins.gpio8);
+    peripherals.Gpio9.replace(pins.gpio9);
+    peripherals.Gpio10.replace(pins.gpio10);
+    peripherals.Gpio11.replace(pins.gpio11);
+    peripherals.Gpio12.replace(pins.gpio12);
+    peripherals.Gpio13.replace(pins.gpio13);
+    peripherals.Gpio14.replace(pins.gpio14);
+    peripherals.Gpio15.replace(pins.gpio15);
+    peripherals.Gpio16.replace(pins.gpio16);
+    peripherals.Gpio17.replace(pins.gpio17);
+    peripherals.Gpio18.replace(pins.gpio18);
+    peripherals.Gpio19.replace(pins.gpio19);
+    peripherals.Gpio20.replace(pins.gpio20);
+    peripherals.Gpio21.replace(pins.gpio21);
+    peripherals.Gpio22.replace(pins.gpio22);
+    peripherals.Gpio23.replace(pins.gpio23);
+    peripherals.Gpio24.replace(pins.gpio24);
+    peripherals.Gpio25.replace(pins.gpio25);
+    peripherals.Gpio26.replace(pins.gpio26);
+    peripherals.Gpio27.replace(pins.gpio27);
+    peripherals.Gpio28.replace(pins.gpio28);
+    peripherals.Gpio29.replace(pins.gpio29);
+    peripherals.Gpio30.replace(pins.gpio30);
+}
+
 pub mod input {
-    use esp_hal::gpio::{Level, Pull, CreateErasedPin, InputPin};
+    use esp_hal::gpio::{CreateErasedPin, InputPin, Level, Pull};
 
     use crate::{arch::peripheral::Peripheral, gpio};
 
@@ -7,8 +49,10 @@ pub mod input {
 
     pub(crate) const SCHMITT_TRIGGER_AVAILABLE: bool = false;
 
+    // NOTE(unstable-feature(trait_alias)): we may not have to use that unstable feature if we
+    // define our own Pin trait and implement it on all GPIO types.
     // TODO: ask upstream whether it's acceptable to use `CreateErasedPin` in this scenario
-    pub(crate) trait Pin: InputPin + CreateErasedPin {}
+    pub(crate) trait Pin = InputPin + CreateErasedPin;
 
     pub(crate) fn new(
         pin: impl Peripheral<P: Pin> + 'static,
@@ -42,22 +86,23 @@ pub mod input {
 }
 
 pub mod output {
-    use esp_hal::gpio::{Level, OutputPin, CreateErasedPin};
+    use esp_hal::gpio::{CreateErasedPin, Level, OutputPin};
 
     use crate::{
         arch::peripheral::Peripheral,
         gpio::{FromDriveStrength, FromSpeed, PinState},
     };
 
-    pub(crate) use esp_hal::gpio::AnyOutput as Output;
+    pub(crate) use esp_hal::gpio::{AnyOutput as Output, AnyOutputOpenDrain as OpenDrainOutput};
 
+    pub(crate) const OPEN_DRAIN_AVAILABLE: bool = true;
     // FIXME: ESP32 *does* support setting the drive strength, but esp-hal seems to currently make
     // this impossible on `AnyOuput` (unlike on `Output`), because it internally uses an
     // `ErasedPin`.
     pub(crate) const DRIVE_STRENGTH_AVAILABLE: bool = false;
     pub(crate) const SPEED_AVAILABLE: bool = false;
 
-    pub(crate) trait Pin: OutputPin + CreateErasedPin {}
+    pub(crate) trait Pin = OutputPin + CreateErasedPin;
 
     pub(crate) fn new(
         pin: impl Peripheral<P: Pin> + 'static,
@@ -71,6 +116,22 @@ pub mod output {
         // TODO
         // output.set_drive_strength(drive_strength.into());
         output
+    }
+
+    // FIXME
+    pub(crate) fn new_open_drain(
+        pin: impl Peripheral<P: Pin> + 'static,
+        initial_state: PinState,
+        drive_strength: DriveStrength,
+        _speed: Speed, // Not supported by this architecture
+    ) -> OpenDrainOutput<'static> {
+        todo!();
+        // let initial_state: bool = initial_state.into();
+        // let initial_state = Level::from(initial_state);
+        // let mut output = OpenDrainOutput::new(pin, initial_state);
+        // TODO
+        // output.set_drive_strength(drive_strength.into());
+        // output
     }
 
     // We do not provide a `Default` impl as not all pins have the same reset value.
