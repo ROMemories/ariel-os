@@ -3,7 +3,7 @@ pub mod input {
 
     use crate::{arch::peripheral::Peripheral, gpio};
 
-    pub(crate) use embassy_rp::gpio::{Input, InputPin};
+    pub(crate) use embassy_rp::gpio::{Input, Pin as InputPin};
 
     pub(crate) const SCHMITT_TRIGGER_AVAILABLE: bool = true;
 
@@ -49,7 +49,7 @@ pub mod output {
         gpio::{FromDriveStrength, FromSpeed, PinState},
     };
 
-    pub(crate) use embassy_rp::gpio::{Output, OutputPin};
+    pub(crate) use embassy_rp::gpio::{Output, Pin as OutputPin};
 
     pub(crate) const DRIVE_STRENGTH_AVAILABLE: bool = true;
     pub(crate) const SPEED_AVAILABLE: bool = true;
