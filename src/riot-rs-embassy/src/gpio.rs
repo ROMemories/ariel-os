@@ -353,6 +353,7 @@ pub(crate) trait FromDriveStrength {
 }
 
 /// Speed setting of an output.
+///
 /// Speed can be increased when needed, at the price of increasing high-frequency noise.
 ///
 /// This enum allows to either use high-level, portable values, roughly normalized across
