@@ -41,7 +41,7 @@ pub fn init(peripherals: &mut arch::OptionalPeripherals) {
 }
 
 pub mod input {
-    use esp_hal::gpio::{CreateErasedPin, InputPin, Level, Pull};
+    use esp_hal::gpio::{CreateErasedPin, InputPin as EspInputPin, Level, Pull};
 
     use crate::{arch::peripheral::Peripheral, gpio};
 
@@ -52,10 +52,10 @@ pub mod input {
     // NOTE(unstable-feature(trait_alias)): we may not have to use that unstable feature if we
     // define our own Pin trait and implement it on all GPIO types.
     // TODO: ask upstream whether it's acceptable to use `CreateErasedPin` in this scenario
-    pub(crate) trait Pin = InputPin + CreateErasedPin;
+    pub(crate) trait InputPin = EspInputPin + CreateErasedPin;
 
     pub(crate) fn new(
-        pin: impl Peripheral<P: Pin> + 'static,
+        pin: impl Peripheral<P: InputPin> + 'static,
         int_enabled: bool,
         pull: crate::gpio::Pull,
         _schmitt_trigger: bool, // Not supported by this architecture
@@ -86,7 +86,7 @@ pub mod input {
 }
 
 pub mod output {
-    use esp_hal::gpio::{CreateErasedPin, Level, OutputPin, Pull};
+    use esp_hal::gpio::{CreateErasedPin, Level, OutputPin as EspOutputPin, Pull};
 
     use crate::{
         arch::peripheral::Peripheral,
@@ -101,10 +101,10 @@ pub mod output {
     pub(crate) const DRIVE_STRENGTH_AVAILABLE: bool = false;
     pub(crate) const SPEED_AVAILABLE: bool = false;
 
-    pub(crate) trait Pin = OutputPin + CreateErasedPin;
+    pub(crate) trait OutputPin = EspOutputPin + CreateErasedPin;
 
     pub(crate) fn new(
-        pin: impl Peripheral<P: Pin> + 'static,
+        pin: impl Peripheral<P: OutputPin> + 'static,
         initial_state: PinState,
         drive_strength: DriveStrength,
         _speed: Speed, // Not supported by this architecture
