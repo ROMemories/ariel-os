@@ -176,6 +176,18 @@ impl From<bool> for Level {
     }
 }
 
+impl From<embedded_hal::digital::PinState> for Level {
+    fn from(pin_state: embedded_hal::digital::PinState) -> Self {
+        bool::from(pin_state).into()
+    }
+}
+
+impl From<Level> for embedded_hal::digital::PinState {
+    fn from(level: Level) -> Self {
+        bool::from(level).into()
+    }
+}
+
 macro_rules! impl_from_level {
     ($level:ident) => {
         impl From<crate::gpio::Level> for $level {
