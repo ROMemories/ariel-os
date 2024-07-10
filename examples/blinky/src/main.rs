@@ -40,19 +40,19 @@ riot_rs::define_peripherals!(BlinkyButtonPeripherals {
 async fn blinky(peripherals: BlinkyPeripherals) {
     // All of the following are possible (not all of them are equivalent):
     //
-    // let mut led1 = Output::new(peripherals.led1, PinState::High);
+    // let mut led1 = Output::new(peripherals.led1, Level::High);
     //
-    let mut led1 = Output::builder(peripherals.led1, PinState::High)
+    let mut led1 = Output::builder(peripherals.led1, Level::Low)
         .opt_drive_strength(DriveStrength::default())
         .build();
     //
     // #[cfg(context = "nrf")]
-    // let mut led1 = Output::builder(peripherals.led1, PinState::High)
+    // let mut led1 = Output::builder(peripherals.led1, Level::High)
     //     .drive_strength(DriveStrength::Medium)
     //     .build();
     //
     // #[cfg(context = "nrf")]
-    // let mut led1 = Output::builder(peripherals.led1, PinState::High)
+    // let mut led1 = Output::builder(peripherals.led1, Level::High)
     //     .drive_strength(DriveStrength::Arch(
     //         riot_rs::embassy::arch::DriveStrength::High,
     //     ))
@@ -71,7 +71,7 @@ async fn blinky_button(peripherals: BlinkyButtonPeripherals) {
     let btn2_builder = btn2_builder.schmitt_trigger(true);
     let mut btn2 = btn2_builder.build_with_interrupt().unwrap();
 
-    let mut led2 = Output::new(peripherals.led2, PinState::High);
+    let mut led2 = Output::new(peripherals.led2, Level::High);
 
     loop {
         // Wait for the button to be pressed
