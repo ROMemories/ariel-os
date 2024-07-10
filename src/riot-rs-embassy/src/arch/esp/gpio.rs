@@ -105,7 +105,7 @@ pub mod output {
 
     pub(crate) fn new(
         pin: impl Peripheral<P: OutputPin> + 'static,
-        initial_state: PinState,
+        initial_level: crate::gpio::Level,
         drive_strength: DriveStrength,
         _speed: Speed, // Not supported by this architecture
     ) -> Output<'static> {
