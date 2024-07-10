@@ -147,7 +147,7 @@ macro_rules! impl_embedded_hal_input_trait {
                 <$arch_type as embedded_hal::digital::InputPin>::is_low(&mut self.input)
             }
         }
-    }
+    };
 }
 
 impl_embedded_hal_input_trait!(Input, ArchInput);
