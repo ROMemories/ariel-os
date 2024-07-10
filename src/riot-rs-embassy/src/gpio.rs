@@ -322,16 +322,16 @@ impl Output {
         }
     }
 
-    /// Sets the output as low.
-    pub fn set_low(&mut self) {
-        // All architectures are infallible.
-        let _ = <Self as embedded_hal::digital::OutputPin>::set_low(self);
-    }
-
     /// Sets the output as high.
     pub fn set_high(&mut self) {
         // All architectures are infallible.
         let _ = <Self as embedded_hal::digital::OutputPin>::set_high(self);
+    }
+
+    /// Sets the output as low.
+    pub fn set_low(&mut self) {
+        // All architectures are infallible.
+        let _ = <Self as embedded_hal::digital::OutputPin>::set_low(self);
     }
 
     /// Toggles the output level.
