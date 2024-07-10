@@ -6,7 +6,7 @@
 use embassy_time::{Duration, Timer};
 use riot_rs::embassy::{
     arch::peripherals,
-    gpio::{DriveStrength, Input, Output, PinState, Pull},
+    gpio::{DriveStrength, Input, Level, Output, Pull},
 };
 
 #[cfg(context = "nrf52840dk")]
