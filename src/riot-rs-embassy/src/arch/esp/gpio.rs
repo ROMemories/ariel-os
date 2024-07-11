@@ -28,16 +28,20 @@ pub fn init(peripherals: &mut arch::OptionalPeripherals) {
     peripherals.GPIO_18.replace(pins.gpio18);
     peripherals.GPIO_19.replace(pins.gpio19);
     peripherals.GPIO_20.replace(pins.gpio20);
-    peripherals.GPIO_21.replace(pins.gpio21);
-    peripherals.GPIO_22.replace(pins.gpio22);
-    peripherals.GPIO_23.replace(pins.gpio23);
-    peripherals.GPIO_24.replace(pins.gpio24);
-    peripherals.GPIO_25.replace(pins.gpio25);
-    peripherals.GPIO_26.replace(pins.gpio26);
-    peripherals.GPIO_27.replace(pins.gpio27);
-    peripherals.GPIO_28.replace(pins.gpio28);
-    peripherals.GPIO_29.replace(pins.gpio29);
-    peripherals.GPIO_30.replace(pins.gpio30);
+
+    #[cfg(context = "esp32c6")]
+    {
+        peripherals.GPIO_21.replace(pins.gpio21);
+        peripherals.GPIO_22.replace(pins.gpio22);
+        peripherals.GPIO_23.replace(pins.gpio23);
+        peripherals.GPIO_24.replace(pins.gpio24);
+        peripherals.GPIO_25.replace(pins.gpio25);
+        peripherals.GPIO_26.replace(pins.gpio26);
+        peripherals.GPIO_27.replace(pins.gpio27);
+        peripherals.GPIO_28.replace(pins.gpio28);
+        peripherals.GPIO_29.replace(pins.gpio29);
+        peripherals.GPIO_30.replace(pins.gpio30);
+    }
 }
 
 pub mod input {
