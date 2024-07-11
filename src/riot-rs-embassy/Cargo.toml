@@ -59,7 +59,7 @@ embassy-executor = { workspace = true, default-features = false, features = [
 
 [target.'cfg(context = "nrf")'.dependencies]
 embassy-nrf = { workspace = true, features = [
-  "gpiote", # FIXME: is it ok to always enable GPIOTE?
+  "gpiote",
   "time-driver-rtc1",
   "time",
   "unstable-pac",
