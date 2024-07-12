@@ -18,6 +18,15 @@ riot_rs::define_peripherals!(BlinkyButtonPeripherals {
     btn2: P0_12,
 });
 
+#[cfg(context = "nrf5340dk")]
+riot_rs::define_peripherals!(BlinkyPeripherals { led1: P0_28 });
+
+#[cfg(context = "nrf5340dk")]
+riot_rs::define_peripherals!(BlinkyButtonPeripherals {
+    led2: P0_29,
+    btn2: P0_24,
+});
+
 #[cfg(context = "rp")]
 riot_rs::define_peripherals!(BlinkyPeripherals { led1: PIN_1 });
 
