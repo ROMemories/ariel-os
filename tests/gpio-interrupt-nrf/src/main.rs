@@ -11,8 +11,10 @@ use riot_rs::{
     },
 };
 
-// These pins should be available on all STM32 chips.
-#[cfg(context = "nrf")]
+#[cfg(context = "nrf51")]
+todo!();
+
+#[cfg(context = "nrf52")]
 riot_rs::define_peripherals!(ButtonPeripherals {
     btn_0: P0_00,
     btn_1: P0_01,
@@ -23,6 +25,19 @@ riot_rs::define_peripherals!(ButtonPeripherals {
     btn_6: P0_06,
     btn_7: P0_07,
     btn_8: P0_08,
+});
+
+#[cfg(context = "nrf5340")]
+riot_rs::define_peripherals!(ButtonPeripherals {
+    btn_0: P0_00,
+    btn_1: P0_01,
+    btn_2: P0_04,
+    btn_3: P0_05,
+    btn_4: P0_06,
+    btn_5: P0_07,
+    btn_6: P0_08,
+    btn_7: P0_09,
+    btn_8: P0_10,
 });
 
 #[riot_rs::task(autostart, peripherals)]
