@@ -69,6 +69,7 @@ pub mod input {
         Ok(Input::new(pin, pull))
     }
 
+    #[cfg(feature = "external-interrupts")]
     pub(crate) fn new_int_enabled(
         pin: impl Peripheral<P: InputPin> + 'static,
         pull: crate::gpio::Pull,

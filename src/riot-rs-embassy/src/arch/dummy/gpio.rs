@@ -91,6 +91,7 @@ pub mod input {
         unimplemented!();
     }
 
+    #[cfg(feature = "external-interrupts")]
     pub(crate) fn new_int_enabled(
         pin: impl Peripheral<P: InputPin> + 'static,
         pull: crate::gpio::Pull,
@@ -100,6 +101,7 @@ pub mod input {
     }
 
     define_input_like!(Input);
+    #[cfg(feature = "external-interrupts")]
     define_input_like!(IntEnabledInput);
 }
 
