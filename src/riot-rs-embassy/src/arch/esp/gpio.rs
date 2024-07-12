@@ -109,7 +109,7 @@ pub mod output {
     pub(crate) use esp_hal::gpio::AnyOutput as Output;
 
     // FIXME: ESP32 *does* support setting the drive strength, but esp-hal seems to currently make
-    // this impossible on `AnyOuput` (unlike on `Output`), because it internally uses an
+    // this impossible on `AnyOutput` (unlike on `Output`), because it internally uses an
     // `ErasedPin`.
     pub(crate) const DRIVE_STRENGTH_CONFIGURABLE: bool = false;
     pub(crate) const SPEED_CONFIGURABLE: bool = false;
