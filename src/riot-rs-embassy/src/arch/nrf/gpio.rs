@@ -11,21 +11,21 @@ pub mod input {
 
     pub(crate) const SCHMITT_TRIGGER_CONFIGURABLE: bool = false;
 
-    pub(crate) fn new(
-        pin: impl Peripheral<P: InputPin> + 'static,
+    pub(crate) fn new<'d>(
+        pin: impl Peripheral<P: InputPin> + 'd,
         pull: crate::gpio::Pull,
         _schmitt_trigger: bool, // Not supported by this architecture
-    ) -> Result<Input<'static>, gpio::input::Error> {
+    ) -> Result<Input<'d>, gpio::input::Error> {
         let pull = Pull::from(pull);
         Ok(Input::new(pin, pull))
     }
 
     #[cfg(feature = "external-interrupts")]
-    pub(crate) fn new_int_enabled(
-        pin: impl Peripheral<P: InputPin> + 'static,
+    pub(crate) fn new_int_enabled<'d>(
+        pin: impl Peripheral<P: InputPin> + 'd,
         pull: crate::gpio::Pull,
         _schmitt_trigger: bool, // Not supported by this architecture
-    ) -> Result<IntEnabledInput<'static>, gpio::input::Error> {
+    ) -> Result<IntEnabledInput<'d>, gpio::input::Error> {
         let pull = Pull::from(pull);
         let pin = crate::extint_registry::EXTINT_REGISTRY.use_interrupt_for_pin(pin)?;
         Ok(Input::new(pin, pull))
@@ -64,12 +64,12 @@ pub mod output {
     pub(crate) const DRIVE_STRENGTH_CONFIGURABLE: bool = true;
     pub(crate) const SPEED_CONFIGURABLE: bool = false;
 
-    pub(crate) fn new(
-        pin: impl Peripheral<P: OutputPin> + 'static,
+    pub(crate) fn new<'d>(
+        pin: impl Peripheral<P: OutputPin> + 'd,
         initial_level: crate::gpio::Level,
         drive_strength: DriveStrength,
         _speed: Speed, // Not supported by this architecture
-    ) -> Output<'static> {
+    ) -> Output<'d> {
         let output_drive = match drive_strength {
             DriveStrength::Standard => OutputDrive::Standard,
             DriveStrength::High => OutputDrive::HighDrive,

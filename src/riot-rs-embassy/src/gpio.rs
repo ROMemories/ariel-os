@@ -44,13 +44,13 @@ macro_rules! inner_impl_input_methods {
 ///
 /// If support for external interrupts is needed, use [`InputBuilder::build_with_interrupt()`] to
 /// obtain an [`IntEnabledInput`].
-pub struct Input {
-    input: ArchInput<'static>, // FIXME: is this ok to require a 'static pin?
+pub struct Input<'d> {
+    input: ArchInput<'d>,
 }
 
-impl Input {
+impl<'d> Input<'d> {
     /// Returns a configured [`Input`].
-    pub fn new(pin: impl Peripheral<P: ArchInputPin> + 'static, pull: Pull) -> Self {
+    pub fn new(pin: impl Peripheral<P: ArchInputPin> + 'd, pull: Pull) -> Self {
         Self::builder(pin, pull).build()
     }
 
@@ -67,7 +67,7 @@ impl Input {
 }
 
 #[doc(hidden)]
-impl embedded_hal::digital::ErrorType for Input {
+impl embedded_hal::digital::ErrorType for Input<'_> {
     type Error = <ArchInput<'static> as embedded_hal::digital::ErrorType>::Error;
 }
 
@@ -75,12 +75,12 @@ impl embedded_hal::digital::ErrorType for Input {
 ///
 /// Can be obtained with [`InputBuilder::build_with_interrupt()`].
 #[cfg(feature = "external-interrupts")]
-pub struct IntEnabledInput {
-    input: ArchIntEnabledInput<'static>, // FIXME: is this ok to require a 'static pin?
+pub struct IntEnabledInput<'d> {
+    input: ArchIntEnabledInput<'d>,
 }
 
 #[cfg(feature = "external-interrupts")]
-impl IntEnabledInput {
+impl IntEnabledInput<'_> {
     inner_impl_input_methods!(input);
 
     /// Asynchronously waits until the input level is high.
@@ -113,12 +113,12 @@ impl IntEnabledInput {
 
 #[cfg(feature = "external-interrupts")]
 #[doc(hidden)]
-impl embedded_hal::digital::ErrorType for IntEnabledInput {
+impl embedded_hal::digital::ErrorType for IntEnabledInput<'_> {
     type Error = <ArchIntEnabledInput<'static> as embedded_hal::digital::ErrorType>::Error;
 }
 
 #[cfg(feature = "external-interrupts")]
-impl embedded_hal_async::digital::Wait for IntEnabledInput {
+impl embedded_hal_async::digital::Wait for IntEnabledInput<'_> {
     async fn wait_for_high(&mut self) -> Result<(), Self::Error> {
         <ArchIntEnabledInput as embedded_hal_async::digital::Wait>::wait_for_high(&mut self.input)
             .await
@@ -153,7 +153,7 @@ impl embedded_hal_async::digital::Wait for IntEnabledInput {
 
 macro_rules! impl_embedded_hal_input_trait {
     ($type:ident, $arch_type:ident) => {
-        impl embedded_hal::digital::InputPin for $type {
+        impl embedded_hal::digital::InputPin for $type<'_> {
             fn is_high(&mut self) -> Result<bool, Self::Error> {
                 <$arch_type as embedded_hal::digital::InputPin>::is_high(&mut self.input)
             }
@@ -242,7 +242,7 @@ pub mod input {
         pub(crate) schmitt_trigger: bool,
     }
 
-    impl<P: Peripheral<P: ArchInputPin> + 'static> InputBuilder<P> {
+    impl<'d, P: Peripheral<P: ArchInputPin> + 'd> InputBuilder<P> {
         /// Configures the input's Schmitt trigger.
         ///
         /// # Note
@@ -282,9 +282,9 @@ pub mod input {
     }
 
     // Split the impl for consistency with outputs.
-    impl<P: Peripheral<P: ArchInputPin> + 'static> InputBuilder<P> {
+    impl<'d, P: Peripheral<P: ArchInputPin> + 'd> InputBuilder<P> {
         /// Returns an [`Input`] by finalizing the builder.
-        pub fn build(self) -> Input {
+        pub fn build(self) -> Input<'d> {
             let input = match arch::gpio::input::new(self.pin, self.pull, self.schmitt_trigger) {
                 Ok(input) => input,
                 Err(_) => unreachable!(),
@@ -306,7 +306,7 @@ pub mod input {
         /// architecture-specific error.
         // FIXME: rename this
         #[cfg(feature = "external-interrupts")]
-        pub fn build_with_interrupt(self) -> Result<IntEnabledInput, Error> {
+        pub fn build_with_interrupt(self) -> Result<IntEnabledInput<'d>, Error> {
             let input =
                 arch::gpio::input::new_int_enabled(self.pin, self.pull, self.schmitt_trigger)?;
 
@@ -346,13 +346,13 @@ pub enum Pull {
 }
 
 /// A GPIO output.
-pub struct Output {
-    output: ArchOutput<'static>, // FIXME: is this ok to require a 'static pin?
+pub struct Output<'d> {
+    output: ArchOutput<'d>,
 }
 
-impl Output {
+impl<'d> Output<'d> {
     /// Returns a configured [`Output`].
-    pub fn new(pin: impl Peripheral<P: ArchOutputPin> + 'static, initial_level: Level) -> Self {
+    pub fn new(pin: impl Peripheral<P: ArchOutputPin> + 'd, initial_level: Level) -> Self {
         Self::builder(pin, initial_level).build()
     }
 
@@ -483,7 +483,7 @@ pub mod output {
     // We define this in a macro because it will be useful for open-drain outputs.
     macro_rules! impl_output_builder {
         ($type:ident, $pin_trait:ident) => {
-            impl<P: Peripheral<P: $pin_trait> + 'static> $type<P> {
+            impl<'d, P: Peripheral<P: $pin_trait> + 'd> $type<P> {
                 /// Configures the output's drive strength.
                 ///
                 /// # Note
@@ -559,9 +559,9 @@ pub mod output {
 
     impl_output_builder!(OutputBuilder, ArchOutputPin);
 
-    impl<P: Peripheral<P: ArchOutputPin> + 'static> OutputBuilder<P> {
+    impl<'d, P: Peripheral<P: ArchOutputPin> + 'd> OutputBuilder<P> {
         /// Returns an [`Output`] by finalizing the builder.
-        pub fn build(self) -> Output {
+        pub fn build(self) -> Output<'d> {
             // TODO: should we move this into `output::new()`s?
             let drive_strength =
                 <ArchDriveStrength as FromDriveStrength>::from(self.drive_strength);
@@ -580,11 +580,11 @@ pub mod output {
 macro_rules! impl_embedded_hal_output_traits {
     ($type:ident, $arch_type:ident) => {
         #[doc(hidden)]
-        impl embedded_hal::digital::ErrorType for $type {
+        impl embedded_hal::digital::ErrorType for $type<'_> {
             type Error = <$arch_type<'static> as embedded_hal::digital::ErrorType>::Error;
         }
 
-        impl embedded_hal::digital::OutputPin for $type {
+        impl embedded_hal::digital::OutputPin for $type<'_> {
             fn set_high(&mut self) -> Result<(), Self::Error> {
                 <$arch_type as embedded_hal::digital::OutputPin>::set_high(&mut self.output)
             }
@@ -599,7 +599,7 @@ macro_rules! impl_embedded_hal_output_traits {
         // - embassy-rp
         // - esp-hal
         // - embassy-stm32
-        impl StatefulOutputPin for $type {
+        impl StatefulOutputPin for $type<'_> {
             fn is_set_high(&mut self) -> Result<bool, Self::Error> {
                 <$arch_type as StatefulOutputPin>::is_set_high(&mut self.output)
             }
