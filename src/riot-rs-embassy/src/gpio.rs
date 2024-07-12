@@ -399,7 +399,7 @@ impl Output {
 ///
 /// This enum allows to either use high-level, portable values, roughly normalized across
 /// architectures, or to use architecture-specific values if needed.
-// TODO: should this be marked non_exaustive?
+// TODO: should this be marked non_exhaustive?
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum DriveStrength {
     /// Architecture-specific drive strength setting.
