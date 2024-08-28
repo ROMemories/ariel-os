@@ -14,6 +14,7 @@ members = [
   "src/riot-rs-debug",
   "src/riot-rs-macros",
   "src/riot-rs-random",
+  "src/riot-rs-shared-types",
   "tests/benchmarks/bench_sched_yield",
   "tests/gpio",
   "tests/gpio-interrupt-nrf",
@@ -75,6 +76,7 @@ riot-rs-debug = { path = "src/riot-rs-debug", default-features = false }
 riot-rs-embassy = { path = "src/riot-rs-embassy", default-features = false }
 riot-rs-rt = { path = "src/riot-rs-rt" }
 riot-rs-runqueue = { path = "src/riot-rs-runqueue" }
+riot-rs-shared-types = { path = "src/riot-rs-shared-types" }
 riot-rs-utils = { path = "src/riot-rs-utils", default-features = false }
 
 const_panic = { version = "0.2.8", default-features = false }
