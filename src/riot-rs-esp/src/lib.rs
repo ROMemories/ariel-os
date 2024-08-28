@@ -1,4 +1,12 @@
+#![no_std]
+#![feature(doc_auto_cfg)]
+#![feature(trait_alias)]
+#![feature(type_alias_impl_trait)]
+
 pub mod gpio;
+
+#[cfg(feature = "wifi")]
+pub mod wifi;
 
 pub mod peripheral {
     pub use esp_hal::peripheral::Peripheral;
@@ -77,7 +85,7 @@ pub fn init() -> OptionalPeripherals {
         )
         .unwrap();
 
-        crate::wifi::esp_wifi::WIFI_INIT.set(init).unwrap();
+        wifi::esp_wifi::WIFI_INIT.set(init).unwrap();
     }
 
     let timer_group0 = TimerGroup::new_async(peripherals.TIMG0.take().unwrap(), &clocks);

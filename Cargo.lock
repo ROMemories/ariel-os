@@ -3523,13 +3523,11 @@ dependencies = [
  "embassy-usb",
  "embedded-hal 1.0.0",
  "embedded-hal-async",
- "esp-hal",
- "esp-hal-embassy",
- "esp-wifi",
  "heapless 0.8.0",
  "linkme",
  "once_cell",
  "riot-rs-debug",
+ "riot-rs-esp",
  "riot-rs-macros",
  "riot-rs-nrf",
  "riot-rs-rp",
@@ -3539,6 +3537,22 @@ dependencies = [
  "riot-rs-threads",
  "riot-rs-utils",
  "static_cell",
+]
+
+[[package]]
+name = "riot-rs-esp"
+version = "0.1.0"
+dependencies = [
+ "cfg-if",
+ "embassy-executor",
+ "embassy-time",
+ "esp-hal",
+ "esp-hal-embassy",
+ "esp-wifi",
+ "once_cell",
+ "riot-rs-debug",
+ "riot-rs-shared-types",
+ "riot-rs-utils",
 ]
 
 [[package]]
