@@ -3521,7 +3521,6 @@ dependencies = [
  "embassy-hal-internal",
  "embassy-net",
  "embassy-net-driver-channel",
- "embassy-nrf",
  "embassy-rp",
  "embassy-sync 0.6.0",
  "embassy-time",
@@ -3534,9 +3533,9 @@ dependencies = [
  "heapless 0.8.0",
  "linkme",
  "once_cell",
- "portable-atomic",
  "riot-rs-debug",
  "riot-rs-macros",
+ "riot-rs-nrf",
  "riot-rs-random",
  "riot-rs-rt",
  "riot-rs-shared-types",
@@ -3559,6 +3558,19 @@ dependencies = [
  "riot-rs",
  "syn 2.0.76",
  "trybuild",
+]
+
+[[package]]
+name = "riot-rs-nrf"
+version = "0.1.0"
+dependencies = [
+ "cfg-if",
+ "embassy-executor",
+ "embassy-nrf",
+ "portable-atomic",
+ "riot-rs-debug",
+ "riot-rs-random",
+ "riot-rs-shared-types",
 ]
 
 [[package]]
