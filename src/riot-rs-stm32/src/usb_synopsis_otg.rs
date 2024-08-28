@@ -1,6 +1,5 @@
 use embassy_stm32::{bind_interrupts, peripherals, usb, usb::Driver};
-
-use crate::arch;
+use static_cell::make_static;
 
 bind_interrupts!(struct Irqs {
     OTG_FS => usb::InterruptHandler<peripherals::USB_OTG_FS>;
@@ -8,7 +7,7 @@ bind_interrupts!(struct Irqs {
 
 pub type UsbDriver = Driver<'static, peripherals::USB_OTG_FS>;
 
-pub fn driver(peripherals: &mut arch::OptionalPeripherals) -> UsbDriver {
+pub fn driver(peripherals: &mut crate::OptionalPeripherals) -> UsbDriver {
     let usb = peripherals.USB_OTG_FS.take().unwrap();
     let dp = peripherals.PA12.take().unwrap();
     let dm = peripherals.PA11.take().unwrap();
@@ -17,7 +16,7 @@ pub fn driver(peripherals: &mut arch::OptionalPeripherals) -> UsbDriver {
     // "An internal buffer used to temporarily store received packets.
     // Must be large enough to fit all OUT endpoint max packet sizes.
     // Endpoint allocation will fail if it is too small."
-    let ep_out_buffer = crate::make_static!([0u8; 256]);
+    let ep_out_buffer = make_static!([0u8; 256]);
     let mut config = embassy_stm32::usb::Config::default();
 
     // Enable vbus_detection
@@ -32,7 +31,7 @@ pub fn driver(peripherals: &mut arch::OptionalPeripherals) -> UsbDriver {
     #[cfg(feature = "executor-interrupt")]
     {
         use embassy_stm32::interrupt::{InterruptExt, Priority};
-        crate::arch::SWI.set_priority(Priority::P1);
+        crate::SWI.set_priority(Priority::P1);
         embassy_stm32::interrupt::OTG_FS.set_priority(Priority::P0);
     }
 
