@@ -13,7 +13,7 @@ macro_rules! define_input_like {
                 unimplemented!();
             }
 
-            pub fn get_level(&self) -> crate::gpio::Level {
+            pub fn get_level(&self) -> crate::arch::gpio::input::Level {
                 unimplemented!();
             }
 
@@ -76,10 +76,6 @@ macro_rules! define_input_like {
     };
 }
 
-pub trait IntoLevel {
-    fn into(level: Self) -> riot_rs_shared_types::gpio::Level;
-}
-
 pub mod input {
     use crate::arch::peripheral::Peripheral;
 
@@ -108,20 +104,12 @@ pub mod input {
     #[cfg(feature = "external-interrupts")]
     define_input_like!(IntEnabledInput);
 
-    enum Level {
+    pub enum Level {
         Low,
         High,
     }
 
-    // FIXME
-    impl super::IntoLevel for riot_rs_shared_types::gpio::Level {
-        fn into(level: Self) -> riot_rs_shared_types::gpio::Level {
-            match level {
-                riot_rs_shared_types::gpio::Level::Low => riot_rs_shared_types::gpio::Level::Low,
-                riot_rs_shared_types::gpio::Level::High => riot_rs_shared_types::gpio::Level::High,
-            }
-        }
-    }
+    riot_rs_shared_types::define_into_level!();
 }
 
 pub mod output {
