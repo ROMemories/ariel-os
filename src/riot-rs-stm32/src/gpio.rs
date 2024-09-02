@@ -1,7 +1,3 @@
-pub trait IntoLevel {
-    fn into(level: Self) -> riot_rs_shared_types::gpio::Level;
-}
-
 pub mod input {
     use embassy_stm32::{
         gpio::{Level, Pull},
@@ -20,7 +16,6 @@ pub mod input {
         pull: riot_rs_shared_types::gpio::Pull,
         _schmitt_trigger: bool, // Not supported by this architecture
     ) -> Result<Input<'static>, riot_rs_shared_types::gpio::input::Error> {
-        // let pull = Pull::from(pull);
         let pull = from_pull(pull);
         Ok(Input::new(pin, pull))
     }
@@ -31,7 +26,6 @@ pub mod input {
         pull: riot_rs_shared_types::gpio::Pull,
         _schmitt_trigger: bool, // Not supported by this architecture
     ) -> Result<IntEnabledInput<'static>, riot_rs_shared_types::gpio::input::Error> {
-        // let pull = Pull::from(pull);
         let pull = from_pull(pull);
         let mut pin = pin.into_ref();
         let ch = crate::extint_registry::EXTINT_REGISTRY.get_interrupt_channel_for_pin(&mut pin)?;
@@ -39,41 +33,8 @@ pub mod input {
         Ok(IntEnabledInput::new(pin, ch, pull))
     }
 
-    impl crate::gpio::IntoLevel for Level {
-        fn into(level: Self) -> riot_rs_shared_types::gpio::Level {
-            match level {
-                Level::Low => riot_rs_shared_types::gpio::Level::Low,
-                Level::High => riot_rs_shared_types::gpio::Level::High,
-            }
-        }
-    }
-
-    fn from_pull(pull: riot_rs_shared_types::gpio::Pull) -> Pull {
-        match pull {
-            riot_rs_shared_types::gpio::Pull::None => Pull::None,
-            riot_rs_shared_types::gpio::Pull::Up => Pull::Up,
-            riot_rs_shared_types::gpio::Pull::Down => Pull::Down,
-        }
-    }
-
-    // impl From<riot_rs_shared_types::gpio::Pull> for Pull {
-    //     fn from(pull: riot_rs_shared_types::gpio::Pull) -> Self {
-    //         match pull {
-    //             riot_rs_shared_types::gpio::Pull::None => Pull::None,
-    //             riot_rs_shared_types::gpio::Pull::Up => Pull::Up,
-    //             riot_rs_shared_types::gpio::Pull::Down => Pull::Down,
-    //         }
-    //     }
-    // }
-    //
-    // impl From<Level> for riot_rs_shared_types::gpio::Level {
-    //     fn from(level: Level) -> Self {
-    //         match level {
-    //             Level::Low => riot_rs_shared_types::gpio::Level::Low,
-    //             Level::High => riot_rs_shared_types::gpio::Level::High,
-    //         }
-    //     }
-    // }
+    riot_rs_shared_types::define_from_pull!();
+    riot_rs_shared_types::define_into_level!();
 }
 
 pub mod output {
@@ -101,8 +62,6 @@ pub mod output {
         };
         Output::new(pin, initial_level, speed.into())
     }
-
-    // riot_rs_shared_types::impl_from_level!(Level);
 
     #[derive(Copy, Clone, PartialEq, Eq)]
     pub enum DriveStrength {
