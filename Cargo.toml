@@ -23,6 +23,7 @@ members = [
   "tests/gpio",
   "tests/gpio-interrupt-nrf",
   "tests/gpio-interrupt-stm32",
+  "tests/i2c-bus",
 ]
 
 exclude = ["src/lib"]
@@ -51,6 +52,7 @@ portable-atomic = { version = "1.6.0", default-features = false, features = [
   "require-cas",
 ] }
 
+embassy-embedded-hal = { version = "0.2.0", default-features = false }
 embassy-executor = { version = "0.6", default-features = false }
 embassy-futures = { version = "0.1.1", default-features = false }
 embassy-hal-internal = { version = "0.2.0", default-features = false }
@@ -78,6 +80,7 @@ riot-rs-bench = { path = "src/riot-rs-bench", default-features = false }
 riot-rs-boards = { path = "src/riot-rs-boards", default-features = false }
 riot-rs-debug = { path = "src/riot-rs-debug", default-features = false }
 riot-rs-embassy = { path = "src/riot-rs-embassy", default-features = false }
+riot-rs-macros = { path = "src/riot-rs-macros" }
 riot-rs-random = { path = "src/riot-rs-random" }
 riot-rs-rt = { path = "src/riot-rs-rt" }
 riot-rs-runqueue = { path = "src/riot-rs-runqueue" }
@@ -88,6 +91,7 @@ riot-rs-utils = { path = "src/riot-rs-utils", default-features = false }
 const_panic = { version = "0.2.8", default-features = false }
 defmt = { version = "0.3.7" }
 document-features = "0.2.8"
+fugit = { version = "0.3.7", default-features = false }
 heapless = { version = "0.8.0", default-features = false }
 konst = { version = "0.3.8", default-features = false }
 ld-memory = { version = "0.2.9" }

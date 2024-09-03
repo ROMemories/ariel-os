@@ -10,8 +10,13 @@ repository.workspace = true
 workspace = true
 
 [dependencies]
+embassy-futures = { workspace = true }
+embassy-time = { workspace = true }
 embedded-hal = { workspace = true }
 
 [features]
 ## Enables GPIO interrupt support.
 external-interrupts = []
+
+## Enables I2C support.
+i2c = []

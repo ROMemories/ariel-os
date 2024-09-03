@@ -9,6 +9,9 @@ pub mod peripheral {
     pub use embassy_rp::Peripheral;
 }
 
+#[cfg(feature = "i2c")]
+pub mod i2c;
+
 #[cfg(feature = "wifi")]
 mod wifi;
 

@@ -11,6 +11,9 @@ pub mod peripheral {
 #[cfg(feature = "external-interrupts")]
 pub mod extint_registry;
 
+#[cfg(feature = "i2c")]
+pub mod i2c;
+
 #[cfg(feature = "hwrng")]
 pub mod hwrng;
 

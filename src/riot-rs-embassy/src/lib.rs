@@ -26,6 +26,9 @@ cfg_if::cfg_if! {
     }
 }
 
+#[cfg(feature = "i2c")]
+pub mod i2c;
+
 #[cfg(feature = "usb")]
 pub mod usb;
 
