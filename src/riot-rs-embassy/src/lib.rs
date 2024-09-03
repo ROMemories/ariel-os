@@ -2,6 +2,7 @@
 
 #![no_std]
 #![feature(type_alias_impl_trait)]
+#![feature(impl_trait_in_assoc_type)]
 #![feature(used_with_arg)]
 #![feature(lint_reasons)]
 #![feature(doc_auto_cfg)]
@@ -173,7 +174,6 @@ async fn init_task(mut peripherals: arch::OptionalPeripherals) {
         let builder = usb::UsbBuilder::new(
             usb_driver,
             usb_config,
-            &mut make_static!([0; 256])[..],
             &mut make_static!([0; 256])[..],
             &mut make_static!([0; 256])[..],
             &mut make_static!([0; 128])[..],

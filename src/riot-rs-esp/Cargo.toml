@@ -17,9 +17,7 @@ esp-hal = { workspace = true, default-features = false, features = [
   "async",
   "embedded-hal",
 ] }
-esp-hal-embassy = { workspace = true, default-features = false, features = [
-  "time-timg0",
-] }
+esp-hal-embassy = { workspace = true, default-features = false, features = [] }
 esp-wifi = { workspace = true, default-features = false, features = [
   "async",
   "embassy-net",

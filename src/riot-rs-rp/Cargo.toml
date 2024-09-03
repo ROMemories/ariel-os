@@ -23,13 +23,16 @@ riot-rs-utils = { workspace = true }
 static_cell = { workspace = true, optional = true }
 
 # rpi-pico-w cyw43
-cyw43 = { version = "0.1.0", features = ["firmware-logs"], optional = true }
-cyw43-pio = { version = "0.1.0", features = ["overclock"], optional = true }
+cyw43 = { version = "0.2.0", features = ["firmware-logs"], optional = true }
+cyw43-pio = { version = "0.2.0", features = ["overclock"], optional = true }
 
 [target.'cfg(context = "cortex-m")'.dependencies]
 embassy-executor = { workspace = true, default-features = false, features = [
   "arch-cortex-m",
 ] }
+
+[target.'cfg(context = "rp2040")'.dependencies]
+embassy-rp = { workspace = true, default-features = false, features = ["rp2040"] }
 
 [features]
 ## Enables GPIO interrupt support.
