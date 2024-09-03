@@ -11,10 +11,14 @@ workspace = true
 
 [dependencies]
 cfg-if = { workspace = true }
+defmt = { workspace = true, optional = true }
 embassy-executor = { workspace = true, default-features = false, features = [
   "arch-cortex-m",
 ] }
 embassy-stm32 = { workspace = true, default-features = false }
+embedded-hal-async = { workspace = true }
+paste = { workspace = true }
+riot-rs-macros = { workspace = true }
 riot-rs-shared-types = { workspace = true }
 portable-atomic = { workspace = true }
 static_cell = { workspace = true }
@@ -33,6 +37,9 @@ external-interrupts = [
   "riot-rs-shared-types/external-interrupts",
 ]
 
+## Enables I2C support.
+i2c = ["riot-rs-shared-types/i2c"]
+
 ## Enables USB support.
 usb = []
 # These are chosen automatically by riot-rs-boards and select the correct stm32
@@ -41,7 +48,7 @@ stm32-usb = []
 stm32-usb-synopsis = []
 
 ## Enables defmt support.
-defmt = ["embassy-stm32/defmt"]
+defmt = ["dep:defmt", "embassy-stm32/defmt"]
 
 ## Enables the interrupt executor.
 executor-interrupt = ["embassy-executor/executor-interrupt"]

@@ -10,6 +10,8 @@ repository.workspace = true
 workspace = true
 
 [dependencies]
+cfg-if = { workspace = true }
+defmt = { workspace = true, optional = true }
 embassy-net-driver-channel = { workspace = true, optional = true }
 embassy-rp = { workspace = true, default-features = false, features = [
   "rt",
@@ -17,6 +19,8 @@ embassy-rp = { workspace = true, default-features = false, features = [
   "unstable-pac",
   # "unstable-traits",
 ] }
+embedded-hal-async = { workspace = true }
+paste = { workspace = true }
 riot-rs-debug = { workspace = true }
 riot-rs-shared-types = { workspace = true }
 riot-rs-utils = { workspace = true }
@@ -38,11 +42,14 @@ embassy-rp = { workspace = true, default-features = false, features = ["rp2040"]
 ## Enables GPIO interrupt support.
 external-interrupts = ["riot-rs-shared-types/external-interrupts"]
 
+## Enables I2C support.
+i2c = ["riot-rs-shared-types/i2c"]
+
 ## Enables USB support.
 usb = []
 
 ## Enables defmt support.
-defmt = ["embassy-rp/defmt"]
+defmt = ["dep:defmt", "embassy-rp/defmt"]
 
 ## Enables Wi-Fi support.
 wifi = []

@@ -2064,6 +2064,7 @@ version = "0.3.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "17186ad64927d5ac8f02c1e77ccefa08ccd9eaa314d5a4772278aa204a22f7e7"
 dependencies = [
+ "defmt",
  "gcd",
 ]
 
@@ -2403,6 +2404,18 @@ name = "httparse"
 version = "1.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0fcc0b4a115bf80b728eb8ea024ad5bd707b615bfed49e0665b6e0f86fd082d9"
+
+[[package]]
+name = "i2c-bus"
+version = "0.1.0"
+dependencies = [
+ "embassy-executor",
+ "embassy-sync 0.6.0",
+ "embedded-hal-async",
+ "once_cell",
+ "riot-rs",
+ "riot-rs-boards",
+]
 
 [[package]]
 name = "ident_case"
@@ -3496,6 +3509,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "ref_thread_local"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a0d51660a68078997855ba5602f73ab3a5031bd7ad480a9d4c90fbbf04e1fff0"
+
+[[package]]
 name = "regex"
 version = "1.10.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3621,7 +3640,9 @@ name = "riot-rs-embassy"
 version = "0.1.0"
 dependencies = [
  "cfg-if",
+ "const_panic",
  "critical-section",
+ "embassy-embedded-hal",
  "embassy-executor",
  "embassy-hal-internal",
  "embassy-net",
@@ -3651,12 +3672,16 @@ name = "riot-rs-esp"
 version = "0.1.0"
 dependencies = [
  "cfg-if",
+ "defmt",
  "embassy-executor",
  "embassy-time",
+ "embedded-hal-async",
  "esp-hal",
  "esp-hal-embassy",
  "esp-wifi",
+ "fugit",
  "once_cell",
+ "paste",
  "riot-rs-debug",
  "riot-rs-shared-types",
  "riot-rs-utils",
@@ -3673,6 +3698,8 @@ dependencies = [
  "proc-macro2",
  "quote",
  "riot-rs",
+ "serde_json",
+ "stm32-data-serde",
  "syn 2.0.77",
  "trybuild",
 ]
@@ -3682,8 +3709,11 @@ name = "riot-rs-nrf"
 version = "0.1.0"
 dependencies = [
  "cfg-if",
+ "defmt",
  "embassy-executor",
  "embassy-nrf",
+ "embedded-hal-async",
+ "paste",
  "portable-atomic",
  "riot-rs-debug",
  "riot-rs-random",
@@ -3704,11 +3734,15 @@ dependencies = [
 name = "riot-rs-rp"
 version = "0.1.0"
 dependencies = [
+ "cfg-if",
  "cyw43",
  "cyw43-pio",
+ "defmt",
  "embassy-executor",
  "embassy-net-driver-channel",
  "embassy-rp",
+ "embedded-hal-async",
+ "paste",
  "riot-rs-debug",
  "riot-rs-shared-types",
  "riot-rs-utils",
@@ -3743,6 +3777,8 @@ dependencies = [
 name = "riot-rs-shared-types"
 version = "0.1.0"
 dependencies = [
+ "embassy-futures",
+ "embassy-time",
  "embedded-hal 1.0.0",
 ]
 
@@ -3751,9 +3787,13 @@ name = "riot-rs-stm32"
 version = "0.1.0"
 dependencies = [
  "cfg-if",
+ "defmt",
  "embassy-executor",
  "embassy-stm32",
+ "embedded-hal-async",
+ "paste",
  "portable-atomic",
+ "riot-rs-macros",
  "riot-rs-shared-types",
  "static_cell",
 ]
@@ -4150,6 +4190,15 @@ version = "0.1.0"
 dependencies = [
  "riot-rs-embassy",
  "riot-rs-rt",
+]
+
+[[package]]
+name = "stm32-data-serde"
+version = "0.1.0"
+dependencies = [
+ "ref_thread_local",
+ "regex",
+ "serde",
 ]
 
 [[package]]
