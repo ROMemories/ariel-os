@@ -14,6 +14,9 @@ pub mod extint_registry;
 #[cfg(feature = "i2c")]
 pub mod i2c;
 
+#[cfg(feature = "spi")]
+pub mod spi;
+
 use embassy_stm32::Config;
 
 pub use embassy_stm32::{interrupt, peripherals, OptionalPeripherals, Peripherals};

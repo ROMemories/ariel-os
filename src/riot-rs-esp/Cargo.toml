@@ -61,6 +61,8 @@ external-interrupts = ["riot-rs-shared-types/external-interrupts"]
 
 ## Enables I2C support.
 i2c = ["dep:fugit", "riot-rs-shared-types/i2c"]
+## Enables SPI support.
+spi = ["dep:fugit", "riot-rs-shared-types/spi"]
 
 ## Enables defmt support.
 defmt = ["dep:defmt", "esp-wifi?/defmt", "fugit?/defmt"]

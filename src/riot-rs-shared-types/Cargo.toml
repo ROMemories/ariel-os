@@ -20,3 +20,5 @@ external-interrupts = []
 
 ## Enables I2C support.
 i2c = []
+## Enables SPI support.
+spi = []

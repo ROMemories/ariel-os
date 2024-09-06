@@ -39,6 +39,8 @@ external-interrupts = [
 
 ## Enables I2C support.
 i2c = ["riot-rs-shared-types/i2c"]
+## Enables SPI support.
+spi = ["riot-rs-shared-types/spi"]
 
 ## Enables USB support.
 usb = []

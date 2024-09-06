@@ -17,6 +17,9 @@ pub mod i2c;
 #[cfg(feature = "hwrng")]
 pub mod hwrng;
 
+#[cfg(feature = "spi")]
+pub mod spi;
+
 #[cfg(feature = "usb")]
 pub mod usb;
 

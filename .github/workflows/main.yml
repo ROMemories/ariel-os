@@ -110,7 +110,7 @@ jobs:
       # TODO: we'll eventually want to enable relevant features
       - name: Run crate tests
         run: |
-            cargo test --no-default-features --features i2c,no-boards -p riot-rs -p riot-rs-embassy -p riot-rs-runqueue -p riot-rs-threads -p riot-rs-macros
+            cargo test --no-default-features --features i2c,no-boards,spi -p riot-rs -p riot-rs-embassy -p riot-rs-runqueue -p riot-rs-threads -p riot-rs-macros
             cargo test --features external-interrupts -p riot-rs-rp
             cargo test --features external-interrupts,'embassy-nrf/nrf52840' -p riot-rs-nrf
             cargo test --features external-interrupts,'embassy-stm32/stm32wb55rg' -p riot-rs-stm32
@@ -185,7 +185,7 @@ jobs:
           args: --verbose --locked --features external-interrupts,embassy-stm32/stm32wb55rg -p riot-rs-stm32
 
       - name: rustdoc
-        run: RUSTDOCFLAGS='-D warnings' cargo doc -p riot-rs --features bench,csprng,external-interrupts,hwrng,i2c,no-boards,random,threading,usb
+        run: RUSTDOCFLAGS='-D warnings' cargo doc -p riot-rs --features bench,csprng,external-interrupts,hwrng,i2c,no-boards,random,spi,threading,usb
 
       - name: rustdoc for ESP32
         run: RUSTDOCFLAGS='-D warnings' cargo doc --target=riscv32imac-unknown-none-elf --features external-interrupts,esp-hal/esp32c6,esp-hal-embassy/esp32c6,esp-hal-embassy/time-timg0 -p riot-rs-esp

@@ -62,6 +62,21 @@ mod call_with_stm32_peripheral_list {
         // TODO: factor out the branches even more if possible
         // Collecting in each branch is required for type-erasure.
         let peripheral_definitions: Vec<_> = match input.peripheral_kind {
+            PeripheralKind::Spi => {
+                let peripheral_interrupts =
+                    relevant_peripherals.filter_map(SpiPeripheral::try_from_peripheral);
+                peripheral_interrupts
+                    .map(|p| {
+                        let interrupt = format_ident!("{}", p.interrupt);
+                        let name = format_ident!("{}", p.name);
+
+                        match input.output_kind {
+                            OutputKind::Peripherals => quote! { #name },
+                            OutputKind::PeripheralsAndInterrupts => quote! { #interrupt => #name },
+                        }
+                    })
+                    .collect()
+            }
             PeripheralKind::I2c => {
                 let peripheral_interrupts =
                     relevant_peripherals.map(I2cPeripheral::from_peripheral);
@@ -125,17 +140,20 @@ mod call_with_stm32_peripheral_list {
     #[derive(Debug, Copy, Clone, PartialEq, Eq)]
     pub enum PeripheralKind {
         I2c,
+        Spi,
     }
 
     impl PeripheralKind {
         pub fn to_embassy_kind(self) -> &'static str {
             match self {
+                Self::Spi => "spi",
                 Self::I2c => "i2c",
             }
         }
 
         pub fn try_from_ident(ident: &syn::Ident) -> Option<Self> {
             match ident.to_string().as_ref() {
+                "Spi" => Some(Self::Spi),
                 "I2c" => Some(Self::I2c),
                 _ => None,
             }
@@ -155,6 +173,37 @@ mod call_with_stm32_peripheral_list {
                 "PeripheralsAndInterrupts" => Some(Self::PeripheralsAndInterrupts),
                 _ => None,
             }
+        }
+    }
+
+    #[derive(Debug, Clone, PartialEq, Eq)]
+    pub struct SpiPeripheral {
+        pub name: String,
+        pub interrupt: String,
+    }
+
+    impl SpiPeripheral {
+        /// Extracts data from the `stm32-data-serde` schema.
+        pub fn try_from_peripheral(peripheral: &core::Peripheral) -> Option<Self> {
+            let mut interrupts = peripheral.interrupts.as_ref().unwrap().iter();
+
+            let interrupt = interrupts.next().unwrap();
+            // Assert that all SPI peripheral have exactly one interrupt.
+            assert!(interrupts.next().is_none());
+
+            let interrupt = match interrupt.signal.as_ref() {
+                "RADIO" => return None, // This is for the SUBGHZSPI peripheral.
+                "GLOBAL" => interrupt.interrupt.clone(),
+                _ => panic!(
+                    "{} is not a recognized SPI interrupt signal",
+                    interrupt.signal
+                ),
+            };
+
+            Some(Self {
+                name: peripheral.name.clone(),
+                interrupt,
+            })
         }
     }
 
@@ -250,6 +299,41 @@ mod call_with_stm32_peripheral_list {
             );
         }
 
+        #[test]
+        fn test_spi_driver_definitions() {
+            let macro_to_call = format_ident!("test");
+
+            test_driver_definition_from_json_file(
+                "STM32H755ZI",
+                PeripheralKind::Spi,
+                OutputKind::PeripheralsAndInterrupts,
+                macro_to_call.clone(),
+                "test ! (SPI1 => SPI1 , SPI2 => SPI2 , SPI3 => SPI3 , SPI4 => SPI4 , SPI5 => SPI5 , SPI6 => SPI6) ;",
+            );
+            test_driver_definition_from_json_file(
+                "STM32H755ZI",
+                PeripheralKind::Spi,
+                OutputKind::Peripherals,
+                macro_to_call.clone(),
+                "test ! (SPI1 , SPI2 , SPI3 , SPI4 , SPI5 , SPI6) ;",
+            );
+
+            test_driver_definition_from_json_file(
+                "STM32WB55RG",
+                PeripheralKind::Spi,
+                OutputKind::PeripheralsAndInterrupts,
+                macro_to_call.clone(),
+                "test ! (SPI1 => SPI1 , SPI2 => SPI2) ;",
+            );
+            test_driver_definition_from_json_file(
+                "STM32WB55RG",
+                PeripheralKind::Spi,
+                OutputKind::Peripherals,
+                macro_to_call.clone(),
+                "test ! (SPI1 , SPI2) ;",
+            );
+        }
+
         // Test that JSON files generate something without panicking.
         #[test]
         fn test_all_json_files() {
@@ -266,6 +350,14 @@ mod call_with_stm32_peripheral_list {
                 let input = Input {
                     macro_to_call: format_ident!("test"),
                     peripheral_kind: PeripheralKind::I2c,
+                    output_kind: OutputKind::PeripheralsAndInterrupts,
+                };
+                let _generated =
+                    generate_stm32_driver_definition(&json, &chip_embassy_name, &input).to_string();
+
+                let input = Input {
+                    macro_to_call: format_ident!("test"),
+                    peripheral_kind: PeripheralKind::Spi,
                     output_kind: OutputKind::PeripheralsAndInterrupts,
                 };
                 let _generated =

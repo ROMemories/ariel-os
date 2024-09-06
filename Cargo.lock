@@ -4106,6 +4106,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "spi-bus"
+version = "0.1.0"
+dependencies = [
+ "embassy-executor",
+ "embassy-sync 0.6.0",
+ "embedded-hal-async",
+ "once_cell",
+ "riot-rs",
+ "riot-rs-boards",
+ "static_cell",
+]
+
+[[package]]
 name = "spin"
 version = "0.9.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
