@@ -31,8 +31,8 @@ pub struct kHz(pub u32);
 /// Assuming the architecture is only able to do 100 kHz and 400 kHz (not 250 kHz):
 ///
 /// ```
-/// # use riot_rs_embassy::{arch, i2c::controller::{highest_khz_freq_in, kHz}};
-/// let freq = const { highest_khz_freq_in(kHz(100)..=kHz(250)) };
+/// # use riot_rs_embassy::{arch, i2c::controller::{highest_freq_in, kHz}};
+/// let freq = const { highest_freq_in(kHz(100)..=kHz(250)) };
 /// assert_eq!(freq, arch::i2c::controller::Frequency::_100k);
 /// ```
 ///
@@ -40,7 +40,7 @@ pub struct kHz(pub u32);
 ///
 /// This function is only intended to be used in a `const` context.
 /// It panics if no suitable frequency can be found.
-pub const fn highest_khz_freq_in(
+pub const fn highest_freq_in(
     range: core::ops::RangeInclusive<kHz>,
 ) -> arch::i2c::controller::Frequency {
     let min = range.start().0;
@@ -100,15 +100,15 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_valid_highest_khz_freq_in() {
-        const FREQ_0: arch::i2c::controller::Frequency = highest_khz_freq_in(kHz(50)..=kHz(150));
-        const FREQ_1: arch::i2c::controller::Frequency = highest_khz_freq_in(kHz(100)..=kHz(100));
-        const FREQ_2: arch::i2c::controller::Frequency = highest_khz_freq_in(kHz(50)..=kHz(100));
-        const FREQ_3: arch::i2c::controller::Frequency = highest_khz_freq_in(kHz(50)..=kHz(400));
-        const FREQ_4: arch::i2c::controller::Frequency = highest_khz_freq_in(kHz(100)..=kHz(400));
-        const FREQ_5: arch::i2c::controller::Frequency = highest_khz_freq_in(kHz(300)..=kHz(400));
-        const FREQ_6: arch::i2c::controller::Frequency = highest_khz_freq_in(kHz(100)..=kHz(450));
-        const FREQ_7: arch::i2c::controller::Frequency = highest_khz_freq_in(kHz(300)..=kHz(450));
+    fn test_valid_highest_freq_in() {
+        const FREQ_0: arch::i2c::controller::Frequency = highest_freq_in(kHz(50)..=kHz(150));
+        const FREQ_1: arch::i2c::controller::Frequency = highest_freq_in(kHz(100)..=kHz(100));
+        const FREQ_2: arch::i2c::controller::Frequency = highest_freq_in(kHz(50)..=kHz(100));
+        const FREQ_3: arch::i2c::controller::Frequency = highest_freq_in(kHz(50)..=kHz(400));
+        const FREQ_4: arch::i2c::controller::Frequency = highest_freq_in(kHz(100)..=kHz(400));
+        const FREQ_5: arch::i2c::controller::Frequency = highest_freq_in(kHz(300)..=kHz(400));
+        const FREQ_6: arch::i2c::controller::Frequency = highest_freq_in(kHz(100)..=kHz(450));
+        const FREQ_7: arch::i2c::controller::Frequency = highest_freq_in(kHz(300)..=kHz(450));
 
         // The only available values in the dummy arch are 100k and 400k.
         assert_eq!(FREQ_0, arch::i2c::controller::Frequency::_100k);
@@ -122,6 +122,6 @@ mod tests {
 
         // FIXME: add another test to check when max < min
         // and with
-        // const FREQ_0: arch::i2c::controller::Frequency = highest_khz_freq_in(kHz(50)..=kHz(80));
+        // const FREQ_0: arch::i2c::controller::Frequency = highest_freq_in(kHz(50)..=kHz(80));
     }
 }
