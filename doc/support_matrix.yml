@@ -24,7 +24,7 @@ functionalities:
     title: Debug Output
     description:
   - name: i2c_controller
-    title: I2C Controller
+    title: I2C Controller Mode
     description: I2C in controller mode
   - name: logging
     title: Logging
