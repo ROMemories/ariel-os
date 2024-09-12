@@ -8,7 +8,6 @@ use embassy_stm32::{
     time::Hertz,
     Peripheral,
 };
-use riot_rs_macros::call_with_stm32_peripheral_list;
 use riot_rs_shared_types::impl_async_i2c_for_driver_enum;
 
 /// I2C bus configuration.
@@ -122,7 +121,12 @@ pub(crate) fn init(peripherals: &mut crate::OptionalPeripherals) {
     }
 
     // Take all I2c peripherals and do nothing with them.
-    call_with_stm32_peripheral_list!(take_all_i2c_peripherals!, I2c, Peripherals);
+    #[cfg(context = "stm32f401retx")]
+    take_all_i2c_peripherals!(I2C1, I2C2, I2C3);
+    #[cfg(context = "stm32h755zitx")]
+    take_all_i2c_peripherals!(I2C1, I2C2, I2C3, I2C4);
+    #[cfg(context = "stm32wb55rgvx")]
+    take_all_i2c_peripherals!(I2C1, I2C3);
 }
 
 macro_rules! define_i2c_drivers {
@@ -217,4 +221,22 @@ fn from_error(err: embassy_stm32::i2c::Error) -> riot_rs_shared_types::i2c::cont
 }
 
 // Define a driver per peripheral
-call_with_stm32_peripheral_list!(define_i2c_drivers!, I2c, PeripheralsAndInterrupts);
+#[cfg(context = "stm32f401retx")]
+define_i2c_drivers!(
+   I2C1_EV + I2C1_ER => I2C1,
+   I2C2_EV + I2C2_ER => I2C2,
+   I2C3_EV + I2C3_ER => I2C3,
+);
+#[cfg(context = "stm32h755zitx")]
+define_i2c_drivers!(
+   I2C1_EV + I2C1_ER => I2C1,
+   I2C2_EV + I2C2_ER => I2C2,
+   I2C3_EV + I2C3_ER => I2C3,
+   I2C4_EV + I2C4_ER => I2C4,
+);
+#[cfg(context = "stm32wb55rgvx")]
+define_i2c_drivers!(
+   I2C1_EV + I2C1_ER => I2C1,
+   // There is no I2C2
+   I2C3_EV + I2C3_ER => I2C3,
+);
