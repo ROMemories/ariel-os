@@ -1,4 +1,4 @@
-# i2c-bus
+# i2c-controller
 
 ## About
 
