@@ -1,11 +1,13 @@
-//! Provides support for the SPI communication bus in main mode.
+//! Provides support for the SPI communication bus in main mode, with DMA support.
+//!
+//! As setting up DMA may incur some overhead, it is most suitable for data transfers.
+
+// FIXME: expand the doc comment to explain when to use it
 
 use embassy_embedded_hal::shared_bus::asynch::spi::SpiDevice as InnerSpiDevice;
 use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
 
 use crate::{arch, gpio};
-
-pub use riot_rs_shared_types::spi::main::*;
 
 /// An SPI driver implementing [`embedded_hal_async::spi::SpiDevice`].
 ///
@@ -20,4 +22,3 @@ pub use riot_rs_shared_types::spi::main::*;
 pub type SpiDevice =
     InnerSpiDevice<'static, CriticalSectionRawMutex, arch::spi::main::Spi, gpio::Output>;
 
-crate::define_highest_khz_freq_in!(arch::spi::main::Frequency);
