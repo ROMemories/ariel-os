@@ -141,6 +141,10 @@ mod clist {
             || tail[i] == SENTINEL || tail[i] as (usize) < N_THREADS
         )))]
         tail: [u8; N_QUEUES],
+        #[refine(hax_lib::forall(|i: usize| hax_lib::implies(
+            i < next_idxs.len(),
+            || next_idxs[i] == SENTINEL || next_idxs[i] as (usize) < N_THREADS
+        )))]
         next_idxs: [u8; N_THREADS],
     }
 
@@ -220,11 +224,12 @@ mod clist {
             }
         }
 
-        // pub fn advance(&mut self, rq: u8) {
-        //     if let Some(head) = self.peek_head(rq) {
-        //         self.tail[rq as usize] = head;
-        //     }
-        // }
+        #[requires(rq as (usize) < N_QUEUES)]
+        pub fn advance(&mut self, rq: u8) {
+            if let Some(head) = self.peek_head(rq) {
+                self.tail[rq as usize] = head;
+            }
+        }
     }
 
     #[cfg(test)]
