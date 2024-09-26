@@ -32,3 +32,10 @@ trybuild = "1.0.89"
 
 [lib]
 proc-macro = true
+
+[features]
+# These features could be codegened
+max-reading-value-min-count-2 = []
+max-reading-value-min-count-3 = []
+max-reading-value-min-count-9 = []
+max-reading-value-min-count-12 = []

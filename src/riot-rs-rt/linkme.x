@@ -7,6 +7,8 @@ SECTIONS {
   linkm2_USB_BUILDER_HOOKS : { *(linkm2_USB_BUILDER_HOOKS) } > FLASH
   linkme_THREAD_FNS : { *(linkme_THREAD_FNS) } > FLASH
   linkm2_THREAD_FNS : { *(linkm2_THREAD_FNS) } > FLASH
+  linkme_SENSOR_REFS : { *(linkme_SENSOR_REFS) } > FLASH
+  linkm2_SENSOR_REFS : { *(linkm2_SENSOR_REFS) } > FLASH
 }
 
 INSERT AFTER .rodata

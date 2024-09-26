@@ -21,8 +21,12 @@ picoserve = { version = "0.12.0", default-features = false, features = [
   "embassy",
   "embassy-stack-is-copy",
 ], git = "https://github.com/kaspar030/picoserve", branch = "update_embassy_stack_api" }
-riot-rs = { path = "../../src/riot-rs", features = ["override-network-config"] }
+riot-rs = { path = "../../src/riot-rs", features = [
+  "override-network-config",
+  "sensors",
+] }
 riot-rs-boards = { path = "../../src/riot-rs-boards" }
+riot-rs-builtin-sensors = { path = "../../src/riot-rs-builtin-sensors" }
 serde = { version = "1.0", default-features = false }
 static_cell = { workspace = true }
 
@@ -33,3 +37,4 @@ riot-rs = { path = "../../src/riot-rs", features = ["override-usb-config"] }
 
 [features]
 button-readings = ["dep:embassy-nrf"]
+internal-temp = ["riot-rs/internal-temp"]

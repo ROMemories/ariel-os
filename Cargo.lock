@@ -3,6 +3,15 @@
 version = 3
 
 [[package]]
+name = "accelerometer"
+version = "0.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1a4586d95cb0695e748760c9a751141eebb68265b1b20392a0f14db608679f7a"
+dependencies = [
+ "micromath 1.1.1",
+]
+
+[[package]]
 name = "adler2"
 version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -911,7 +920,7 @@ dependencies = [
  "embedded-hal 1.0.0",
  "futures",
  "heapless 0.8.0",
- "num_enum",
+ "num_enum 0.5.11",
 ]
 
 [[package]]
@@ -1218,6 +1227,7 @@ dependencies = [
  "picoserve",
  "riot-rs",
  "riot-rs-boards",
+ "riot-rs-builtin-sensors",
  "serde",
  "static_cell",
 ]
@@ -1511,6 +1521,20 @@ dependencies = [
  "critical-section",
  "embassy-sync 0.6.0",
  "embassy-usb-driver",
+]
+
+[[package]]
+name = "embedded-aht20"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "04b525b32bba93014139b4ec3cb133eaf9377b94b2bfb58e24e234db0251f188"
+dependencies = [
+ "bitflags 2.6.0",
+ "crc",
+ "embedded-hal 1.0.0",
+ "embedded-hal-async",
+ "maybe-async-cfg",
+ "weather-utils",
 ]
 
 [[package]]
@@ -2787,6 +2811,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "78b3ae25bc7c8c38cec158d1f2757ee79e9b3740fbc7ccf0e59e4b08d793fa89"
 
 [[package]]
+name = "lis3dh-async"
+version = "0.9.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e3964d73d6cdac4d06e733062301986c87b33f35c3b5be03f61f93b25277fa33"
+dependencies = [
+ "accelerometer",
+ "embedded-hal-async",
+ "num_enum 0.7.3",
+]
+
+[[package]]
 name = "litrs"
 version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2827,6 +2862,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0ca88d725a0a943b096803bd34e73a4437208b6077654cc4ecb2947a5f91618d"
 
 [[package]]
+name = "maybe-async-cfg"
+version = "0.2.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a1e083394889336bc66a4eaf1011ffbfa74893e910f902a9f271fa624c61e1b2"
+dependencies = [
+ "proc-macro-error",
+ "proc-macro2",
+ "pulldown-cmark",
+ "quote",
+ "syn 1.0.109",
+]
+
+[[package]]
 name = "memchr"
 version = "2.7.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2862,6 +2910,21 @@ dependencies = [
  "riot-rs-debug",
  "riot-rs-rt",
 ]
+
+[[package]]
+name = "micromath"
+version = "1.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bc4010833aea396656c2f91ee704d51a6f1329ec2ab56ffd00bfd56f7481ea94"
+dependencies = [
+ "generic-array",
+]
+
+[[package]]
+name = "micromath"
+version = "2.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c3c8dda44ff03a2f238717214da50f65d5a53b45cd213a7370424ffdb6fae815"
 
 [[package]]
 name = "minicbor"
@@ -3211,7 +3274,16 @@ version = "0.5.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1f646caf906c20226733ed5b1374287eb97e3c2a5c227ce668c1f2ce20ae57c9"
 dependencies = [
- "num_enum_derive",
+ "num_enum_derive 0.5.11",
+]
+
+[[package]]
+name = "num_enum"
+version = "0.7.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4e613fc340b2220f734a8595782c551f1250e969d87d3be1ae0579e8d4065179"
+dependencies = [
+ "num_enum_derive 0.7.3",
 ]
 
 [[package]]
@@ -3223,6 +3295,17 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 1.0.109",
+]
+
+[[package]]
+name = "num_enum_derive"
+version = "0.7.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "af1844ef2428cc3e1cb900be36181049ef3d3193c63e43026cfe202983b27a56"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.77",
 ]
 
 [[package]]
@@ -3380,7 +3463,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "76e09694b50f89f302ed531c1f2a7569f0be5867aee4ab4f8f729bbeec0078e3"
 dependencies = [
  "arrayvec",
- "num_enum",
+ "num_enum 0.5.11",
  "paste",
 ]
 
@@ -3545,6 +3628,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "pulldown-cmark"
+version = "0.11.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "679341d22c78c6c649893cbd6c3278dcbe9fc4faa62fea3a9296ae2b50c14625"
+dependencies = [
+ "bitflags 2.6.0",
+ "memchr",
+ "unicase",
+]
+
+[[package]]
 name = "quote"
 version = "1.0.37"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3687,6 +3781,7 @@ dependencies = [
  "riot-rs-macros",
  "riot-rs-random",
  "riot-rs-rt",
+ "riot-rs-sensors",
  "riot-rs-threads",
  "riot-rs-utils",
  "static_cell",
@@ -3724,6 +3819,25 @@ dependencies = [
  "st-nucleo-f401re",
  "st-nucleo-h755zi-q",
  "st-nucleo-wb55",
+]
+
+[[package]]
+name = "riot-rs-builtin-sensors"
+version = "0.1.0"
+dependencies = [
+ "embassy-embedded-hal",
+ "embassy-executor",
+ "embassy-futures",
+ "embassy-sync 0.6.0",
+ "embassy-time",
+ "embedded-aht20",
+ "embedded-hal 1.0.0",
+ "embedded-hal-async",
+ "lis3dh-async",
+ "portable-atomic",
+ "riot-rs-debug",
+ "riot-rs-embassy",
+ "riot-rs-sensors",
 ]
 
 [[package]]
@@ -3898,6 +4012,23 @@ version = "0.1.2"
 dependencies = [
  "defmt",
  "hax-lib",
+]
+
+[[package]]
+name = "riot-rs-sensors"
+version = "0.1.0"
+dependencies = [
+ "embassy-executor",
+ "embassy-sync 0.6.0",
+ "embassy-time",
+ "embedded-hal 1.0.0",
+ "heapless 0.8.0",
+ "linkme",
+ "portable-atomic",
+ "riot-rs-debug",
+ "riot-rs-macros",
+ "serde",
+ "static_cell",
 ]
 
 [[package]]
@@ -4124,6 +4255,17 @@ name = "semver-parser"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "388a1df253eca08550bef6c72392cfe7c30914bf41df5269b68cbd6ff8f570a3"
+
+[[package]]
+name = "sensors-debug"
+version = "0.1.0"
+dependencies = [
+ "embassy-executor",
+ "embassy-time",
+ "riot-rs",
+ "riot-rs-boards",
+ "riot-rs-builtin-sensors",
+]
 
 [[package]]
 name = "serde"
@@ -4737,6 +4879,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e87a2ed6b42ec5e28cc3b94c09982969e9227600b2e3dcbc1db927a84c06bd69"
 
 [[package]]
+name = "unicase"
+version = "2.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f7d2d4dafb69621809a81864c9c1b864479e1235c0dd4e199924b9742439ed89"
+dependencies = [
+ "version_check",
+]
+
+[[package]]
 name = "unicode-ident"
 version = "1.0.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4868,6 +5019,15 @@ name = "wasi"
 version = "0.11.0+wasi-snapshot-preview1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9c8d87e72b64a3b4db28d11ce29237c246188f4f51057d65a7eab63b7987e423"
+
+[[package]]
+name = "weather-utils"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "060c684bd3f5d64fdb7f1b2a4979addfef289e317e47ca52956391a3eadd9de5"
+dependencies = [
+ "micromath 2.1.0",
+]
 
 [[package]]
 name = "which"

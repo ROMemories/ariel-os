@@ -16,6 +16,9 @@ pub mod hwrng;
 #[cfg(feature = "i2c")]
 pub mod i2c;
 
+#[cfg(feature = "internal-temp")]
+pub mod internal_temp;
+
 #[cfg(feature = "spi")]
 pub mod spi;
 
