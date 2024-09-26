@@ -82,7 +82,8 @@ pub fn task(args: TokenStream, item: TokenStream) -> TokenStream {
 
     // TODO: forbid generics on the function
 
-    let riot_rs_crate = utils::riot_rs_crate();
+    let riot_rs_crate = utils::riot_rs_crate()
+        .unwrap_or_else(|| panic!("{} should be present in `Cargo.toml`", utils::RIOT_RS_CRATE_NAME));
 
     let expanded = if attrs.autostart {
         let peripheral_param = if attrs.peripherals {

@@ -15,6 +15,7 @@ enum-iterator = "2.1.0"
 proc-macro-crate = "3.1.0"
 proc-macro2 = "1.0.78"
 quote = "1.0.35"
+riot-rs-hwsetup = { workspace = true }
 syn = { version = "2.0.47", features = ["full"] }
 
 [dev-dependencies]
@@ -32,3 +33,10 @@ trybuild = "1.0.89"
 
 [lib]
 proc-macro = true
+
+[features]
+# These features could be codegened
+max-reading-value-min-count-2 = []
+max-reading-value-min-count-3 = []
+max-reading-value-min-count-9 = []
+max-reading-value-min-count-12 = []

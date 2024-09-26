@@ -198,6 +198,8 @@ async fn init_task(mut peripherals: arch::OptionalPeripherals) {
 
     let spawner = Spawner::for_current_executor().await;
 
+    codegened_init(&mut peripherals);
+
     for task in EMBASSY_TASKS {
         task(spawner, &mut peripherals);
     }
@@ -327,3 +329,6 @@ async fn init_task(mut peripherals: arch::OptionalPeripherals) {
 
     debug!("riot-rs-embassy::init_task() done");
 }
+
+#[riot_rs_macros::hw_setup_init]
+fn codegened_init(peripherals: &mut arch::OptionalPeripherals) {}

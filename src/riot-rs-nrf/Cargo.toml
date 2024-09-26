@@ -47,6 +47,8 @@ external-interrupts = [
 ## Enables seeding the random number generator from hardware.
 hwrng = ["dep:riot-rs-random"]
 
+internal-temp = []
+
 ## Enables I2C support.
 i2c = ["riot-rs-embassy-common/i2c", "embassy-executor/integrated-timers"]
 

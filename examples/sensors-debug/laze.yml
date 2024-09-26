@@ -1,17 +1,16 @@
 apps:
-  - name: embassy-http-server
+  - name: sensors-debug
     env:
       global:
         CARGO_ENV:
           - CONFIG_ISR_STACKSIZE=65536
     selects:
       - ?release
-      - network
-      - ?button-readings
-      - ?internal-temp
+      - ?button-readings2
+      - ?internal-temp2
 
 modules:
-  - name: button-readings
+  - name: button-readings2
     context:
       - nrf52840dk
     env:
@@ -19,7 +18,7 @@ modules:
         FEATURES:
           - button-readings
 
-  - name: internal-temp
+  - name: internal-temp2
     context:
       - nrf52840
     env:

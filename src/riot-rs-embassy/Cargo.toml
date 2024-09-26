@@ -99,6 +99,10 @@ usb-ethernet = ["usb", "net"]
 ## Use a hardware RNG to seed into the riot-rs-random system-wide RNG
 hwrng = ["riot-rs-nrf/hwrng", "riot-rs-rp/hwrng", "riot-rs-stm32/hwrng"]
 
+# FIXME
+# internal-temp = ["riot-rs-nrf/internal-temp"]
+internal-temp = []
+
 wifi = []
 wifi-cyw43 = ["riot-rs-rp/wifi-cyw43", "net", "wifi"]
 wifi-esp = ["riot-rs-esp/wifi-esp", "net", "wifi"]
