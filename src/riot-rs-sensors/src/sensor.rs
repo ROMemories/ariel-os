@@ -18,6 +18,8 @@
 
 use core::{any::Any, future::Future};
 
+use portable_atomic::{AtomicU8, Ordering};
+
 use crate::{interrupts::InterruptEventKind, Category, Label, PhysicalUnit};
 
 pub use crate::{
@@ -93,20 +95,33 @@ impl dyn Sensor {
 
 /// Mode of a sensor driver.
 #[derive(Copy, Clone, PartialEq, Eq)]
-#[repr(u8)]
 pub enum Mode {
+    /// The sensor driver is disabled.
     Disabled,
+    /// The sensor driver is enabled.
     Enabled,
+    /// The sensor driver is sleeping.
+    /// The sensor device may be in a low-power mode.
     Sleeping,
 }
 
+pub enum ModeSettingError {
+    Uninitialized,
+}
+
 /// State of a sensor driver.
-#[derive(Copy, Clone, PartialEq, Eq)]
+#[derive(Copy, Clone, Default, PartialEq, Eq)]
 #[repr(u8)]
 pub enum State {
+    /// The sensor driver is uninitialized.
+    /// It has not been initialized yet, or initialization could not succeed.
+    #[default]
     Uninitialized = 0,
+    /// The sensor driver is disabled.
     Disabled = 1,
+    /// The sensor driver is enabled.
     Enabled = 2,
+    /// The sensor driver is sleeping.
     Sleeping = 3,
 }
 
@@ -137,8 +152,34 @@ impl TryFrom<u8> for State {
 #[derive(Debug)]
 pub struct TryFromIntError;
 
-pub enum ModeSettingError {
-    Uninitialized,
+/// A helper to store [`State`] as an atomic.
+///
+/// Intended for sensor driver implementors.
+#[derive(Default)]
+pub struct StateAtomic(AtomicU8);
+
+impl StateAtomic {
+    /// Creates a new [`StateAtomic`].
+    pub const fn new(state: State) -> Self {
+        // Make sure `State` fits into a `u8`.
+        const {
+            assert!(core::mem::size_of::<State>() == core::mem::size_of::<u8>());
+        }
+
+        Self(AtomicU8::new(state as u8))
+    }
+
+    /// Returns the current state.
+    pub fn get(&self) -> State {
+        // NOTE(no-panic): cast cannot fail because the integer value always comes from *us*
+        // internally casting `State`.
+        State::try_from(self.0.load(Ordering::Acquire)).unwrap()
+    }
+
+    /// Sets the current state.
+    pub fn set(&self, state: State) {
+        self.0.store(state as u8, Ordering::Release)
+    }
 }
 
 riot_rs_macros::define_count_adjusted_enums!();

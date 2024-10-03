@@ -1,5 +1,3 @@
-use portable_atomic::{AtomicU8, Ordering};
-
 use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, channel::Channel, mutex::Mutex};
 use embedded_hal::digital::InputPin;
 use riot_rs_embassy::Spawner;
@@ -7,7 +5,7 @@ use riot_rs_embassy::Spawner;
 use riot_rs_sensors::{
     sensor::{
         AccuracyError, Mode, ModeSettingError, PhysicalValue, PhysicalValues, ReadingAxes,
-        ReadingAxis, ReadingError, ReadingResult, State,
+        ReadingAxis, ReadingError, ReadingResult, State, StateAtomic,
     },
     Category, Label, PhysicalUnit, Sensor,
 };
@@ -27,7 +25,7 @@ pub type PushButton = GenericPushButton<riot_rs_embassy::gpio::Input>;
 // TODO: how to name this?
 // TODO: is it useful to expose this or should we just make it non-generic?
 pub struct GenericPushButton<I: InputPin> {
-    state: AtomicU8,
+    state: StateAtomic,
     label: Option<&'static str>,
     // buttons: [Option<Button>; N], // TODO: maybe use MaybeUninit
     button: Mutex<CriticalSectionRawMutex, Option<I>>, // TODO: maybe use MaybeUninit
@@ -37,7 +35,7 @@ impl<I: InputPin + 'static> GenericPushButton<I> {
     #[allow(clippy::new_without_default)]
     pub const fn new(label: Option<&'static str>) -> Self {
         Self {
-            state: AtomicU8::new(State::Uninitialized as u8),
+            state: StateAtomic::new(State::Uninitialized),
             label,
             button: Mutex::new(None),
         }
@@ -45,14 +43,14 @@ impl<I: InputPin + 'static> GenericPushButton<I> {
 
     // TODO: add Spawner for consistency
     pub fn init(&'static self, _spawner: Spawner, gpio: I, config: Config) {
-        if self.state.load(Ordering::Acquire) == State::Uninitialized as u8 {
+        if self.state.get() == State::Uninitialized {
             // We use `try_lock()` instead of `lock()` to not make this function async.
             // This mutex cannot be locked at this point as it is private and can only be
             // locked when the sensor has been initialized successfully.
             let mut button = self.button.try_lock().unwrap();
             *button = Some(gpio);
 
-            self.state.store(State::Enabled as u8, Ordering::Release);
+            self.state.set(State::Enabled);
         }
     }
 }
@@ -60,7 +58,7 @@ impl<I: InputPin + 'static> GenericPushButton<I> {
 impl<I: InputPin + Send + 'static> Sensor for GenericPushButton<I> {
     #[allow(refining_impl_trait)]
     async fn measure(&self) -> ReadingResult<PhysicalValues> {
-        if self.state.load(Ordering::Acquire) != State::Enabled as u8 {
+        if self.state.get() != State::Enabled {
             return Err(ReadingError::NonEnabled);
         }
 
@@ -77,19 +75,17 @@ impl<I: InputPin + Send + 'static> Sensor for GenericPushButton<I> {
     }
 
     fn set_mode(&self, mode: Mode) -> Result<State, ModeSettingError> {
-        if self.state.load(Ordering::Acquire) == State::Uninitialized as u8 {
+        if self.state.get() == State::Uninitialized {
             return Err(ModeSettingError::Uninitialized);
         }
 
         let state = State::from(mode);
-        self.state.store(state as u8, Ordering::Release);
+        self.state.set(state);
         Ok(state)
     }
 
     fn state(&self) -> State {
-        let state = self.state.load(Ordering::Acquire);
-        // NOTE(no-panic): the state atomic is only written from a State
-        State::try_from(state).unwrap()
+        self.state.get()
     }
 
     fn categories(&self) -> &'static [Category] {
