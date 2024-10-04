@@ -18,7 +18,7 @@ static BUTTON_1_REF: &'static dyn riot_rs::sensors::Sensor = &BUTTON_1;
 // Set the sensor initialization to run at startup
 #[cfg(all(feature = "button-readings", context = "nrf52840dk"))]
 #[riot_rs::spawner(autostart, peripherals)]
-fn BUTTON_1_init(spawner: riot_rs::Spawner, peripherals: BUTTON_1Peripherals) {
+fn BUTTON_1_init(spawner: riot_rs::Spawner, peripherals: crate::pins::BUTTON_1Peripherals) {
     let mut config = riot_rs_builtin_sensors::push_buttons::Config::default();
 
     let pull = riot_rs::gpio::Pull::Up;
@@ -26,8 +26,5 @@ fn BUTTON_1_init(spawner: riot_rs::Spawner, peripherals: BUTTON_1Peripherals) {
 
     BUTTON_1.init(spawner, input, config);
 }
-
-#[cfg(all(feature = "button-readings", context = "nrf52840dk"))]
-riot_rs::define_peripherals!(BUTTON_1Peripherals { p: P0_11 });
 
 riot_rs::sensors::register_sensor_drivers!(riot_rs_builtin_sensors::push_buttons::PushButton);
