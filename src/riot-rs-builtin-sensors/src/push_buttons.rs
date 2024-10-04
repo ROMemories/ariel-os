@@ -75,13 +75,13 @@ impl<I: InputPin + Send + 'static> Sensor for GenericPushButton<I> {
     }
 
     fn set_mode(&self, mode: Mode) -> Result<State, ModeSettingError> {
-        if self.state.get() == State::Uninitialized {
-            return Err(ModeSettingError::Uninitialized);
-        }
+        let new_state = self.state.set_mode(mode);
 
-        let state = State::from(mode);
-        self.state.set(state);
-        Ok(state)
+        if new_state == State::Uninitialized {
+            Err(ModeSettingError::Uninitialized)
+        } else {
+            Ok(new_state)
+        }
     }
 
     fn state(&self) -> State {

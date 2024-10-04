@@ -157,7 +157,9 @@ pub struct TryFromIntError;
 ///
 /// Intended for sensor driver implementors.
 #[derive(Default)]
-pub struct StateAtomic(AtomicU8);
+pub struct StateAtomic {
+    state: AtomicU8,
+}
 
 impl StateAtomic {
     /// Creates a new [`StateAtomic`].
@@ -167,19 +169,43 @@ impl StateAtomic {
             assert!(core::mem::size_of::<State>() == core::mem::size_of::<u8>());
         }
 
-        Self(AtomicU8::new(state as u8))
+        Self {
+            state: AtomicU8::new(state as u8),
+        }
     }
 
     /// Returns the current state.
     pub fn get(&self) -> State {
         // NOTE(no-panic): cast cannot fail because the integer value always comes from *us*
         // internally casting `State`.
-        State::try_from(self.0.load(Ordering::Acquire)).unwrap()
+        State::try_from(self.state.load(Ordering::Acquire)).unwrap()
     }
 
     /// Sets the current state.
     pub fn set(&self, state: State) {
-        self.0.store(state as u8, Ordering::Release)
+        self.state.store(state as u8, Ordering::Release)
+    }
+
+    /// Sets the current mode.
+    pub fn set_mode(&self, mode: Mode) -> State {
+        let new_state = State::from(mode);
+
+        // Set the mode if the current state is not uninitialized
+        let res = self
+            .state
+            .fetch_update(Ordering::Release, Ordering::Acquire, |s| {
+                if s == State::Uninitialized as u8 {
+                    None
+                } else {
+                    Some(new_state as u8)
+                }
+            });
+
+        if res.is_err() {
+            State::Uninitialized
+        } else {
+            new_state
+        }
     }
 }
 
