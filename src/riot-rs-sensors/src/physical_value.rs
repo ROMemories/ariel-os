@@ -14,6 +14,9 @@
 ///
 /// The unit of measurement can be obtained using
 /// [`ReadingAxis::unit()`](crate::sensor::ReadingAxis::unit).
+// We do not implement `Eq` or `PartialOrd` on purpose: `Eq` would prevent us from possibly adding
+// floats in the future and `PartialOrd` does not make sense because interpreting the value
+// requires the `ReadingAxis` associated to this `PhysicalValue`.
 #[derive(Debug, Copy, Clone, PartialEq, serde::Serialize)]
 pub struct PhysicalValue {
     value: i32,

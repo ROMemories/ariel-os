@@ -64,10 +64,11 @@ pub trait Sensor: Any + Send + Sync {
     #[must_use]
     fn categories(&self) -> &'static [Category];
 
-    /// String label of the sensor driver instance.
+    /// String label of the sensor driver *instance*.
     ///
-    /// For instance, in the case of a temperature sensor, this allows to specify whether it is
-    /// placed indoor or outdoor.
+    /// This is intended to be configured when setting up the sensor driver instance.
+    /// For instance, in the case of a temperature sensor, this allows to specify whether this
+    /// specific sensor device is placed indoor or outdoor.
     #[must_use]
     fn label(&self) -> Option<&'static str>;
 
