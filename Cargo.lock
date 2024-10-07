@@ -4261,7 +4261,9 @@ name = "sensors-debug"
 version = "0.1.0"
 dependencies = [
  "embassy-executor",
+ "embassy-sync 0.6.0",
  "embassy-time",
+ "once_cell",
  "riot-rs",
  "riot-rs-boards",
  "riot-rs-builtin-sensors",

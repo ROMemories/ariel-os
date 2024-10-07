@@ -296,29 +296,29 @@ macro_rules! register_sensor_drivers {
         /// Panics if the concrete type of the sensor driver was not present in the list of types provided.
         /// Should not be used by users directly, users should use the `riot_rs::sensors::measure!()`
         /// proc-macro instead.
-        macro_rules! measure {
-            ($sensor:path) => {
-                {
-                    use $crate::{sensor::ReadingResult, Sensor};
+        pub async fn __downcast_and_measure(sensor: &dyn $crate::Sensor) -> $crate::sensor::ReadingResult<$crate::sensor::PhysicalValues> {
+            use $crate::{sensor::ReadingResult, Sensor};
 
-                    // As `Sensor::measure()` is non-dispatchable, we have to downcast
-                    async fn __measure_sensor(sensor: &dyn Sensor) -> ReadingResult<impl Reading> {
-                        $(
-                        $(#[$sensor_attr])*
-                        if let Some(sensor) = sensor.downcast_ref::<$sensor_type>() {
-                            return sensor.measure().await;
-                        }
-                        )*
+            // As `Sensor::measure()` is non-dispatchable, we have to downcast
+            $(
+            $(#[$sensor_attr])*
+            if let Some(sensor) = sensor.downcast_ref::<$sensor_type>() {
+                return sensor.measure().await;
+            }
+            )*
 
-                        // Every possible sensor concrete types must have been provided.
-                        unreachable!();
-                    }
+            // Every possible sensor concrete types must have been provided.
+            unreachable!("the sensor driver type must be registered");
+        }
 
-                    __measure_sensor($sensor)
-                }
+        #[riot_rs::task(autostart)]
+        async fn __sensor_task() {
+            loop {
+                let request = riot_rs::sensors::registry::TRIGGER_MEASUREMENT.receive().await;
+                let reading = __downcast_and_measure(request.sensor).await;
+                request.response_sender.try_send(reading).unwrap();
             }
         }
-        pub(crate) use measure;
     };
 }
 
