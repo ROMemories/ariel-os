@@ -30,7 +30,7 @@ pub static SENSOR_REFS: [&'static dyn Sensor] = [..];
 pub static REGISTRY: Registry = Registry::new();
 
 #[doc(hidden)]
-pub static TRIGGER_MEASUREMENT: Channel<CriticalSectionRawMutex, Request, 3> = Channel::new();
+pub static TRIGGER_MEASUREMENT: Channel<CriticalSectionRawMutex, (), 1> = Channel::new();
 #[doc(hidden)]
 pub static RECEIVE_READING: Channel<CriticalSectionRawMutex, ReadingResult<PhysicalValues>, 3> =
     Channel::new();

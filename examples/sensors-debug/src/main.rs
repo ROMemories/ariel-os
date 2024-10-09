@@ -22,7 +22,9 @@ async fn main() {
         println!("New measurements:");
         for sensor in REGISTRY.sensors() {
             println!("{}", sensor.display_name().unwrap());
-            match REGISTRY.measure(sensor).await {
+            // TODO: try to trigger all sensors before waiting for the readings
+            sensor.trigger_measurement().unwrap();
+            match sensor.wait_for_reading().await {
                 Ok(values) => {
                     for (value, reading_axis) in values.values().zip(sensor.reading_axes().iter()) {
                         let value = value.value() as f32

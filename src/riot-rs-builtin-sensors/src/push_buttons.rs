@@ -1,11 +1,13 @@
-use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, channel::Channel, mutex::Mutex};
+use embassy_sync::{
+    blocking_mutex::raw::CriticalSectionRawMutex, channel::Channel, mutex::Mutex, signal::Signal,
+};
 use embedded_hal::digital::InputPin;
 use riot_rs_embassy::Spawner;
 
 use riot_rs_sensors::{
     sensor::{
-        AccuracyError, Mode, ModeSettingError, PhysicalValue, PhysicalValues, ReadingAxes,
-        ReadingAxis, ReadingError, ReadingResult, State, StateAtomic,
+        AccuracyError, MeasurementError, Mode, ModeSettingError, PhysicalValue, PhysicalValues,
+        ReadingAxes, ReadingAxis, ReadingError, ReadingResult, ReadingWaiter, State, StateAtomic,
     },
     Category, Label, PhysicalUnit, Sensor,
 };
@@ -29,6 +31,8 @@ pub struct GenericPushButton<I: InputPin> {
     label: Option<&'static str>,
     // buttons: [Option<Button>; N], // TODO: maybe use MaybeUninit
     button: Mutex<CriticalSectionRawMutex, Option<I>>, // TODO: maybe use MaybeUninit
+    trigger: Signal<CriticalSectionRawMutex, ()>,
+    reading_channel: Channel<CriticalSectionRawMutex, ReadingResult<PhysicalValues>, 1>,
 }
 
 impl<I: InputPin + 'static> GenericPushButton<I> {
@@ -38,6 +42,8 @@ impl<I: InputPin + 'static> GenericPushButton<I> {
             state: StateAtomic::new(State::Uninitialized),
             label,
             button: Mutex::new(None),
+            trigger: Signal::new(),
+            reading_channel: Channel::new(),
         }
     }
 
@@ -53,25 +59,40 @@ impl<I: InputPin + 'static> GenericPushButton<I> {
             self.state.set(State::Enabled);
         }
     }
+
+    pub async fn run(&self) -> ! {
+        loop {
+            let request = self.trigger.wait().await;
+
+            let reading = self.button.lock().await.as_mut().unwrap().is_low().unwrap();
+
+            // FIXME: this has to be configurable to handle both active-low and active-high push button
+            // inputs
+            let is_pressed = reading;
+
+            self.reading_channel
+                .send(Ok(PhysicalValues::V1([PhysicalValue::new(
+                    i32::from(is_pressed),
+                    AccuracyError::None,
+                )])))
+                .await;
+        }
+    }
 }
 
 impl<I: InputPin + Send + 'static> Sensor for GenericPushButton<I> {
-    #[allow(refining_impl_trait)]
-    async fn measure(&self) -> ReadingResult<PhysicalValues> {
+    fn trigger_measurement(&self) -> Result<(), MeasurementError> {
         if self.state.get() != State::Enabled {
-            return Err(ReadingError::NonEnabled);
+            return Err(MeasurementError::NonEnabled);
         }
 
-        let reading = self.button.lock().await.as_mut().unwrap().is_low().unwrap();
+        self.trigger.signal(());
 
-        // FIXME: this has to be configurable to handle both active-low and active-high push button
-        // inputs
-        let is_pressed = reading;
+        Ok(())
+    }
 
-        Ok(PhysicalValues::V1([PhysicalValue::new(
-            i32::from(is_pressed),
-            AccuracyError::None,
-        )]))
+    fn wait_for_reading(&'static self) -> ReadingWaiter {
+        self.reading_channel.receive()
     }
 
     fn set_mode(&self, mode: Mode) -> Result<State, ModeSettingError> {

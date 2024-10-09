@@ -16,8 +16,14 @@
 //! fixed scaling value is provided in [`ReadingAxis`], for each [`PhysicalValue`] returned.
 //! See [`PhysicalValue`] for more details.
 
-use core::{any::Any, future::Future};
+use core::{
+    any::Any,
+    future::Future,
+    pin::Pin,
+    task::{Context, Poll},
+};
 
+use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, channel::ReceiveFuture};
 use portable_atomic::{AtomicU8, Ordering};
 
 use crate::{interrupts::InterruptEventKind, Category, Label, PhysicalUnit};
@@ -29,18 +35,17 @@ pub use crate::{
 
 /// Represents a sensor device; implemented on sensor drivers.
 /// See [the module level documentation](crate::sensor) for more.
-// TODO: introduce a trait currently deferring to Any
 pub trait Sensor: Any + Send + Sync {
-    // TODO: add a link to an explanation of the setup file
-    /// Triggers a measurement, waits for the result and returns the reading asynchronously.
+    /// Triggers a measurement.
+    fn trigger_measurement(&self) -> Result<(), MeasurementError>;
+
+    /// Waits for the reading and returns it asynchronously.
     /// Depending on the sensor device and the sensor driver, this may use a sensor interrupt or
     /// data polling.
     ///
     /// Interpretation of the reading requires data from [`Sensor::reading_axes()`] as well.
     /// See [the module level documentation](crate::sensor) for more.
-    fn measure(&self) -> impl Future<Output = ReadingResult<impl Reading>>
-    where
-        Self: Sized;
+    fn wait_for_reading(&'static self) -> ReadingWaiter;
 
     // FIXME: rename this
     /// Provides information about the reading returned by [`Sensor::measure()`].
@@ -87,6 +92,13 @@ pub trait Sensor: Any + Send + Sync {
     #[must_use]
     fn version(&self) -> u8;
 }
+
+pub type ReadingWaiter = embassy_sync::channel::ReceiveFuture<
+    'static,
+    CriticalSectionRawMutex,
+    ReadingResult<PhysicalValues>,
+    1,
+>;
 
 impl dyn Sensor {
     pub fn downcast_ref<S: Sensor>(&self) -> Option<&S> {
@@ -249,6 +261,13 @@ impl ReadingAxis {
     }
 }
 
+/// Represents errors happening when *triggering* a sensor measurement.
+#[derive(Debug)]
+pub enum MeasurementError {
+    /// The sensor driver is not enabled (e.g., it may be disabled or sleeping).
+    NonEnabled,
+}
+
 /// Represents errors happening when accessing a sensor reading.
 // TODO: is it more useful to indicate the error nature or whether it is temporary or permanent?
 #[derive(Debug)]
@@ -309,15 +328,6 @@ macro_rules! register_sensor_drivers {
 
             // Every possible sensor concrete types must have been provided.
             unreachable!("the sensor driver type must be registered");
-        }
-
-        #[riot_rs::task(autostart)]
-        async fn __sensor_task() {
-            loop {
-                let request = riot_rs::sensors::registry::TRIGGER_MEASUREMENT.receive().await;
-                let reading = __downcast_and_measure(request.sensor).await;
-                request.response_sender.try_send(reading).unwrap();
-            }
         }
     };
 }
