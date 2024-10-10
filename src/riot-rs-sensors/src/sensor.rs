@@ -78,6 +78,10 @@ pub trait Sensor: Send + Sync {
 
     /// Sets the sensor driver mode and returns the previous state.
     /// Allows to put the sensor device to sleep if supported.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`ModeSettingError::Uninitialized`] if the sensor driver is not initialized.
     fn set_mode(&self, mode: Mode) -> Result<State, ModeSettingError>;
 
     /// Returns the current sensor driver state.
@@ -122,6 +126,7 @@ pub struct SensorSignaling {
 }
 
 impl SensorSignaling {
+    #[must_use]
     pub const fn new() -> Self {
         Self {
             trigger: Signal::new(),
@@ -256,6 +261,7 @@ pub struct StateAtomic {
 
 impl StateAtomic {
     /// Creates a new [`StateAtomic`].
+    #[must_use]
     pub const fn new(state: State) -> Self {
         // Make sure `State` fits into a `u8`.
         const {
@@ -268,6 +274,7 @@ impl StateAtomic {
     }
 
     /// Returns the current state.
+    #[expect(clippy::missing_panics_doc, reason = "cannot actually panic")]
     pub fn get(&self) -> State {
         // NOTE(no-panic): cast cannot fail because the integer value always comes from *us*
         // internally casting `State`.
