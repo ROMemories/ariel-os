@@ -1,24 +1,25 @@
 //! Provides a [`Sensor`] trait abstracting over implementation details of a sensor driver.
 //!
-//! To obtain a reading and make sense of the result, two methods are required:
-//! [`Sensor::measure()`] and [`Sensor::reading_axes()`]:
+//! After triggering a measurement with [`Sensor::trigger_measurement()`], a reading can be
+//! obtained using [`Sensor::wait_for_reading()`].
+//! It is additionally necessary to use [`Sensor::reading_axes()`] to make sensor of the obtained
+//! reading:
 //!
-//! - [`Sensor::measure()`] returns a [`PhysicalValues`], a data "tuple" containing values returned
-//! by the sensor driver.
-//! - The [`ReadingAxes`] type, returned by [`Sensor::reading_axes()`], tells what physical value
-//! each value from that tuple corresponds to, using [`Label`].
-//! For instance, this allows to disambiguate the values provided by a temperature & humidity
-//! sensor.
-//! The [`ReadingAxes`] are fixed for a given sensor driver, allowing to display information about
-//! the physical values a sensor can measure without triggering a measurement.
+//! - [`Sensor::wait_for_reading()`] returns a [`PhysicalValues`], a data "tuple" containing values
+//!   returned by the sensor driver.
+//! - [`Sensor::reading_axes()`] returns a [`ReadingAxes`] which indicates what physical value
+//!   each value from that tuple corresponds to, using a [`Label`].
+//!   For instance, this allows to disambiguate the values provided by a temperature & humidity
+//!   sensor.
+//!   The [`ReadingAxes`] are fixed for a given sensor driver, allowing to display information
+//!   about the physical values a sensor can measure without triggering a measurement.
 //!
-//! To avoid float handling, values returned by [`Sensor::measure()`] are integers, and a
+//! To avoid float handling, values returned by [`Sensor::wait_for_reading()`] are integers, and a
 //! fixed scaling value is provided in [`ReadingAxis`], for each [`PhysicalValue`] returned.
 //! See [`PhysicalValue`] for more details.
 
 use core::{
-    any::Any,
-    future::{self, Future},
+    future::Future,
     pin::Pin,
     task::{Context, Poll},
 };
@@ -26,7 +27,6 @@ use core::{
 use embassy_sync::{
     blocking_mutex::raw::CriticalSectionRawMutex,
     channel::{Channel, ReceiveFuture},
-    mutex::Mutex,
     signal::Signal,
 };
 use portable_atomic::{AtomicU8, Ordering};
@@ -40,8 +40,18 @@ pub use crate::{
 
 /// Represents a sensor device; implemented on sensor drivers.
 /// See [the module level documentation](crate::sensor) for more.
-pub trait Sensor: Any + Send + Sync {
+pub trait Sensor: Send + Sync {
     /// Triggers a measurement.
+    /// Clears the previous reading.
+    ///
+    /// To obtain readings from every sensor drivers this method can be called in a loop over all
+    /// sensors returned by [`Registry::sensors()`](crate::registry::Registry::sensors), before
+    /// obtaining the readings with [`Self::wait_for_reading()`], so that the measurements happen
+    /// concurrently.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`MeasurementError::NonEnabled`] if the sensor driver is not enabled.
     fn trigger_measurement(&self) -> Result<(), MeasurementError>;
 
     /// Waits for the reading and returns it asynchronously.
@@ -50,10 +60,14 @@ pub trait Sensor: Any + Send + Sync {
     ///
     /// Interpretation of the reading requires data from [`Sensor::reading_axes()`] as well.
     /// See [the module level documentation](crate::sensor) for more.
+    ///
+    /// # Errors
+    ///
+    /// - Returns [`ReadingError::NonEnabled`] if the sensor driver is not enabled.
+    /// - Returns [`ReadingError::SensorAccess`] if the sensor device cannot be accessed.
     fn wait_for_reading(&'static self) -> ReadingWaiter;
 
-    // FIXME: rename this
-    /// Provides information about the reading returned by [`Sensor::measure()`].
+    /// Provides information about the reading returned by [`Sensor::wait_for_reading()`].
     #[must_use]
     fn reading_axes(&self) -> ReadingAxes;
 
@@ -83,7 +97,8 @@ pub trait Sensor: Any + Send + Sync {
     fn label(&self) -> Option<&'static str>;
 
     /// Returns a human-readable name of the sensor driver.
-    // TODO: i18n?
+    ///
+    /// For instance, "push button" and "3-axis accelerometer" are appropriate display names.
     #[must_use]
     fn display_name(&self) -> Option<&'static str>;
 
@@ -98,8 +113,9 @@ pub trait Sensor: Any + Send + Sync {
     fn version(&self) -> u8;
 }
 
-// TODO: move this and make it clear it is only useful for sensor driver implementors
+// TODO: move this
 // TODO: rename this
+/// Intended for sensor driver implementors only.
 pub struct SensorSignaling {
     trigger: Signal<CriticalSectionRawMutex, ()>,
     reading_channel: Channel<CriticalSectionRawMutex, ReadingResult<PhysicalValues>, 1>,
@@ -135,14 +151,18 @@ impl SensorSignaling {
     }
 }
 
+/// Future returned by [`Sensor::wait_for_reading()`].
 #[must_use = "futures do nothing unless you `.await` or poll them"]
 #[pin_project::pin_project(project = ReadingWaiterProj)]
 pub enum ReadingWaiter {
+    #[doc(hidden)]
     Waiter {
         #[pin]
         waiter: ReceiveFuture<'static, CriticalSectionRawMutex, ReadingResult<PhysicalValues>, 1>,
     },
+    #[doc(hidden)]
     Err(ReadingError),
+    #[doc(hidden)]
     Resolved,
 }
 
@@ -164,12 +184,6 @@ impl Future for ReadingWaiter {
             }
             ReadingWaiterProj::Resolved => unreachable!(),
         }
-    }
-}
-
-impl dyn Sensor {
-    pub fn downcast_ref<S: Sensor>(&self) -> Option<&S> {
-        (self as &dyn Any).downcast_ref::<S>()
     }
 }
 
@@ -234,7 +248,7 @@ pub struct TryFromIntError;
 
 /// A helper to store [`State`] as an atomic.
 ///
-/// Intended for sensor driver implementors.
+/// Intended for sensor driver implementors only.
 #[derive(Default)]
 pub struct StateAtomic {
     state: AtomicU8,
@@ -290,7 +304,7 @@ impl StateAtomic {
 
 riot_rs_macros::define_count_adjusted_enums!();
 
-/// Provides meta-data about a [`PhysicalValue`].
+/// Provides metadata about a [`PhysicalValue`].
 #[derive(Debug, Copy, Clone, serde::Serialize)]
 pub struct ReadingAxis {
     label: Label,

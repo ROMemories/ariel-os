@@ -87,10 +87,8 @@ pub enum AccuracyError {
     },
 }
 
-/// Implemented on types returned by [`Sensor::measure()`](crate::Sensor::measure).
-///
-/// [`PhysicalValues`](crate::sensor::PhysicalValues) implements this trait, and should usually be
-/// used by sensor driver implementors.
+/// Implemented on [`PhysicalValues`](crate::sensor::PhysicalValues), returned by
+/// [`Sensor::wait_for_reading()`](crate::Sensor::wait_for_reading).
 pub trait Reading: core::fmt::Debug {
     /// Returns the first value returned by [`Reading::values()`].
     fn value(&self) -> PhysicalValue;

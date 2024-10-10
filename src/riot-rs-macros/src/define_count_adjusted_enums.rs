@@ -69,7 +69,7 @@ pub fn define_count_adjusted_enums(_item: TokenStream) -> TokenStream {
             }
         }
 
-        /// Meta-data required to interpret values returned by [`Sensor::measure()`].
+        /// Metadata required to interpret values returned by [`Sensor::wait_for_reading()`].
         ///
         /// # Note
         ///
