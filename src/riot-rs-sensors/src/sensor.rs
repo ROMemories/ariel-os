@@ -337,47 +337,6 @@ impl core::error::Error for ReadingError {}
 
 pub type ReadingResult<R> = Result<R, ReadingError>;
 
-/// Registers sensor drivers so that they can be read using the generated `measure!` macro.
-#[doc(hidden)]
-#[macro_export]
-macro_rules! register_sensor_drivers {
-    (
-        $(
-            $(#[$sensor_attr:meta])*
-            $sensor_type:path
-        ),*
-        $(,)?
-    ) => {
-        /// Returns the result of calling [`Sensor::measure()`] on the sensor driver concrete type.
-        ///
-        /// Downcasts the provided sensor driver to its concrete type, and calls the async,
-        /// non-dispatchable `Sensor::measure()` method on it.
-        ///
-        /// This macro needs to be provided with the sensor driver and with the list of existing sensor
-        /// driver concrete types (at least one).
-        ///
-        /// # Panics
-        ///
-        /// Panics if the concrete type of the sensor driver was not present in the list of types provided.
-        /// Should not be used by users directly, users should use the `riot_rs::sensors::measure!()`
-        /// proc-macro instead.
-        pub async fn __downcast_and_measure(sensor: &dyn $crate::Sensor) -> $crate::sensor::ReadingResult<$crate::sensor::PhysicalValues> {
-            use $crate::{sensor::ReadingResult, Sensor};
-
-            // As `Sensor::measure()` is non-dispatchable, we have to downcast
-            $(
-            $(#[$sensor_attr])*
-            if let Some(sensor) = sensor.downcast_ref::<$sensor_type>() {
-                return sensor.measure().await;
-            }
-            )*
-
-            // Every possible sensor concrete types must have been provided.
-            unreachable!("the sensor driver type must be registered");
-        }
-    };
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
