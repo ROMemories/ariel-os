@@ -23,7 +23,12 @@ use core::{
     task::{Context, Poll},
 };
 
-use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, channel::ReceiveFuture};
+use embassy_sync::{
+    blocking_mutex::raw::CriticalSectionRawMutex,
+    channel::{Channel, ReceiveFuture},
+    mutex::Mutex,
+    signal::Signal,
+};
 use portable_atomic::{AtomicU8, Ordering};
 
 use crate::{interrupts::InterruptEventKind, Category, Label, PhysicalUnit};
@@ -93,26 +98,52 @@ pub trait Sensor: Any + Send + Sync {
     fn version(&self) -> u8;
 }
 
-// FIXME: wrap the channel used by sensor drivers
-// FIXME: rename this
-type OurReceiveFuture =
-    ReceiveFuture<'static, CriticalSectionRawMutex, ReadingResult<PhysicalValues>, 1>;
+// TODO: move this and make it clear it is only useful for sensor driver implementors
+// TODO: rename this
+pub struct SensorSignaling {
+    trigger: Signal<CriticalSectionRawMutex, ()>,
+    reading_channel: Channel<CriticalSectionRawMutex, ReadingResult<PhysicalValues>, 1>,
+}
+
+impl SensorSignaling {
+    pub const fn new() -> Self {
+        Self {
+            trigger: Signal::new(),
+            reading_channel: Channel::new(),
+        }
+    }
+
+    pub fn trigger_measurement(&self) {
+        // Remove the possibly lingering reading.
+        self.reading_channel.clear();
+
+        self.trigger.signal(());
+    }
+
+    pub async fn wait_for_trigger(&self) {
+        self.trigger.wait().await;
+    }
+
+    pub async fn signal_reading(&self, reading: Result<PhysicalValues, ReadingError>) {
+        self.reading_channel.send(reading).await;
+    }
+
+    pub fn wait_for_reading(&'static self) -> ReadingWaiter {
+        ReadingWaiter::Waiter {
+            waiter: self.reading_channel.receive(),
+        }
+    }
+}
 
 #[must_use = "futures do nothing unless you `.await` or poll them"]
 #[pin_project::pin_project(project = ReadingWaiterProj)]
 pub enum ReadingWaiter {
     Waiter {
         #[pin]
-        waiter: OurReceiveFuture,
+        waiter: ReceiveFuture<'static, CriticalSectionRawMutex, ReadingResult<PhysicalValues>, 1>,
     },
     Err(ReadingError),
     Resolved,
-}
-
-impl From<OurReceiveFuture> for ReadingWaiter {
-    fn from(waiter: OurReceiveFuture) -> Self {
-        Self::Waiter { waiter }
-    }
 }
 
 impl Future for ReadingWaiter {

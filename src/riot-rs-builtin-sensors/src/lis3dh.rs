@@ -13,7 +13,7 @@ use riot_rs_sensors::{
     sensor::{
         AccuracyError, MeasurementError, Mode as SensorMode, ModeSettingError, PhysicalValue,
         PhysicalValues, ReadingAxes, ReadingAxis, ReadingError, ReadingResult, ReadingWaiter,
-        State, StateAtomic,
+        SensorSignaling, State, StateAtomic,
     },
     Category, Label, PhysicalUnit, Sensor,
 };
@@ -62,8 +62,7 @@ pub struct Lis3dhI2c {
     data_rate: AtomicU8,
     // TODO: consider using MaybeUninit?
     accel: Mutex<CriticalSectionRawMutex, Option<InnerLis3dh<Lis3dhI2C<I2cDevice>>>>,
-    trigger: Signal<CriticalSectionRawMutex, ()>,
-    reading_channel: Channel<CriticalSectionRawMutex, ReadingResult<PhysicalValues>, 1>,
+    signaling: SensorSignaling,
     interrupts: Mutex<CriticalSectionRawMutex, [Option<gpio::IntEnabledInput>; INTERRUPT_COUNT]>,
 }
 
@@ -78,8 +77,7 @@ impl Lis3dhI2c {
             label,
             data_rate: AtomicU8::new(DataRate::PowerDown as u8),
             accel: Mutex::new(None),
-            trigger: Signal::new(),
-            reading_channel: Channel::new(),
+            signaling: SensorSignaling::new(),
             interrupts: Mutex::new([NO_INTERRUPT; INTERRUPT_COUNT]),
         }
     }
@@ -133,12 +131,12 @@ impl Lis3dhI2c {
 
     pub async fn run(&self) -> ! {
         loop {
-            let request = self.trigger.wait().await;
+            self.signaling.wait_for_trigger().await;
 
             // TODO: maybe should check is_data_ready()?
             let Ok(data) = self.accel.lock().await.as_mut().unwrap().accel_norm().await else {
-                self.reading_channel
-                    .send(Err(ReadingError::SensorAccess))
+                self.signaling
+                    .signal_reading(Err(ReadingError::SensorAccess))
                     .await;
                 continue;
             };
@@ -150,8 +148,8 @@ impl Lis3dhI2c {
             let y = PhysicalValue::new((data.y * 100.) as i32, AccuracyError::Unknown);
             let z = PhysicalValue::new((data.z * 100.) as i32, AccuracyError::Unknown);
 
-            self.reading_channel
-                .send(Ok(PhysicalValues::V3([x, y, z])))
+            self.signaling
+                .signal_reading(Ok(PhysicalValues::V3([x, y, z])))
                 .await;
         }
     }
@@ -305,9 +303,7 @@ impl Sensor for Lis3dhI2c {
             return Err(MeasurementError::NonEnabled);
         }
 
-        // FIXME: clear/reset the `reading_channel`?
-
-        self.trigger.signal(());
+        self.signaling.trigger_measurement();
 
         Ok(())
     }
@@ -317,7 +313,7 @@ impl Sensor for Lis3dhI2c {
             return ReadingWaiter::Err(ReadingError::NonEnabled);
         }
 
-        self.reading_channel.receive().into()
+        self.signaling.wait_for_reading()
     }
 
     fn available_interrupt_events(&self) -> &[InterruptEventKind] {

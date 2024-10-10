@@ -7,7 +7,8 @@ use riot_rs_embassy::Spawner;
 use riot_rs_sensors::{
     sensor::{
         AccuracyError, MeasurementError, Mode, ModeSettingError, PhysicalValue, PhysicalValues,
-        ReadingAxes, ReadingAxis, ReadingError, ReadingResult, ReadingWaiter, State, StateAtomic,
+        ReadingAxes, ReadingAxis, ReadingError, ReadingResult, ReadingWaiter, SensorSignaling,
+        State, StateAtomic,
     },
     Category, Label, PhysicalUnit, Sensor,
 };
@@ -31,8 +32,7 @@ pub struct GenericPushButton<I: InputPin> {
     label: Option<&'static str>,
     // buttons: [Option<Button>; N], // TODO: maybe use MaybeUninit
     button: Mutex<CriticalSectionRawMutex, Option<I>>, // TODO: maybe use MaybeUninit
-    trigger: Signal<CriticalSectionRawMutex, ()>,
-    reading_channel: Channel<CriticalSectionRawMutex, ReadingResult<PhysicalValues>, 1>,
+    signaling: SensorSignaling,
 }
 
 impl<I: InputPin + 'static> GenericPushButton<I> {
@@ -42,8 +42,7 @@ impl<I: InputPin + 'static> GenericPushButton<I> {
             state: StateAtomic::new(State::Uninitialized),
             label,
             button: Mutex::new(None),
-            trigger: Signal::new(),
-            reading_channel: Channel::new(),
+            signaling: SensorSignaling::new(),
         }
     }
 
@@ -62,7 +61,7 @@ impl<I: InputPin + 'static> GenericPushButton<I> {
 
     pub async fn run(&self) -> ! {
         loop {
-            let request = self.trigger.wait().await;
+            self.signaling.wait_for_trigger().await;
 
             let reading = self.button.lock().await.as_mut().unwrap().is_low().unwrap();
 
@@ -70,8 +69,8 @@ impl<I: InputPin + 'static> GenericPushButton<I> {
             // inputs
             let is_pressed = reading;
 
-            self.reading_channel
-                .send(Ok(PhysicalValues::V1([PhysicalValue::new(
+            self.signaling
+                .signal_reading(Ok(PhysicalValues::V1([PhysicalValue::new(
                     i32::from(is_pressed),
                     AccuracyError::None,
                 )])))
@@ -86,14 +85,17 @@ impl<I: InputPin + Send + 'static> Sensor for GenericPushButton<I> {
             return Err(MeasurementError::NonEnabled);
         }
 
-        // FIXME: clear/reset the `reading_channel`?
-        self.trigger.signal(());
+        self.signaling.trigger_measurement();
 
         Ok(())
     }
 
     fn wait_for_reading(&'static self) -> ReadingWaiter {
-        self.reading_channel.receive().into()
+        if self.state.get() != State::Enabled {
+            return ReadingWaiter::Err(ReadingError::NonEnabled);
+        }
+
+        self.signaling.wait_for_reading()
     }
 
     fn set_mode(&self, mode: Mode) -> Result<State, ModeSettingError> {
