@@ -1,21 +1,24 @@
-use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, mutex::Mutex};
+use embassy_sync::{
+    blocking_mutex::raw::CriticalSectionRawMutex, channel::Channel, mutex::Mutex, signal::Signal,
+};
 use embassy_time::{Duration, Timer};
 use lis3dh_async::{Configuration, DataRate, Lis3dh as InnerLis3dh, Lis3dhI2C};
 use portable_atomic::{AtomicU8, Ordering};
-use riot_rs_embassy::{arch, Spawner};
+use riot_rs_embassy::{arch, gpio, i2c::controller::I2cDevice, Spawner};
 use riot_rs_sensors::{
     interrupts::{
         self, AccelerometerInterruptEvent, DeviceInterrupt, InterruptError, InterruptEvent,
         InterruptEventKind,
     },
     sensor::{
-        AccuracyError, Mode as SensorMode, ModeSettingError, PhysicalValue, PhysicalValues,
-        ReadingError, ReadingInfo, ReadingInfos, ReadingResult, State,
+        AccuracyError, MeasurementError, Mode as SensorMode, ModeSettingError, PhysicalValue,
+        PhysicalValues, ReadingAxes, ReadingAxis, ReadingError, ReadingResult, ReadingWaiter,
+        State, StateAtomic,
     },
     Category, Label, PhysicalUnit, Sensor,
 };
 
-pub use crate::lis3dh_spi::Lis3dhSpi;
+// pub use crate::lis3dh_spi::Lis3dhSpi;
 pub use lis3dh_async::{Mode, SlaveAddr as Address};
 
 // FIXME: what's the best way to instantiate sensor driver configuration?
@@ -54,38 +57,41 @@ const INTERRUPT_COUNT: usize = 2;
 
 // TODO: could maybe use a OnceCell instead of an Option
 pub struct Lis3dhI2c {
-    state: AtomicU8,
+    state: StateAtomic,
     label: Option<&'static str>,
     data_rate: AtomicU8,
     // TODO: consider using MaybeUninit?
-    accel: Mutex<CriticalSectionRawMutex, Option<InnerLis3dh<Lis3dhI2C<arch::i2c::I2cDevice>>>>,
-    interrupts:
-        Mutex<CriticalSectionRawMutex, [Option<arch::gpio::Input<'static>>; INTERRUPT_COUNT]>,
+    accel: Mutex<CriticalSectionRawMutex, Option<InnerLis3dh<Lis3dhI2C<I2cDevice>>>>,
+    trigger: Signal<CriticalSectionRawMutex, ()>,
+    reading_channel: Channel<CriticalSectionRawMutex, ReadingResult<PhysicalValues>, 1>,
+    interrupts: Mutex<CriticalSectionRawMutex, [Option<gpio::IntEnabledInput>; INTERRUPT_COUNT]>,
 }
 
 impl Lis3dhI2c {
     #[expect(clippy::new_without_default)]
     #[must_use]
     pub const fn new(label: Option<&'static str>) -> Self {
-        // This is required to initialize the array because Input is not Copy.
-        const NO_INTERRUPT: Option<arch::gpio::Input<'static>> = None;
+        // This is required to initialize the array because IntEnabledInput is not Copy.
+        const NO_INTERRUPT: Option<gpio::IntEnabledInput> = None;
         Self {
-            state: AtomicU8::new(State::Uninitialized as u8),
+            state: StateAtomic::new(State::Uninitialized),
             label,
             data_rate: AtomicU8::new(DataRate::PowerDown as u8),
             accel: Mutex::new(None),
+            trigger: Signal::new(),
+            reading_channel: Channel::new(),
             interrupts: Mutex::new([NO_INTERRUPT; INTERRUPT_COUNT]),
         }
     }
 
-    pub fn init(
+    pub async fn init(
         &'static self,
         _spawner: Spawner,
         peripherals: Peripherals,
-        i2c: arch::i2c::I2cDevice,
+        i2c: I2cDevice,
         config: Config,
     ) {
-        if self.state.load(Ordering::Acquire) == State::Uninitialized as u8 {
+        if self.state.get() == State::Uninitialized {
             // TODO: can this be made shorter?
             let mut lis3dh_config = Configuration::default();
             lis3dh_config.mode = config.mode;
@@ -96,7 +102,6 @@ impl Lis3dhI2c {
             lis3dh_config.block_data_update = config.block_data_update;
             lis3dh_config.enable_temperature = config.enable_temperature;
 
-            // FIXME: add a timeout, blocks indefinitely if no device is connected
             // FIXME: is using block_on ok here?
             // FIXME: handle the Result
             // FIXME: this does not work because of https://github.com/embassy-rs/embassy/issues/2830
@@ -109,12 +114,9 @@ impl Lis3dhI2c {
             //     Either::Second(_) => panic!("timeout when initializing Lis3dh"), // FIXME
             // };
 
-            let driver = embassy_futures::block_on(InnerLis3dh::new_i2c_with_config(
-                i2c,
-                config.address,
-                lis3dh_config,
-            ))
-            .unwrap();
+            let driver = InnerLis3dh::new_i2c_with_config(i2c, config.address, lis3dh_config)
+                .await
+                .unwrap();
 
             self.data_rate
                 .store(lis3dh_config.datarate as u8, Ordering::Relaxed);
@@ -125,18 +127,44 @@ impl Lis3dhI2c {
             let mut accel = self.accel.try_lock().unwrap();
             *accel = Some(driver);
 
-            self.state.store(State::Enabled as u8, Ordering::Release);
+            self.state.set(State::Enabled);
+        }
+    }
+
+    pub async fn run(&self) -> ! {
+        loop {
+            let request = self.trigger.wait().await;
+
+            // TODO: maybe should check is_data_ready()?
+            let Ok(data) = self.accel.lock().await.as_mut().unwrap().accel_norm().await else {
+                self.reading_channel
+                    .send(Err(ReadingError::SensorAccess))
+                    .await;
+                continue;
+            };
+
+            #[expect(clippy::cast_possible_truncation)]
+            // FIXME: dumb scaling, take precision into account
+            // FIXME: specify the measurement error
+            let x = PhysicalValue::new((data.x * 100.) as i32, AccuracyError::Unknown);
+            let y = PhysicalValue::new((data.y * 100.) as i32, AccuracyError::Unknown);
+            let z = PhysicalValue::new((data.z * 100.) as i32, AccuracyError::Unknown);
+
+            self.reading_channel
+                .send(Ok(PhysicalValues::V3([x, y, z])))
+                .await;
         }
     }
 
     // FIXME: is this ok to make this method async?
     pub async fn register_interrupt_pin(
         &self,
-        pin: arch::gpio::Input<'static>,
+        pin: gpio::IntEnabledInput,
         device_interrupt: DeviceInterrupt,
         event: InterruptEvent,
     ) -> Result<(), InterruptError> {
         // FIXME: check first that the interrupt can indeed handle that kind of event
+        // (make a const function for that)
 
         let index = match device_interrupt {
             DeviceInterrupt::Int1 => 0,
@@ -156,8 +184,12 @@ impl Lis3dhI2c {
         Ok(())
     }
 
-    // FIXME: move this to Sensor (/!\ async)
-    pub async fn wait_for_interrupt_event(&self, event: InterruptEvent) -> Result<(), InterruptError>{
+    // FIXME: move this to Sensor (/!\ async, but fine, just need to always be used on a concrete
+    // type directly)
+    pub async fn wait_for_interrupt_event(
+        &self,
+        event: InterruptEvent,
+    ) -> Result<(), InterruptError> {
         use lis3dh_async::{
             Interrupt1, InterruptConfig, InterruptMode, IrqPin1Config, Range, Threshold,
         };
@@ -246,9 +278,7 @@ impl Lis3dhI2c {
                 ..
             } => unimplemented!(),
             InterruptEvent { kind, .. } => {
-                return Err(InterruptError::UnsupportedInterruptEventKind {
-                    event_kind: kind
-                });
+                return Err(InterruptError::UnsupportedInterruptEventKind { event_kind: kind });
             }
         }
 
@@ -270,31 +300,24 @@ impl Lis3dhI2c {
 }
 
 impl Sensor for Lis3dhI2c {
-    #[allow(refining_impl_trait)]
-    async fn measure(&self) -> ReadingResult<PhysicalValues> {
-        if self.state.load(Ordering::Acquire) != State::Enabled as u8 {
-            return Err(ReadingError::NonEnabled);
+    fn trigger_measurement(&self) -> Result<(), MeasurementError> {
+        if self.state.get() != State::Enabled {
+            return Err(MeasurementError::NonEnabled);
         }
 
-        // TODO: maybe should check is_data_ready()?
-        let data = self
-            .accel
-            .lock()
-            .await
-            .as_mut()
-            .unwrap()
-            .accel_norm()
-            .await
-            .map_err(|_| ReadingError::SensorAccess)?;
+        // FIXME: clear/reset the `reading_channel`?
 
-        #[allow(clippy::cast_possible_truncation)]
-        // FIXME: dumb scaling, take precision into account
-        // FIXME: specify the measurement error
-        let x = PhysicalValue::new((data.x * 100.) as i32, AccuracyError::Unknown);
-        let y = PhysicalValue::new((data.y * 100.) as i32, AccuracyError::Unknown);
-        let z = PhysicalValue::new((data.z * 100.) as i32, AccuracyError::Unknown);
+        self.trigger.signal(());
 
-        Ok(PhysicalValues::V3([x, y, z]))
+        Ok(())
+    }
+
+    fn wait_for_reading(&'static self) -> ReadingWaiter {
+        if self.state.get() != State::Enabled {
+            return ReadingWaiter::Err(ReadingError::NonEnabled);
+        }
+
+        self.reading_channel.receive().into()
     }
 
     fn available_interrupt_events(&self) -> &[InterruptEventKind] {
@@ -310,30 +333,28 @@ impl Sensor for Lis3dhI2c {
     }
 
     fn set_mode(&self, mode: SensorMode) -> Result<State, ModeSettingError> {
-        if self.state.load(Ordering::Acquire) == State::Uninitialized as u8 {
-            return Err(ModeSettingError::Uninitialized);
-        }
+        let new_state = self.state.set_mode(mode);
 
-        let state = State::from(mode);
-        self.state.store(state as u8, Ordering::Release);
-        Ok(state)
+        if new_state == State::Uninitialized {
+            Err(ModeSettingError::Uninitialized)
+        } else {
+            Ok(new_state)
+        }
     }
 
     fn state(&self) -> State {
-        let state = self.state.load(Ordering::Acquire);
-        // NOTE(no-panic): the state atomic is only written from a State
-        State::try_from(state).unwrap()
+        self.state.get()
     }
 
     fn categories(&self) -> &'static [Category] {
         &[Category::Accelerometer]
     }
 
-    fn reading_infos(&self) -> ReadingInfos {
-        ReadingInfos::V3([
-            ReadingInfo::new(Label::X, -2, PhysicalUnit::AccelG),
-            ReadingInfo::new(Label::Y, -2, PhysicalUnit::AccelG),
-            ReadingInfo::new(Label::Z, -2, PhysicalUnit::AccelG),
+    fn reading_axes(&self) -> ReadingAxes {
+        ReadingAxes::V3([
+            ReadingAxis::new(Label::X, -2, PhysicalUnit::AccelG),
+            ReadingAxis::new(Label::Y, -2, PhysicalUnit::AccelG),
+            ReadingAxis::new(Label::Z, -2, PhysicalUnit::AccelG),
         ])
     }
 

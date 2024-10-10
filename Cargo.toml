@@ -106,6 +106,7 @@ once_cell = { version = "=1.19.0", default-features = false, features = [
   "critical-section",
 ] }
 paste = { version = "1.0" }
+pin-project = "1.1.6"
 serde = { version = "1.0", default-features = false }
 serde_json = { version = "1.0", default-features = false }
 serde_yaml = { version = "0.9.34", default-features = false } # TODO: replace with a maintained crate

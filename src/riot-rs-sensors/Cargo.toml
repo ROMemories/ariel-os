@@ -16,6 +16,7 @@ embassy-time = { workspace = true }
 embedded-hal = { workspace = true }
 heapless = { workspace = true }
 linkme = { workspace = true }
+pin-project = { workspace = true }
 portable-atomic = { workspace = true }
 riot-rs-debug = { workspace = true }                # TODO: debug only
 riot-rs-macros = { workspace = true }

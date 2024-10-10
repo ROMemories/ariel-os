@@ -18,7 +18,7 @@
 
 use core::{
     any::Any,
-    future::Future,
+    future::{self, Future},
     pin::Pin,
     task::{Context, Poll},
 };
@@ -93,12 +93,48 @@ pub trait Sensor: Any + Send + Sync {
     fn version(&self) -> u8;
 }
 
-pub type ReadingWaiter = embassy_sync::channel::ReceiveFuture<
-    'static,
-    CriticalSectionRawMutex,
-    ReadingResult<PhysicalValues>,
-    1,
->;
+// FIXME: wrap the channel used by sensor drivers
+// FIXME: rename this
+type OurReceiveFuture =
+    ReceiveFuture<'static, CriticalSectionRawMutex, ReadingResult<PhysicalValues>, 1>;
+
+#[must_use = "futures do nothing unless you `.await` or poll them"]
+#[pin_project::pin_project(project = ReadingWaiterProj)]
+pub enum ReadingWaiter {
+    Waiter {
+        #[pin]
+        waiter: OurReceiveFuture,
+    },
+    Err(ReadingError),
+    Resolved,
+}
+
+impl From<OurReceiveFuture> for ReadingWaiter {
+    fn from(waiter: OurReceiveFuture) -> Self {
+        Self::Waiter { waiter }
+    }
+}
+
+impl Future for ReadingWaiter {
+    type Output = ReadingResult<PhysicalValues>;
+
+    fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+        let this = self.as_mut().project();
+        match this {
+            ReadingWaiterProj::Waiter { waiter } => waiter.poll(cx),
+            ReadingWaiterProj::Err(err) => {
+                // Replace the error with a dummy error value, crafted from thin air, and mark the
+                // future as resolved, so that we do not take this dummy value into account later.
+                // This avoids requiring `Clone` on `ReadingError`.
+                let err = core::mem::replace(err, ReadingError::NonEnabled);
+                *self = ReadingWaiter::Resolved;
+
+                Poll::Ready(Err(err))
+            }
+            ReadingWaiterProj::Resolved => unreachable!(),
+        }
+    }
+}
 
 impl dyn Sensor {
     pub fn downcast_ref<S: Sensor>(&self) -> Option<&S> {
@@ -267,6 +303,16 @@ pub enum MeasurementError {
     /// The sensor driver is not enabled (e.g., it may be disabled or sleeping).
     NonEnabled,
 }
+
+impl core::fmt::Display for MeasurementError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::NonEnabled => write!(f, "sensor driver is not enabled"),
+        }
+    }
+}
+
+impl core::error::Error for MeasurementError {}
 
 /// Represents errors happening when accessing a sensor reading.
 // TODO: is it more useful to indicate the error nature or whether it is temporary or permanent?

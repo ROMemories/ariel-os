@@ -86,13 +86,14 @@ impl<I: InputPin + Send + 'static> Sensor for GenericPushButton<I> {
             return Err(MeasurementError::NonEnabled);
         }
 
+        // FIXME: clear/reset the `reading_channel`?
         self.trigger.signal(());
 
         Ok(())
     }
 
     fn wait_for_reading(&'static self) -> ReadingWaiter {
-        self.reading_channel.receive()
+        self.reading_channel.receive().into()
     }
 
     fn set_mode(&self, mode: Mode) -> Result<State, ModeSettingError> {

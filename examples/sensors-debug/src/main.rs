@@ -10,7 +10,6 @@ mod sensors;
 
 use embassy_time::{Duration, Timer};
 use riot_rs::{
-    arch::{self, peripherals},
     debug::println,
     gpio,
     sensors::{Reading, REGISTRY},
@@ -21,9 +20,18 @@ async fn main() {
     loop {
         println!("New measurements:");
         for sensor in REGISTRY.sensors() {
+            if let Err(err) = sensor.trigger_measurement() {
+                println!(
+                    "error while triggering measurement for {}: {}",
+                    sensor.display_name().unwrap(),
+                    err
+                );
+                continue;
+            }
+        }
+
+        for sensor in REGISTRY.sensors() {
             println!("{}", sensor.display_name().unwrap());
-            // TODO: try to trigger all sensors before waiting for the readings
-            sensor.trigger_measurement().unwrap();
             match sensor.wait_for_reading().await {
                 Ok(values) => {
                     for (value, reading_axis) in values.values().zip(sensor.reading_axes().iter()) {
@@ -40,7 +48,11 @@ async fn main() {
                     }
                 }
                 Err(err) => {
-                    println!("error while reading sensor value: {}", err);
+                    println!(
+                        "error while reading sensor value from {}: {}",
+                        sensor.display_name().unwrap(),
+                        err
+                    );
                 }
             }
         }
