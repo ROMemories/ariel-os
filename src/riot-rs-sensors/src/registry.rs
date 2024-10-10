@@ -19,12 +19,18 @@ pub static SENSOR_REFS: [&'static dyn Sensor] = [..];
 pub static REGISTRY: Registry = Registry::new();
 
 /// The sensor driver instance registry.
-pub struct Registry {}
+///
+/// This is exposed as [`REGISTRY`].
+pub struct Registry {
+    _private: (),
+}
 
 impl Registry {
     // The constructor is private to make the registry a singleton.
     const fn new() -> Self {
-        Self {}
+        Self {
+            _private: (),
+        }
     }
 
     /// Returns an iterator over registered sensor driver instances.
