@@ -25,4 +25,5 @@ riot-rs-sensors = { workspace = true, features = [
 
 # Sensor drivers
 lis3dh-async = { version = "0.9.2" }
+lsm303agr = { version = "1.1.0", features = ["async"] }
 embedded-aht20 = { version = "0.1.1", features = ["async"] }
