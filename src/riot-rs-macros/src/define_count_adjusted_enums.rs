@@ -7,12 +7,14 @@ pub fn define_count_adjusted_enums(_item: TokenStream) -> TokenStream {
 
     // The order of these feature-gated statements is important as these features are not meant to
     // be mutually exclusive.
-    #[expect(unused_variables, reason = "overridden by feature selection")]
+    #[allow(unused_variables, reason = "overridden by feature selection")]
     let count = 1;
     #[cfg(feature = "max-reading-value-min-count-2")]
     let count = 2;
     #[cfg(feature = "max-reading-value-min-count-3")]
     let count = 3;
+    #[cfg(feature = "max-reading-value-min-count-6")]
+    let count = 6;
     #[cfg(feature = "max-reading-value-min-count-9")]
     let count = 9;
     #[cfg(feature = "max-reading-value-min-count-12")]
