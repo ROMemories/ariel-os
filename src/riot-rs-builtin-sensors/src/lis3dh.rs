@@ -103,18 +103,6 @@ impl Lis3dhI2c {
             lis3dh_config.block_data_update = config.block_data_update;
             lis3dh_config.enable_temperature = config.enable_temperature;
 
-            // FIXME: is using block_on ok here?
-            // FIXME: handle the Result
-            // FIXME: this does not work because of https://github.com/embassy-rs/embassy/issues/2830
-            // let init = embassy_futures::block_on(embassy_futures::select::select(
-            //     InnerLis3dh::new_i2c_with_config(i2c, addr, config),
-            //     Timer::after(Duration::from_secs(1)),
-            // ));
-            // let driver = match init {
-            //     Either::First(driver) => driver.unwrap(),
-            //     Either::Second(_) => panic!("timeout when initializing Lis3dh"), // FIXME
-            // };
-
             let driver = InnerLis3dh::new_i2c_with_config(i2c, config.address, lis3dh_config)
                 .await
                 .unwrap();
@@ -149,7 +137,6 @@ impl Lis3dhI2c {
 
             #[expect(clippy::cast_possible_truncation)]
             // FIXME: dumb scaling, take precision into account
-            // FIXME: specify the measurement error
             let x = PhysicalValue::new((data.x * 100.) as i32);
             let y = PhysicalValue::new((data.y * 100.) as i32);
             let z = PhysicalValue::new((data.z * 100.) as i32);
@@ -181,11 +168,7 @@ impl Lis3dhI2c {
         &self,
         pin: gpio::IntEnabledInput,
         device_interrupt: DeviceInterrupt,
-        event: InterruptEvent,
     ) -> Result<(), InterruptError> {
-        // FIXME: check first that the interrupt can indeed handle that kind of event
-        // (make a const function for that)
-
         let index = match device_interrupt {
             DeviceInterrupt::Int1 => 0,
             DeviceInterrupt::Int2 => 1,
@@ -302,18 +285,14 @@ impl Lis3dhI2c {
             }
         }
 
-        // FIXME: select the appropriate pin, return an error if no appropriate pin
         // Wait for the external interrupt to be triggered by the sensor device
         // FIXME: is it ok to keep the mutex locked for this long?
-        self.interrupts
-            .lock()
-            .await
-            .get_mut(0)
-            .unwrap()
-            .as_mut()
-            .unwrap() // FIXME: check that a pin has been provided
-            .wait_for_high()
-            .await;
+        {
+            let mut interrupts = self.interrupts.lock().await;
+            // FIXME: select the appropriate pin, return an error if no appropriate pin
+            let interrupt_pin = interrupts.get_mut(0).unwrap().as_mut().unwrap();
+            interrupt_pin.wait_for_high().await;
+        }
 
         Ok(())
     }
