@@ -11,8 +11,8 @@
 //!   each value from that tuple corresponds to, using a [`Label`].
 //!   For instance, this allows to disambiguate the values provided by a temperature & humidity
 //!   sensor.
-//!   The [`ReadingAxes`] are fixed for a given sensor driver, allowing to display information
-//!   about the physical values a sensor can measure without triggering a measurement.
+//!   Each [`ReadingAxis`] also provides information about the measurement accuracy, through
+//!   [`ReadingAxis::accuracy_fn()`].
 //!
 //! To avoid float handling, values returned by [`Sensor::wait_for_reading()`] are integers, and a
 //! fixed scaling value is provided in [`ReadingAxis`], for each [`PhysicalValue`] returned.
@@ -39,6 +39,7 @@ pub use crate::{
 };
 
 /// Represents a sensor device; implemented on sensor drivers.
+///
 /// See [the module level documentation](crate::sensor) for more.
 pub trait Sensor: Send + Sync {
     /// Triggers a measurement.
@@ -145,8 +146,12 @@ impl SensorSignaling {
         self.trigger.wait().await;
     }
 
-    pub async fn signal_reading(&self, reading: Result<PhysicalValues, ReadingError>) {
-        self.reading_channel.send(reading).await;
+    pub async fn signal_reading(&self, reading: PhysicalValues) {
+        self.reading_channel.send(Ok(reading)).await;
+    }
+
+    pub async fn signal_reading_err(&self, reading_err: ReadingError) {
+        self.reading_channel.send(Err(reading_err)).await;
     }
 
     pub fn wait_for_reading(&'static self) -> ReadingWaiter {
@@ -283,7 +288,7 @@ impl StateAtomic {
 
     /// Sets the current state.
     pub fn set(&self, state: State) {
-        self.state.store(state as u8, Ordering::Release)
+        self.state.store(state as u8, Ordering::Release);
     }
 
     /// Sets the current mode.
@@ -312,21 +317,25 @@ impl StateAtomic {
 riot_rs_macros::define_count_adjusted_enums!();
 
 /// Provides metadata about a [`PhysicalValue`].
-#[derive(Debug, Copy, Clone, serde::Serialize)]
+#[derive(Debug, Copy, Clone)]
 pub struct ReadingAxis {
     label: Label,
     scaling: i8,
     unit: PhysicalUnit,
+    accuracy: AccuracyFn,
 }
 
 impl ReadingAxis {
     /// Creates a new [`ReadingAxis`].
+    ///
+    /// Intended for sensor driver implementors only.
     #[must_use]
-    pub fn new(label: Label, scaling: i8, unit: PhysicalUnit) -> Self {
+    pub fn new(label: Label, scaling: i8, unit: PhysicalUnit, accuracy: AccuracyFn) -> Self {
         Self {
             label,
             scaling,
             unit,
+            accuracy,
         }
     }
 
@@ -347,7 +356,24 @@ impl ReadingAxis {
     pub fn unit(&self) -> PhysicalUnit {
         self.unit
     }
+
+    /// Returns a function allowing to obtain the accuracy error of a recently obtained
+    /// [`PhysicalValue`].
+    ///
+    /// # Note
+    ///
+    /// As the accuracy may depend on the sensor driver configuration, that accuracy function
+    /// should only be used for one [`PhysicalValue`] instance, and it is necessary to obtain an
+    /// up-to-date function through an up-to-date [`ReadingAxis`].
+    #[must_use]
+    pub fn accuracy_fn(&self) -> AccuracyFn {
+        self.accuracy
+    }
 }
+
+/// Function allowing to obtain the accuracy error of a [`PhysicalValue`], returned by
+/// [`ReadingAxis::accuracy_fn()`].
+pub type AccuracyFn = fn(PhysicalValue) -> AccuracyError;
 
 /// Represents errors happening when *triggering* a sensor measurement.
 #[derive(Debug)]
@@ -387,6 +413,7 @@ impl core::fmt::Display for ReadingError {
 
 impl core::error::Error for ReadingError {}
 
+/// A specialized [`Result`] type for [`Reading`] operations.
 pub type ReadingResult<R> = Result<R, ReadingError>;
 
 #[cfg(test)]

@@ -28,9 +28,7 @@ pub struct Registry {
 impl Registry {
     // The constructor is private to make the registry a singleton.
     const fn new() -> Self {
-        Self {
-            _private: (),
-        }
+        Self { _private: () }
     }
 
     /// Returns an iterator over registered sensor driver instances.
