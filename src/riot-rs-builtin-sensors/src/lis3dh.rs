@@ -136,7 +136,7 @@ impl Lis3dhI2c {
             // TODO: maybe should check is_data_ready()?
             let Ok(data) = self.accel.lock().await.as_mut().unwrap().accel_norm().await else {
                 self.signaling
-                    .signal_reading(Err(ReadingError::SensorAccess))
+                    .signal_reading_err(ReadingError::SensorAccess)
                     .await;
                 continue;
             };
@@ -144,12 +144,12 @@ impl Lis3dhI2c {
             #[expect(clippy::cast_possible_truncation)]
             // FIXME: dumb scaling, take precision into account
             // FIXME: specify the measurement error
-            let x = PhysicalValue::new((data.x * 100.) as i32, AccuracyError::Unknown);
-            let y = PhysicalValue::new((data.y * 100.) as i32, AccuracyError::Unknown);
-            let z = PhysicalValue::new((data.z * 100.) as i32, AccuracyError::Unknown);
+            let x = PhysicalValue::new((data.x * 100.) as i32);
+            let y = PhysicalValue::new((data.y * 100.) as i32);
+            let z = PhysicalValue::new((data.z * 100.) as i32);
 
             self.signaling
-                .signal_reading(Ok(PhysicalValues::V3([x, y, z])))
+                .signal_reading(PhysicalValues::V3([x, y, z]))
                 .await;
         }
     }
@@ -170,7 +170,7 @@ impl Lis3dhI2c {
             _ => {
                 return Err(InterruptError::UnsupportedDeviceInterrupt {
                     interrupt: device_interrupt,
-                })
+                });
             }
         };
 
@@ -347,10 +347,15 @@ impl Sensor for Lis3dhI2c {
     }
 
     fn reading_axes(&self) -> ReadingAxes {
+        fn accuracy(value: PhysicalValue) -> AccuracyError {
+            // FIXME
+            AccuracyError::Unknown
+        }
+
         ReadingAxes::V3([
-            ReadingAxis::new(Label::X, -2, PhysicalUnit::AccelG),
-            ReadingAxis::new(Label::Y, -2, PhysicalUnit::AccelG),
-            ReadingAxis::new(Label::Z, -2, PhysicalUnit::AccelG),
+            ReadingAxis::new(Label::X, -2, PhysicalUnit::AccelG, accuracy),
+            ReadingAxis::new(Label::Y, -2, PhysicalUnit::AccelG, accuracy),
+            ReadingAxis::new(Label::Z, -2, PhysicalUnit::AccelG, accuracy),
         ])
     }
 

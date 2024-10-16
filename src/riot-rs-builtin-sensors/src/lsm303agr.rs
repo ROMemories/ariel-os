@@ -113,9 +113,9 @@ impl Lsm303agrI2c {
                 Err(_) => unreachable!(), // FIXME: is it?
             };
 
-            let x = PhysicalValue::new(data.x_mg(), AccuracyError::Unknown);
-            let y = PhysicalValue::new(data.y_mg(), AccuracyError::Unknown);
-            let z = PhysicalValue::new(data.z_mg(), AccuracyError::Unknown);
+            let x = PhysicalValue::new(data.x_mg());
+            let y = PhysicalValue::new(data.y_mg());
+            let z = PhysicalValue::new(data.z_mg());
 
             self.signaling
                 .signal_reading(PhysicalValues::V3([x, y, z]))
@@ -164,16 +164,25 @@ impl Sensor for Lsm303agrI2c {
 
     fn categories(&self) -> &'static [Category] {
         // FIXME: add AccelerometerMagnetometer
+        // FIXME: add Temperature (should we have a AccelerometerMagnetometerTemperature category?)
         &[Category::Accelerometer]
     }
 
     fn reading_axes(&self) -> ReadingAxes {
+        fn accuracy(value: PhysicalValue) -> AccuracyError {
+            AccuracyError::Symmetrical {
+                deviation: 40,
+                bias: -30,
+                scaling: -3,
+            }
+        }
+
         // FIXME: add magnetometer readings
         // FIXME: also return the temperature? (needs a new Cargo feature for V7)
         ReadingAxes::V3([
-            ReadingAxis::new(Label::X, -3, PhysicalUnit::AccelG),
-            ReadingAxis::new(Label::Y, -3, PhysicalUnit::AccelG),
-            ReadingAxis::new(Label::Z, -3, PhysicalUnit::AccelG),
+            ReadingAxis::new(Label::X, -3, PhysicalUnit::AccelG, accuracy),
+            ReadingAxis::new(Label::Y, -3, PhysicalUnit::AccelG, accuracy),
+            ReadingAxis::new(Label::Z, -3, PhysicalUnit::AccelG, accuracy),
         ])
     }
 

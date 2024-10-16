@@ -70,10 +70,9 @@ impl<I: InputPin + 'static> GenericPushButton<I> {
             let is_pressed = reading;
 
             self.signaling
-                .signal_reading(Ok(PhysicalValues::V1([PhysicalValue::new(
-                    i32::from(is_pressed),
-                    AccuracyError::None,
-                )])))
+                .signal_reading(PhysicalValues::V1([PhysicalValue::new(i32::from(
+                    is_pressed,
+                ))]))
                 .await;
         }
     }
@@ -117,7 +116,16 @@ impl<I: InputPin + Send + 'static> Sensor for GenericPushButton<I> {
     }
 
     fn reading_axes(&self) -> ReadingAxes {
-        ReadingAxes::V1([ReadingAxis::new(Label::Main, 0, PhysicalUnit::ActiveOne)])
+        fn accuracy(value: PhysicalValue) -> AccuracyError {
+            AccuracyError::None
+        }
+
+        ReadingAxes::V1([ReadingAxis::new(
+            Label::Main,
+            0,
+            PhysicalUnit::ActiveOne,
+            accuracy,
+        )])
     }
 
     fn label(&self) -> Option<&'static str> {
