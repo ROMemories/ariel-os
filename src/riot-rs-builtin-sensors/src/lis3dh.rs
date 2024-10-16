@@ -1,5 +1,8 @@
 use embassy_sync::{
-    blocking_mutex::raw::CriticalSectionRawMutex, channel::Channel, mutex::Mutex, signal::Signal,
+    blocking_mutex::raw::CriticalSectionRawMutex,
+    channel::Channel,
+    mutex::{Mutex, MutexGuard},
+    signal::Signal,
 };
 use embassy_time::{Duration, Timer};
 use lis3dh_async::{Configuration, DataRate, Lis3dh as InnerLis3dh, Lis3dhI2C};
@@ -133,13 +136,16 @@ impl Lis3dhI2c {
         loop {
             self.signaling.wait_for_trigger().await;
 
-            // TODO: maybe should check is_data_ready()?
-            let Ok(data) = self.accel.lock().await.as_mut().unwrap().accel_norm().await else {
+            let mut accel = self.wait_for_data_available().await;
+
+            let Ok(data) = accel.as_mut().unwrap().accel_norm().await else {
                 self.signaling
                     .signal_reading_err(ReadingError::SensorAccess)
                     .await;
                 continue;
             };
+
+            drop(accel);
 
             #[expect(clippy::cast_possible_truncation)]
             // FIXME: dumb scaling, take precision into account
@@ -151,6 +157,22 @@ impl Lis3dhI2c {
             self.signaling
                 .signal_reading(PhysicalValues::V3([x, y, z]))
                 .await;
+        }
+    }
+
+    async fn wait_for_data_available(
+        &self,
+    ) -> MutexGuard<CriticalSectionRawMutex, Option<InnerLis3dh<Lis3dhI2C<I2cDevice>>>> {
+        let mut accel = self.accel.lock().await;
+
+        // FIXME: allow to use an interrupt instead
+
+        loop {
+            if accel.as_mut().unwrap().is_data_ready().await.unwrap() {
+                return accel;
+            }
+            // FIXME: adjust this delay
+            Timer::after(Duration::from_millis(2)).await;
         }
     }
 
