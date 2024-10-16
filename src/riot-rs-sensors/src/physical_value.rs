@@ -81,6 +81,49 @@ pub enum AccuracyError {
     },
 }
 
+impl AccuracyError {
+    pub fn plus(&self, value: PhysicalValue) -> Option<f32> {
+        if let Self::Symmetrical {
+            bias,
+            deviation,
+            scaling,
+        } = *self
+        {
+            let plus = (bias + deviation) as f32 / 10i32.pow((-scaling) as u32) as f32;
+            Some(plus)
+        } else {
+            None
+        }
+    }
+
+    pub fn minus(&self, value: PhysicalValue) -> Option<f32> {
+        if let Self::Symmetrical {
+            bias,
+            deviation,
+            scaling,
+        } = *self
+        {
+            let minus = (bias - deviation) as f32 / 10i32.pow((-scaling) as u32) as f32;
+            Some(minus)
+        } else {
+            None
+        }
+    }
+
+    pub fn plus_minus(&self, value: PhysicalValue) -> Option<f32> {
+        if let Self::Symmetrical {
+            bias,
+            deviation,
+            scaling,
+        } = *self
+        {
+            Some((bias.abs() + deviation.abs()) as f32 / 10i32.pow((-scaling) as u32) as f32)
+        } else {
+            None
+        }
+    }
+}
+
 /// Implemented on [`PhysicalValues`](crate::sensor::PhysicalValues), returned by
 /// [`Sensor::wait_for_reading()`](crate::Sensor::wait_for_reading).
 pub trait Reading: core::fmt::Debug {
