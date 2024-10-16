@@ -8,11 +8,19 @@ mod buses;
 mod pins;
 mod sensors;
 
+use embassy_sync::{
+    blocking_mutex::raw::{CriticalSectionRawMutex, NoopRawMutex},
+    channel::Channel,
+    signal::Signal,
+};
 use embassy_time::{Duration, Timer};
 use riot_rs::{
     debug::println,
     gpio,
-    sensors::{Reading, REGISTRY},
+    sensors::{
+        sensor::{AccuracyError, PhysicalValues, ReadingResult},
+        Reading, REGISTRY,
+    },
 };
 
 #[riot_rs::task(autostart)]
@@ -35,16 +43,26 @@ async fn main() {
             match sensor.wait_for_reading().await {
                 Ok(values) => {
                     for (value, reading_axis) in values.values().zip(sensor.reading_axes().iter()) {
-                        let value = value.value() as f32
-                            / 10i32.pow((-reading_axis.scaling()) as u32) as f32;
-                        println!(
-                            "{} ({}): {} {} ({})",
-                            sensor.display_name().unwrap_or("unknown"),
-                            sensor.label().unwrap_or("no label"),
-                            value,
-                            reading_axis.unit(),
-                            reading_axis.label(),
-                        );
+                        if let accuracy @ AccuracyError::Symmetrical { .. } =
+                            reading_axis.accuracy_fn()(value)
+                        {
+                            let plus_minus = accuracy.plus_minus(value);
+                            let value = value.value() as f32
+                                / 10i32.pow((-reading_axis.scaling()) as u32) as f32;
+                            println!(
+                                "{} ({}): {} ±{} {} ({})",
+                                sensor.display_name().unwrap_or("unknown"),
+                                sensor.label().unwrap_or("no label"),
+                                value,
+                                if let Some(plus_minus) = plus_minus {
+                                    plus_minus
+                                } else {
+                                    f32::NAN
+                                },
+                                reading_axis.unit(),
+                                reading_axis.label(),
+                            );
+                        }
                     }
                 }
                 Err(err) => {

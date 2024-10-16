@@ -9,3 +9,9 @@ riot_rs::define_peripherals!(BusPeripherals {
     i2c0_sda: P0_03,
     i2c0_scl: P0_04,
 });
+
+#[cfg(context = "microbit-v2")]
+riot_rs::define_peripherals!(BusPeripherals {
+    i2c0_sda: P0_16,
+    i2c0_scl: P0_08,
+});
