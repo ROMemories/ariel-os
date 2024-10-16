@@ -4,11 +4,12 @@ use embassy_time::Duration;
 // TODO: add other variants if needed
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 #[non_exhaustive]
+#[repr(u8)]
 pub enum DeviceInterrupt {
-    Int0,
-    Int1,
-    Int2,
-    Int3,
+    Int0 = 0,
+    Int1 = 1,
+    Int2 = 2,
+    Int3 = 3,
 }
 
 impl core::fmt::Display for DeviceInterrupt {
@@ -31,7 +32,7 @@ pub enum InterruptEventKind {
 impl core::fmt::Display for InterruptEventKind {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
-            Self::Accelerometer(event) => write!(f, "{}", event),
+            Self::Accelerometer(event) => write!(f, "{event}"),
         }
     }
 }
@@ -82,13 +83,11 @@ impl core::fmt::Display for InterruptError {
         match self {
             Self::UnsupportedDeviceInterrupt { interrupt } => write!(
                 f,
-                "device interrupt `{}` is not supported for sensor",
-                interrupt,
+                "device interrupt `{interrupt}` is not supported for sensor",
             ),
             Self::UnsupportedInterruptEventKind { event_kind } => write!(
                 f,
-                "interrupt event `{}` is not supported for sensor",
-                event_kind,
+                "interrupt event `{event_kind}` is not supported for sensor",
             ),
         }
     }
