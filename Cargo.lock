@@ -3671,6 +3671,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "riot-rs-builtin-sensors"
+version = "0.1.0"
+dependencies = [
+ "embassy-embedded-hal",
+ "embassy-executor",
+ "embassy-futures",
+ "embassy-sync 0.6.0",
+ "embassy-time",
+ "embedded-hal 1.0.0",
+ "embedded-hal-async",
+ "portable-atomic",
+ "riot-rs-debug",
+ "riot-rs-embassy",
+ "riot-rs-sensors",
+]
+
+[[package]]
 name = "riot-rs-chips"
 version = "0.1.0"
 dependencies = [
@@ -3851,6 +3868,7 @@ dependencies = [
  "embassy-sync 0.6.0",
  "linkme",
  "pin-project",
+ "portable-atomic",
  "riot-rs-macros",
 ]
 
@@ -4069,6 +4087,17 @@ name = "semver-parser"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "388a1df253eca08550bef6c72392cfe7c30914bf41df5269b68cbd6ff8f570a3"
+
+[[package]]
+name = "sensors-debug"
+version = "0.1.0"
+dependencies = [
+ "embassy-executor",
+ "embassy-time",
+ "riot-rs",
+ "riot-rs-boards",
+ "riot-rs-builtin-sensors",
+]
 
 [[package]]
 name = "serde"

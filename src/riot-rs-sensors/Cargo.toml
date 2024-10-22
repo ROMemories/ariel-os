@@ -14,6 +14,7 @@ defmt = { workspace = true, optional = true }
 embassy-sync = { workspace = true }
 linkme = { workspace = true }
 pin-project = { workspace = true }
+portable-atomic = { workspace = true }
 riot-rs-macros = { workspace = true }
 
 [features]

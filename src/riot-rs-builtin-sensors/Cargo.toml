@@ -1,0 +1,25 @@
+[package]
+name = "riot-rs-builtin-sensors"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+repository.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+embassy-embedded-hal = { workspace = true }
+embassy-executor = { workspace = true }
+embassy-sync = { workspace = true }
+embassy-futures = { workspace = true }
+embassy-time = { workspace = true }
+embedded-hal = { workspace = true }
+embedded-hal-async = { workspace = true }
+portable-atomic = { workspace = true }
+riot-rs-embassy = { workspace = true, features = ["external-interrupts"] } # TODO: is this ok?
+riot-rs-debug = { workspace = true }
+riot-rs-sensors = { workspace = true, features = [
+  # "max-reading-value-min-count-3",
+] }

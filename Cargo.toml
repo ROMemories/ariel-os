@@ -10,6 +10,7 @@ members = [
   "src/riot-rs-boards",
   "src/riot-rs-boards/nrf52",
   "src/riot-rs-boards/nrf52840dk",
+  "src/riot-rs-builtin-sensors",
   "src/riot-rs-chips",
   "src/riot-rs-debug",
   "src/riot-rs-embassy-common",

@@ -1,0 +1,18 @@
+apps:
+  - name: sensors-debug
+    env:
+      global:
+        CARGO_ENV:
+          - CONFIG_ISR_STACKSIZE=65536
+    selects:
+      - ?release
+      - ?button-readings2
+
+modules:
+  - name: button-readings2
+    context:
+      - nrf52840dk
+    env:
+      global:
+        FEATURES:
+          - button-readings

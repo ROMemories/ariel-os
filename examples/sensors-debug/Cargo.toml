@@ -1,0 +1,23 @@
+[package]
+name = "sensors-debug"
+version = "0.1.0"
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+publish = false
+
+[lints]
+workspace = true
+
+[dependencies]
+embassy-executor = { workspace = true, default-features = false }
+embassy-time = { workspace = true, default-features = false }
+riot-rs = { path = "../../src/riot-rs", features = [
+  "sensors",
+  "time",
+] }
+riot-rs-boards = { path = "../../src/riot-rs-boards" }
+riot-rs-builtin-sensors = { path = "../../src/riot-rs-builtin-sensors" }
+
+[features]
+button-readings = []

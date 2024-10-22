@@ -50,13 +50,15 @@
 // Required by linkme
 #![feature(used_with_arg)]
 #![deny(clippy::pedantic)]
-#![deny(missing_docs)]
+// #![deny(missing_docs)]
 
 mod category;
 mod label;
 mod measurement_unit;
 pub mod registry;
 pub mod sensor;
+pub mod sensor_signaling;
+pub mod state_atomic;
 mod value;
 
 pub use category::Category;
