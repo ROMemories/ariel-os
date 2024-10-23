@@ -12,6 +12,7 @@ modules:
   - name: button-readings2
     context:
       - nrf52840dk
+      - st-nucleo-h755zi-q
     env:
       global:
         FEATURES:
