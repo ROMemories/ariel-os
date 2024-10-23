@@ -477,3 +477,20 @@ macro_rules! impl_embedded_hal_output_traits {
 }
 
 impl_embedded_hal_output_traits!(Output, ArchOutput);
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn check_gpio_type_sizes() {
+        use riot_rs_embassy_common::maybe_inverted_pin::MaybeInvertedPin;
+
+        // Assert that the GPIO types are zero-cost memory-wise.
+        assert_eq!(size_of::<Input>(), size_of::<()>());
+        assert_eq!(size_of::<IntEnabledInput>(), size_of::<()>());
+        assert_eq!(size_of::<Output>(), size_of::<()>());
+
+        assert_eq!(size_of::<MaybeInvertedPin<Input>>(), size_of::<u8>());
+    }
+}

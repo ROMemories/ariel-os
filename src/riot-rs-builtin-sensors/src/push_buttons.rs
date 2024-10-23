@@ -1,8 +1,7 @@
 use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, mutex::Mutex};
 use embedded_hal::digital::InputPin;
-use portable_atomic::{AtomicBool, Ordering};
 use riot_rs_embassy::Spawner;
-
+use riot_rs_embassy_common::maybe_inverted_pin::MaybeInvertedPin;
 use riot_rs_sensors::{
     sensor::{
         Accuracy, Mode, ReadingAxes, ReadingAxis, ReadingError, ReadingWaiter, SetModeError, State,
@@ -29,13 +28,10 @@ pub type PushButton = GenericPushButton<riot_rs_embassy::gpio::Input>;
 
 // TODO: how to name this?
 // TODO: is it useful to expose this or should we just make it non-generic?
-// TODO: maybe introduce a MaybeInvertedPin decorator instead (similar to InvertedPin but
-// configurable at construction)
 pub struct GenericPushButton<I: InputPin> {
     state: StateAtomic,
     label: Option<&'static str>,
-    button: Mutex<CriticalSectionRawMutex, Option<I>>, // TODO: maybe use MaybeUninit
-    active_low: AtomicBool,
+    button: Mutex<CriticalSectionRawMutex, Option<MaybeInvertedPin<I>>>, // TODO: maybe use MaybeUninit
     signaling: SensorSignaling,
 }
 
@@ -46,7 +42,6 @@ impl<I: InputPin + 'static> GenericPushButton<I> {
             state: StateAtomic::new(State::Uninitialized),
             label,
             button: Mutex::new(None),
-            active_low: AtomicBool::new(true),
             signaling: SensorSignaling::new(),
         }
     }
@@ -59,10 +54,8 @@ impl<I: InputPin + 'static> GenericPushButton<I> {
                 // This mutex cannot be locked at this point as it is private and can only be
                 // locked when the sensor has been initialized successfully.
                 let mut button = self.button.try_lock().unwrap();
-                *button = Some(gpio);
+                *button = Some(MaybeInvertedPin::new(gpio, !config.active_low));
             }
-
-            self.active_low.store(config.active_low, Ordering::Release);
 
             self.state.set(State::Enabled);
         }
@@ -72,10 +65,7 @@ impl<I: InputPin + 'static> GenericPushButton<I> {
         loop {
             self.signaling.wait_for_trigger().await;
 
-            let is_low = self.button.lock().await.as_mut().unwrap().is_low().unwrap();
-
-            // TODO(ordering): maybe the ordering could simply be Relaxed?
-            let is_pressed = !(self.active_low.load(Ordering::Acquire) ^ is_low);
+            let is_pressed = self.button.lock().await.as_mut().unwrap().is_low().unwrap();
 
             self.signaling
                 .signal_reading(Values::V1([Value::new(

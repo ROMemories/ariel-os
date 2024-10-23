@@ -3684,6 +3684,7 @@ dependencies = [
  "portable-atomic",
  "riot-rs-debug",
  "riot-rs-embassy",
+ "riot-rs-embassy-common",
  "riot-rs-sensors",
 ]
 

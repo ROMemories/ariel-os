@@ -20,6 +20,7 @@ embedded-hal-async = { workspace = true }
 portable-atomic = { workspace = true }
 riot-rs-debug = { workspace = true }
 riot-rs-embassy = { workspace = true, features = ["external-interrupts"] } # TODO: is this ok?
+riot-rs-embassy-common = { workspace = true, features = ["external-interrupts"] } # TODO: is this ok?
 riot-rs-sensors = { workspace = true, features = [
   # "max-reading-value-min-count-3",
 ] }
