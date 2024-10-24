@@ -279,6 +279,38 @@ pub mod input {
     }
 }
 
+/// Possibly inverted input pin.
+///
+/// Whether the pin is inverted is configurable at instantiation.
+// TODO: try to make this more memory-efficient, and evaluate runtime overhead.
+pub struct MaybeInvertedInput {
+    pin: Input,
+    inverted: bool,
+}
+
+impl MaybeInvertedInput {
+    /// Returns a new possibly inverted pin.
+    /// If `inverted` is `false`, the pin will not be inverted.
+    pub fn new(pin: Input, inverted: bool) -> Self {
+        Self { pin, inverted }
+    }
+
+    /// Returns whether the input level is high, after possible inversion.
+    pub fn is_high(&self) -> bool {
+        !(self.inverted ^ self.pin.is_low())
+    }
+
+    /// Returns whether the input level is low, after possible inversion.
+    pub fn is_low(&self) -> bool {
+        !(self.inverted ^ self.pin.is_high())
+    }
+
+    /// Destroys the instance and returns the wrapped pin.
+    pub fn destroy(self) -> Input {
+        self.pin
+    }
+}
+
 /// A GPIO output.
 pub struct Output {
     output: ArchOutput<'static>, // FIXME: is this ok to require a 'static pin?
@@ -484,13 +516,11 @@ mod tests {
 
     #[test]
     fn check_gpio_type_sizes() {
-        use riot_rs_embassy_common::maybe_inverted_pin::MaybeInvertedPin;
-
         // Assert that the GPIO types are zero-cost memory-wise.
         assert_eq!(size_of::<Input>(), size_of::<()>());
         assert_eq!(size_of::<IntEnabledInput>(), size_of::<()>());
         assert_eq!(size_of::<Output>(), size_of::<()>());
 
-        assert_eq!(size_of::<MaybeInvertedPin<Input>>(), size_of::<u8>());
+        assert_eq!(size_of::<MaybeInvertedInput>(), size_of::<u8>());
     }
 }

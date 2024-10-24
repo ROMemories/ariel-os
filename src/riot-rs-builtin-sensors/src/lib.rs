@@ -5,4 +5,4 @@
 // #![deny(missing_docs)]
 #![deny(clippy::pedantic)]
 
-pub mod push_buttons;
+pub mod push_button;

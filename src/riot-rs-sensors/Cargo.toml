@@ -12,6 +12,7 @@ workspace = true
 [dependencies]
 defmt = { workspace = true, optional = true }
 embassy-sync = { workspace = true }
+embassy-time = { workspace = true }
 linkme = { workspace = true }
 pin-project = { workspace = true }
 portable-atomic = { workspace = true }

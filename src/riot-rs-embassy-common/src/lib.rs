@@ -13,8 +13,6 @@ pub mod executor_swi;
 #[cfg(feature = "i2c")]
 pub mod i2c;
 
-pub mod maybe_inverted_pin;
-
 pub mod reexports {
     //! Crate re-exports.
 

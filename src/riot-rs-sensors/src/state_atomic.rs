@@ -59,3 +59,14 @@ impl StateAtomic {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn check_type_sizes() {
+        assert_eq!(size_of::<StateAtomic>(), size_of::<u8>());
+        assert_eq!(align_of::<StateAtomic>(), 1);
+    }
+}

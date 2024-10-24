@@ -6,7 +6,7 @@ pub use sensors::*;
 
 /// Type alias of this sensor instance
 #[cfg(feature = "button-readings")]
-pub type PushButton_BUTTON_1 = riot_rs_builtin_sensors::push_buttons::PushButton;
+pub type PushButton_BUTTON_1 = riot_rs_builtin_sensors::push_button::PushButton;
 
 // Instantiate the sensor driver
 #[cfg(feature = "button-readings")]
@@ -32,7 +32,7 @@ mod sensors {
     #[cfg(feature = "button-readings")]
     #[riot_rs::spawner(autostart, peripherals)]
     fn BUTTON_1_init(spawner: riot_rs::Spawner, peripherals: crate::pins::BUTTON_1Peripherals) {
-        let mut config = riot_rs_builtin_sensors::push_buttons::Config::default();
+        let mut config = riot_rs_builtin_sensors::push_button::Config::default();
 
         let pull = riot_rs::gpio::Pull::Up;
         let input = riot_rs::gpio::Input::new(peripherals.p, pull);
@@ -49,7 +49,7 @@ mod sensors {
     #[cfg(feature = "button-readings")]
     #[riot_rs::spawner(autostart, peripherals)]
     fn BUTTON_1_init(spawner: riot_rs::Spawner, peripherals: crate::pins::BUTTON_1Peripherals) {
-        let mut config = riot_rs_builtin_sensors::push_buttons::Config::default();
+        let mut config = riot_rs_builtin_sensors::push_button::Config::default();
         config.active_low = false;
 
         let pull = riot_rs::gpio::Pull::Down;

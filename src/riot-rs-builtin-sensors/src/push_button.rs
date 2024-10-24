@@ -1,7 +1,8 @@
-use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, mutex::Mutex};
-use embedded_hal::digital::InputPin;
-use riot_rs_embassy::Spawner;
-use riot_rs_embassy_common::maybe_inverted_pin::MaybeInvertedPin;
+use embassy_sync::once_lock::OnceLock;
+use riot_rs_embassy::{
+    gpio::{Input, MaybeInvertedInput},
+    Spawner,
+};
 use riot_rs_sensors::{
     sensor::{
         Accuracy, Mode, ReadingAxes, ReadingAxis, ReadingError, ReadingWaiter, SetModeError, State,
@@ -15,6 +16,7 @@ use riot_rs_sensors::{
 #[derive(Debug)]
 #[non_exhaustive]
 pub struct Config {
+    /// Whether the push button pulls the input pin low when pressed.
     pub active_low: bool,
 }
 
@@ -24,38 +26,29 @@ impl Default for Config {
     }
 }
 
-pub type PushButton = GenericPushButton<riot_rs_embassy::gpio::Input>;
-
-// TODO: how to name this?
-// TODO: is it useful to expose this or should we just make it non-generic?
-pub struct GenericPushButton<I: InputPin> {
+pub struct PushButton {
     state: StateAtomic,
     label: Option<&'static str>,
-    button: Mutex<CriticalSectionRawMutex, Option<MaybeInvertedPin<I>>>, // TODO: maybe use MaybeUninit
+    button: OnceLock<MaybeInvertedInput>,
     signaling: SensorSignaling,
 }
 
-impl<I: InputPin + 'static> GenericPushButton<I> {
+impl PushButton {
     #[allow(clippy::new_without_default)]
     pub const fn new(label: Option<&'static str>) -> Self {
         Self {
             state: StateAtomic::new(State::Uninitialized),
             label,
-            button: Mutex::new(None),
+            button: OnceLock::new(),
             signaling: SensorSignaling::new(),
         }
     }
 
-    // TODO: add Spawner for consistency
-    pub fn init(&'static self, _spawner: Spawner, gpio: I, config: Config) {
+    pub fn init(&'static self, _spawner: Spawner, pin: Input, config: Config) {
         if self.state.get() == State::Uninitialized {
-            {
-                // We use `try_lock()` instead of `lock()` to not make this function async.
-                // This mutex cannot be locked at this point as it is private and can only be
-                // locked when the sensor has been initialized successfully.
-                let mut button = self.button.try_lock().unwrap();
-                *button = Some(MaybeInvertedPin::new(gpio, !config.active_low));
-            }
+            let _ = self
+                .button
+                .init(MaybeInvertedInput::new(pin, !config.active_low));
 
             self.state.set(State::Enabled);
         }
@@ -65,7 +58,7 @@ impl<I: InputPin + 'static> GenericPushButton<I> {
         loop {
             self.signaling.wait_for_trigger().await;
 
-            let is_pressed = self.button.lock().await.as_mut().unwrap().is_low().unwrap();
+            let is_pressed = self.button.get().await.is_low();
 
             self.signaling
                 .signal_reading(Values::V1([Value::new(
@@ -77,7 +70,7 @@ impl<I: InputPin + 'static> GenericPushButton<I> {
     }
 }
 
-impl<I: InputPin + Send + 'static> Sensor for GenericPushButton<I> {
+impl Sensor for PushButton {
     fn trigger_measurement(&self) -> Result<(), TriggerMeasurementError> {
         if self.state.get() != State::Enabled {
             return Err(TriggerMeasurementError::NonEnabled);
@@ -132,5 +125,16 @@ impl<I: InputPin + Send + 'static> Sensor for GenericPushButton<I> {
 
     fn version(&self) -> u8 {
         0
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn check_type_sizes() {
+        assert_eq!(size_of::<Values>(), 2 * size_of::<u32>());
+        assert_eq!(size_of::<PushButton>(), 26 * size_of::<u32>());
     }
 }

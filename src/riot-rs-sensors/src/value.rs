@@ -123,8 +123,8 @@ mod tests {
 
     #[test]
     fn assert_type_sizes() {
-        assert!(size_of::<Accuracy>() <= size_of::<u32>());
+        assert_eq!(size_of::<Accuracy>(), size_of::<u32>());
         // Make sure the type is small enough.
-        assert!(size_of::<Value>() <= 2 * size_of::<u32>());
+        assert_eq!(size_of::<Value>(), 2 * size_of::<u32>());
     }
 }

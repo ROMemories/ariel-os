@@ -3867,6 +3867,7 @@ version = "0.1.0"
 dependencies = [
  "defmt",
  "embassy-sync 0.6.0",
+ "embassy-time",
  "linkme",
  "pin-project",
  "portable-atomic",
