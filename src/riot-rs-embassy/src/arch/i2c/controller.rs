@@ -17,6 +17,37 @@ pub enum I2c {
     Hidden,
 }
 
+impl embedded_hal_async::i2c::ErrorType for I2c {
+    type Error = riot_rs_embassy_common::i2c::controller::Error;
+}
+
+impl riot_rs_embassy_common::reexports::embedded_hal_async::i2c::I2c for I2c {
+    async fn read(&mut self, address: u8, read: &mut [u8]) -> Result<(), Self::Error> {
+        unimplemented!();
+    }
+
+    async fn write(&mut self, address: u8, write: &[u8]) -> Result<(), Self::Error> {
+        unimplemented!();
+    }
+
+    async fn write_read(
+        &mut self,
+        address: u8,
+        write: &[u8],
+        read: &mut [u8],
+    ) -> Result<(), Self::Error> {
+        unimplemented!();
+    }
+
+    async fn transaction(
+        &mut self,
+        address: u8,
+        operations: &mut [riot_rs_embassy_common::i2c::controller::Operation<'_>],
+    ) -> Result<(), Self::Error> {
+        unimplemented!();
+    }
+}
+
 /// MCU-specific I2C bus frequency.
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum Frequency {
