@@ -19,8 +19,11 @@ embedded-hal = { workspace = true }
 embedded-hal-async = { workspace = true }
 portable-atomic = { workspace = true }
 riot-rs-debug = { workspace = true }
-riot-rs-embassy = { workspace = true, features = ["external-interrupts"] } # TODO: is this ok?
+riot-rs-embassy = { workspace = true, features = ["external-interrupts", "i2c"] } # TODO: is this ok?
 riot-rs-embassy-common = { workspace = true, features = ["external-interrupts"] } # TODO: is this ok?
 riot-rs-sensors = { workspace = true, features = [
-  # "max-reading-value-min-count-3",
+  "max-reading-value-min-count-3",
 ] }
+
+# Sensor drivers
+lsm303agr = { version = "1.1.0", features = ["async"] }

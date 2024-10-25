@@ -134,7 +134,7 @@ mod tests {
 
     #[test]
     fn check_type_sizes() {
-        assert_eq!(size_of::<Values>(), 2 * size_of::<u32>());
-        assert_eq!(size_of::<PushButton>(), 26 * size_of::<u32>());
+        assert_eq!(size_of::<Values>(), 6 * size_of::<u32>());
+        assert_eq!(size_of::<PushButton>(), 30 * size_of::<u32>());
     }
 }

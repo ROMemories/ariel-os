@@ -95,13 +95,15 @@ mod tests {
 
     #[test]
     fn check_type_sizes() {
-        assert_eq!(size_of::<Values>(), 2 * size_of::<u32>());
+        let values_size = size_of::<Values>();
+
+        assert_eq!(values_size, 6 * size_of::<u32>());
         assert_eq!(size_of::<Waiter>(), size_of::<u8>());
         assert_eq!(align_of::<Waiter>(), 1);
         assert_eq!(
             size_of::<Channel<CriticalSectionRawMutex, ReadingResult<Values>, 1>>(),
-            18 * size_of::<u32>()
+            values_size + 16 * size_of::<u32>()
         );
-        assert_eq!(size_of::<SensorSignaling>(), 20 * size_of::<u32>());
+        assert_eq!(size_of::<SensorSignaling>(), values_size + 18 * size_of::<u32>());
     }
 }

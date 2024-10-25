@@ -5,4 +5,5 @@
 // #![deny(missing_docs)]
 #![deny(clippy::pedantic)]
 
+pub mod lsm303agr;
 pub mod push_button;

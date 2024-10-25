@@ -11,7 +11,9 @@ workspace = true
 
 [dependencies]
 embassy-executor = { workspace = true, default-features = false }
+embassy-sync = { workspace = true }
 embassy-time = { workspace = true, default-features = false }
+once_cell = { workspace = true }
 riot-rs = { path = "../../src/riot-rs", features = [
   "sensors",
   "time",

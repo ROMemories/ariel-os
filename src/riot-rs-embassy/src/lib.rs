@@ -53,6 +53,7 @@ pub mod api {
     pub use crate::usb;
     pub use crate::{
         arch, define_peripherals, delegate, gpio, group_peripherals, Spawner, EMBASSY_TASKS,
+        INIT_TASKS,
     };
     #[cfg(feature = "net")]
     pub use crate::{network, NetworkStack};
@@ -93,7 +94,11 @@ pub mod sendcell;
 #[cfg(feature = "executor-thread")]
 pub mod thread_executor;
 
+pub type InitTask = fn(&mut arch::OptionalPeripherals);
 pub type Task = fn(Spawner, &mut arch::OptionalPeripherals);
+
+#[distributed_slice]
+pub static INIT_TASKS: [InitTask] = [..];
 
 #[distributed_slice]
 pub static EMBASSY_TASKS: [Task] = [..];
@@ -188,6 +193,10 @@ async fn init_task(mut peripherals: arch::OptionalPeripherals) {
     arch::usb::init();
 
     let spawner = Spawner::for_current_executor().await;
+
+    for init_task_fn in INIT_TASKS {
+        init_task_fn(&mut peripherals);
+    }
 
     for task in EMBASSY_TASKS {
         task(spawner, &mut peripherals);
