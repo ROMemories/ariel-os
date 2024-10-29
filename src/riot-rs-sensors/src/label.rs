@@ -18,8 +18,14 @@
 pub enum Label {
     /// Used for sensor drivers returning a single [`Value`](crate::sensor::Value).
     Main,
+    AccelX,
+    AccelY,
+    AccelZ,
     /// Humidity.
     Humidity,
+    MagX,
+    MagY,
+    MagZ,
     /// Temperature.
     Temperature,
     /// X axis.
@@ -33,8 +39,14 @@ pub enum Label {
 impl core::fmt::Display for Label {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
+            Self::AccelX => write!(f, "X"),
+            Self::AccelY => write!(f, "Y"),
+            Self::AccelZ => write!(f, "Z"),
             Self::Main => write!(f, ""),
             Self::Humidity => write!(f, "Humidity"),
+            Self::MagX => write!(f, "X"),
+            Self::MagY => write!(f, "Y"),
+            Self::MagZ => write!(f, "Z"),
             Self::Temperature => write!(f, "Temperature"),
             Self::X => write!(f, "X"),
             Self::Y => write!(f, "Y"),

@@ -2,9 +2,11 @@ use embassy_sync::{
     blocking_mutex::raw::CriticalSectionRawMutex, channel::Channel, mutex::Mutex,
     once_lock::OnceLock, signal::Signal,
 };
+use embassy_time::{Duration, Timer};
 use embedded_hal_async::delay::DelayNs;
 use lsm303agr::{
-    interface::I2cInterface, mode::MagOneShot, AccelMode, AccelOutputDataRate, Lsm303agr,
+    interface::I2cInterface, mode::MagContinuous, AccelMode, AccelOutputDataRate, Lsm303agr,
+    MagMode, MagOutputDataRate,
 };
 use riot_rs_embassy::{arch, gpio, i2c::controller::I2cDevice, Spawner};
 use riot_rs_sensors::{
@@ -14,10 +16,7 @@ use riot_rs_sensors::{
     },
     sensor_signaling::SensorSignaling,
     state_atomic::StateAtomic,
-    Category,
-    Label,
-    MeasurementUnit,
-    Sensor,
+    Category, Label, MeasurementUnit, Sensor,
 };
 
 #[derive(Debug)]
@@ -39,7 +38,7 @@ pub struct Lsm303agrI2c {
     label: Option<&'static str>,
     // FIXME: find a way to change the mag mode
     sensor:
-        OnceLock<Mutex<CriticalSectionRawMutex, Lsm303agr<I2cInterface<I2cDevice>, MagOneShot>>>,
+        OnceLock<Mutex<CriticalSectionRawMutex, Lsm303agr<I2cInterface<I2cDevice>, MagContinuous>>>,
     signaling: SensorSignaling,
 }
 
@@ -69,16 +68,30 @@ impl Lsm303agrI2c {
                 return;
             }
 
+            let mut accel_turn_on_delay = embassy_time::Delay;
             // FIXME: configuration
-            let mut turn_on_delay = embassy_time::Delay;
             driver
                 .set_accel_mode_and_odr(
-                    &mut turn_on_delay,
+                    &mut accel_turn_on_delay,
                     AccelMode::Normal,
                     AccelOutputDataRate::Hz10,
                 )
                 .await
                 .unwrap();
+            let mut mag_turn_on_delay = embassy_time::Delay;
+            // FIXME: configuration
+            driver
+                .set_mag_mode_and_odr(
+                    &mut mag_turn_on_delay,
+                    MagMode::HighResolution,
+                    MagOutputDataRate::Hz10,
+                )
+                .await
+                .unwrap();
+            let Ok(driver) = driver.into_mag_continuous().await else {
+                // FIXME
+                panic!();
+            };
 
             let _ = self.sensor.init(Mutex::new(driver));
 
@@ -90,27 +103,45 @@ impl Lsm303agrI2c {
         loop {
             self.signaling.wait_for_trigger().await;
 
-            // FIXME: wait for data to be ready using `accel_status()`
+            let (accel_data, mag_data) = {
+                let mut sensor = self.sensor.get().await.lock().await;
 
-            let data = match self.sensor.get().await.lock().await.acceleration().await {
-                Ok(data) => data,
-                Err(lsm303agr::Error::Comm(err)) => {
-                    self.signaling
-                        .signal_reading_err(ReadingError::SensorAccess)
-                        .await;
-                    continue;
+                loop {
+                    // FIXME: remove this unwrap
+                    if sensor.accel_status().await.unwrap().xyz_new_data() {
+                        break;
+                    }
+                    // FIXME: adjust this delay
+                    Timer::after(Duration::from_millis(2)).await;
                 }
-                Err(_) => unreachable!(), // FIXME: is it?
+
+                // `magnetic_field()` already checks `mag_status()` internally
+                match (sensor.acceleration().await, sensor.magnetic_field().await) {
+                    (Ok(accel_data), Ok(mag_data)) => (accel_data, mag_data),
+                    (Err(lsm303agr::Error::Comm(err)), Ok(_))
+                    | (Ok(_), Err(lsm303agr::Error::Comm(err))) => {
+                        self.signaling
+                            .signal_reading_err(ReadingError::SensorAccess)
+                            .await;
+                        continue;
+                    }
+                    _ => unreachable!(), // FIXME: is it?
+                }
             };
 
             // FIXME
             let accuracy = Accuracy::Unknown;
 
-            let x = Value::new(data.x_mg(), accuracy);
-            let y = Value::new(data.y_mg(), accuracy);
-            let z = Value::new(data.z_mg(), accuracy);
+            let accel_x = Value::new(accel_data.x_mg(), accuracy);
+            let accel_y = Value::new(accel_data.y_mg(), accuracy);
+            let accel_z = Value::new(accel_data.z_mg(), accuracy);
+            let mag_x = Value::new(mag_data.x_nt(), accuracy);
+            let mag_y = Value::new(mag_data.y_nt(), accuracy);
+            let mag_z = Value::new(mag_data.z_nt(), accuracy);
 
-            self.signaling.signal_reading(Values::V3([x, y, z])).await;
+            self.signaling
+                .signal_reading(Values::V6([accel_x, accel_y, accel_z, mag_x, mag_y, mag_z]))
+                .await;
         }
     }
 }
@@ -155,10 +186,13 @@ impl Sensor for Lsm303agrI2c {
 
     fn reading_axes(&self) -> ReadingAxes {
         // FIXME: add magnetometer readings
-        ReadingAxes::V3([
-            ReadingAxis::new(Label::X, -3, MeasurementUnit::AccelG),
-            ReadingAxis::new(Label::Y, -3, MeasurementUnit::AccelG),
-            ReadingAxis::new(Label::Z, -3, MeasurementUnit::AccelG),
+        ReadingAxes::V6([
+            ReadingAxis::new(Label::AccelX, -3, MeasurementUnit::AccelG),
+            ReadingAxis::new(Label::AccelY, -3, MeasurementUnit::AccelG),
+            ReadingAxis::new(Label::AccelZ, -3, MeasurementUnit::AccelG),
+            ReadingAxis::new(Label::MagX, -9, MeasurementUnit::Tesla),
+            ReadingAxis::new(Label::MagY, -9, MeasurementUnit::Tesla),
+            ReadingAxis::new(Label::MagZ, -9, MeasurementUnit::Tesla),
         ])
     }
 
