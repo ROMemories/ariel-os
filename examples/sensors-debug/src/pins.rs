@@ -18,3 +18,11 @@ riot_rs::define_peripherals!(BusPeripherals {
     i2c0_sda: P0_16,
     i2c0_scl: P0_08,
 });
+
+#[cfg(context = "microbit-v2")]
+riot_rs::define_peripherals!(ACCEL_IntPeripherals { accel_int1: P0_16 });
+#[cfg(context = "microbit-v2")]
+riot_rs::group_peripherals!(ACCEL_Peripherals {
+    int: ACCEL_IntPeripherals,
+    p: riot_rs_builtin_sensors::lsm303agr::Peripherals,
+});

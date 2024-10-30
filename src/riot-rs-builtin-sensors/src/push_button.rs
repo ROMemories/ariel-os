@@ -44,7 +44,7 @@ impl PushButton {
         }
     }
 
-    pub fn init(&'static self, _spawner: Spawner, pin: Input, config: Config) {
+    pub fn init(&self, _spawner: Spawner, pin: Input, config: Config) {
         if self.state.get() == State::Uninitialized {
             let _ = self
                 .button

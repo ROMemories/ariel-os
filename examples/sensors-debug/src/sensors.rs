@@ -75,14 +75,20 @@ mod sensors {
     use super::ACCEL;
 
     #[riot_rs::task(autostart, peripherals)]
-    async fn ACCEL_run(peripherals: riot_rs_builtin_sensors::lsm303agr::Peripherals) {
+    async fn ACCEL_run(peripherals: crate::pins::ACCEL_Peripherals) {
         let mut config = riot_rs_builtin_sensors::lsm303agr::Config::default();
 
         let mut i2c_device =
             riot_rs::i2c::controller::I2cDevice::new(crate::buses::I2C0.get().unwrap());
 
         let spawner = riot_rs::Spawner::for_current_executor().await;
-        ACCEL.init(spawner, peripherals, i2c_device, config).await;
+        ACCEL.init(spawner, peripherals.p, i2c_device, config).await;
+
+        let pull = riot_rs::gpio::Pull::Up;
+        let int1 = riot_rs::gpio::Input::builder(peripherals.int.accel_int1, pull)
+            .build_with_interrupt()
+            .unwrap();
+        ACCEL.register_interrupt_pin(int1, riot_rs::sensors::interrupts::DeviceInterrupt::Int1);
 
         ACCEL.run().await
     }

@@ -53,6 +53,7 @@
 // #![deny(missing_docs)]
 
 mod category;
+pub mod interrupts;
 mod label;
 mod measurement_unit;
 pub mod registry;

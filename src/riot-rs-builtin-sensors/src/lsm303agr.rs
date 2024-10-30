@@ -10,6 +10,7 @@ use lsm303agr::{
 };
 use riot_rs_embassy::{arch, gpio, i2c::controller::I2cDevice, Spawner};
 use riot_rs_sensors::{
+    interrupts::{DeviceInterrupt, InterruptPin},
     sensor::{
         Accuracy, Mode as SensorMode, ReadingAxes, ReadingAxis, ReadingError, ReadingResult,
         ReadingWaiter, SetModeError, State, TriggerMeasurementError, Value, Values,
@@ -40,6 +41,7 @@ pub struct Lsm303agrI2c {
     sensor:
         OnceLock<Mutex<CriticalSectionRawMutex, Lsm303agr<I2cInterface<I2cDevice>, MagContinuous>>>,
     signaling: SensorSignaling,
+    int1_accel: OnceLock<gpio::IntEnabledInput>,
 }
 
 impl Lsm303agrI2c {
@@ -51,11 +53,12 @@ impl Lsm303agrI2c {
             label,
             sensor: OnceLock::new(),
             signaling: SensorSignaling::new(),
+            int1_accel: OnceLock::new(),
         }
     }
 
     pub async fn init(
-        &'static self,
+        &self,
         _spawner: Spawner,
         peripherals: Peripherals,
         i2c: I2cDevice,
@@ -143,6 +146,15 @@ impl Lsm303agrI2c {
                 .signal_reading(Values::V6([accel_x, accel_y, accel_z, mag_x, mag_y, mag_z]))
                 .await;
         }
+    }
+
+    pub fn register_interrupt_pin(
+        &self,
+        pin: gpio::IntEnabledInput,
+        device_interrupt: DeviceInterrupt,
+    ) {
+        let _ = self.int1_accel.init(pin);
+        // FIXME: store/do something with DeviceInterrupt, InterruptPin
     }
 }
 
