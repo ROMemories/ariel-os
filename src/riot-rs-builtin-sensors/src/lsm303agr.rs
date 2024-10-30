@@ -190,7 +190,7 @@ impl Sensor for Lsm303agrI2c {
             ReadingAxis::new(Label::AccelX, -3, MeasurementUnit::AccelG),
             ReadingAxis::new(Label::AccelY, -3, MeasurementUnit::AccelG),
             ReadingAxis::new(Label::AccelZ, -3, MeasurementUnit::AccelG),
-            ReadingAxis::new(Label::MagX, -9, MeasurementUnit::Tesla),
+            ReadingAxis::new(Label::MagX, -9, MeasurementUnit::Tesla), // FIXME: fix the scaler
             ReadingAxis::new(Label::MagY, -9, MeasurementUnit::Tesla),
             ReadingAxis::new(Label::MagZ, -9, MeasurementUnit::Tesla),
         ])

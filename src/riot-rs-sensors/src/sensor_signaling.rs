@@ -104,6 +104,9 @@ mod tests {
             size_of::<Channel<CriticalSectionRawMutex, ReadingResult<Values>, 1>>(),
             values_size + 16 * size_of::<u32>()
         );
-        assert_eq!(size_of::<SensorSignaling>(), values_size + 18 * size_of::<u32>());
+        assert_eq!(
+            size_of::<SensorSignaling>(),
+            values_size + 18 * size_of::<u32>()
+        );
     }
 }
