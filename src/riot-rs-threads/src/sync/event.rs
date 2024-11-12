@@ -1,6 +1,6 @@
 //! This module provides an event that can be waited for.
 //!
-use core::cell::UnsafeCell;
+use core::cell::Cell;
 
 use crate::{threadlist::ThreadList, ThreadState};
 
@@ -12,7 +12,7 @@ use crate::{threadlist::ThreadList, ThreadState};
 /// to false with the clear() method. The wait() method blocks until the flag is set to true. The
 /// flag is set to false initially.
 pub struct Event {
-    state: UnsafeCell<LockState>,
+    state: Cell<LockState>,
 }
 
 unsafe impl Sync for Event {}
@@ -26,14 +26,14 @@ impl Event {
     /// Creates new **unset** Event.
     pub const fn new() -> Self {
         Self {
-            state: UnsafeCell::new(LockState::Locked(ThreadList::new())),
+            state: Cell::new(LockState::Locked(ThreadList::new())),
         }
     }
 
     /// Creates new **set** Event.
     pub const fn new_set() -> Self {
         Self {
-            state: UnsafeCell::new(LockState::Unlocked),
+            state: Cell::new(LockState::Unlocked),
         }
     }
 
@@ -42,8 +42,10 @@ impl Event {
     /// true if locked, false otherwise
     pub fn is_set(&self) -> bool {
         critical_section::with(|_| {
-            let state = unsafe { &*self.state.get() };
-            matches!(state, LockState::Unlocked)
+            let state = self.state.replace(LockState::Unlocked);
+            let set = matches!(state, LockState::Unlocked);
+            self.state.replace(state);
+            set
         })
     }
 
@@ -58,14 +60,17 @@ impl Event {
     /// Panics if this is called outside of a thread context.
     pub fn wait(&self) {
         critical_section::with(|cs| {
-            let state = unsafe { &mut *self.state.get() };
+            let state = self.state.replace(LockState::Unlocked);
             match state {
-                LockState::Unlocked => (),
-                LockState::Locked(waiters) => {
+                LockState::Unlocked => {
+                    self.state.replace(state);
+                }
+                LockState::Locked(mut waiters) => {
                     waiters.put_current(cs, ThreadState::LockBlocked);
+                    self.state.replace(LockState::Locked(waiters));
                 }
             }
-        })
+        });
     }
 
     /// Clear the event (non-blocking).
@@ -74,13 +79,16 @@ impl Event {
     /// If the event was unset, the function returns false
     pub fn clear(&self) -> bool {
         critical_section::with(|_| {
-            let state = unsafe { &mut *self.state.get() };
+            let state = self.state.replace(LockState::Unlocked);
             match state {
                 LockState::Unlocked => {
-                    *state = LockState::Locked(ThreadList::new());
+                    self.state.replace(LockState::Locked(ThreadList::new()));
                     true
                 }
-                LockState::Locked(_) => false,
+                LockState::Locked(_) => {
+                    self.state.replace(state);
+                    false
+                }
             }
         })
     }
@@ -92,16 +100,18 @@ impl Event {
     /// If the event was already set, the function just returns.
     pub fn set(&self) {
         critical_section::with(|cs| {
-            let state = unsafe { &mut *self.state.get() };
+            let state = self.state.replace(LockState::Unlocked);
             match state {
-                LockState::Unlocked => {}
-                LockState::Locked(waiters) => {
+                LockState::Unlocked => {
+                    self.state.replace(state);
+                }
+                LockState::Locked(mut waiters) => {
                     // unlock all waiters
                     while waiters.pop(cs).is_some() {}
-                    *state = LockState::Unlocked;
+                    self.state.replace(LockState::Unlocked);
                 }
             }
-        })
+        });
     }
 }
 
