@@ -5,8 +5,10 @@
 
 mod pins;
 
-use embassy_time::{Duration, Timer};
-use riot_rs::gpio::{Input, Level, Output, Pull};
+use riot_rs::{
+    gpio::{Input, Level, Output, Pull},
+    reexports::embassy_time::{Duration, Timer},
+};
 
 #[riot_rs::task(autostart, peripherals)]
 async fn blinky(peripherals: pins::Peripherals) {

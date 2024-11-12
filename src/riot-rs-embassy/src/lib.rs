@@ -58,8 +58,12 @@ pub mod api {
 
 // These are made available in `riot_rs::reexports`.
 pub mod reexports {
+    pub use embassy_sync;
+
     #[cfg(feature = "net")]
     pub use embassy_net;
+    #[cfg(feature = "time")]
+    pub use embassy_time;
     #[cfg(feature = "usb")]
     pub use embassy_usb;
     // Used by a macro we provide
