@@ -102,7 +102,9 @@ jobs:
                   " \
               -p riot-rs-stm32
           echo "<meta http-equiv=\"refresh\" content=\"0; url=riot_rs\">" > target/doc/index.html
-          mkdir -p ./_site/dev/docs/api && mv target/doc/* ./_site/dev/docs/api
+          mkdir -p ./_site/dev/docs/api
+          mv target/riscv32imac-unknown-none-elf/doc/riot_rs_esp ./_site/dev/docs/api
+          mv target/doc/* ./_site/dev/docs/api
 
       - name: Install mdbook
         run: |
