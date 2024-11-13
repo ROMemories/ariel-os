@@ -1,4 +1,14 @@
-//! This module dispatches between the riot-rs architecture support crates.
+//! Provides MCU-specific items.
+//!
+//! This module actually dispatches between one of the following crate, depending on the target
+//! architecture:
+//!
+//! | Manufacturer         | MCU family  | Crate                                             |
+//! | -------------------- | ----------- | ------------------------------------------------- |
+//! | Espressif            | ESP32       | [`riot-rs-esp`](../../riot_rs_esp/index.html)     |
+//! | Nordic Semiconductor | nRF         | [`riot-rs-nrf`](../../riot_rs_nrf/index.html)     |
+//! | Raspberry Pi         | RP          | [`riot-rs-rp`](../../riot_rs_rp/index.html)       |
+//! | STMicroelectronics   | STM32       | [`riot-rs-stm32`](../../riot_rs_stm32/index.html) |
 
 #![no_std]
 
