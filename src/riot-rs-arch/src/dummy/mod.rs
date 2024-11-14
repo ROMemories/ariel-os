@@ -2,6 +2,20 @@
 // TODO: redirect to the manufacturer-specific crate documentation when we publish it, and
 // mark every item in this dummy module `doc(hidden)`
 
+#![allow(
+    clippy::missing_errors_doc,
+    reason = "this module is hidden in the docs"
+)]
+#![expect(clippy::duplicated_attributes, reason = "Clippy bug #13355")]
+#![allow(
+    clippy::module_name_repetitions,
+    reason = "this dummy module mimics an other, actual module"
+)]
+#![allow(
+    clippy::needless_pass_by_value,
+    reason = "this dummy module mimics an other, actual module"
+)]
+
 mod executor;
 pub mod gpio;
 
@@ -46,6 +60,7 @@ impl From<Peripherals> for OptionalPeripherals {
     }
 }
 
+#[must_use]
 pub fn init() -> OptionalPeripherals {
     unimplemented!();
 }

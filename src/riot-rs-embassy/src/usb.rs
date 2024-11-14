@@ -7,12 +7,15 @@
 
 #![deny(missing_docs)]
 
+#[expect(clippy::module_name_repetitions)]
 pub use crate::arch::usb::UsbDriver;
 
 /// Builder for a USB device stack.
+#[expect(clippy::module_name_repetitions)]
 pub type UsbBuilder = embassy_usb::Builder<'static, UsbDriver>;
 
 /// Configuration hook for a [`UsbBuilder`].
+#[expect(clippy::module_name_repetitions)]
 pub type UsbBuilderHook = &'static crate::delegate::Delegate<UsbBuilder>;
 
 #[doc(hidden)]

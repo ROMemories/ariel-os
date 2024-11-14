@@ -165,6 +165,7 @@ fn init() {
         .run(|spawner| spawner.must_spawn(init_task(p)));
 }
 
+#[allow(clippy::too_many_lines)]
 #[embassy_executor::task]
 async fn init_task(mut peripherals: arch::OptionalPeripherals) {
     debug!("riot-rs-embassy::init_task()");
@@ -200,14 +201,15 @@ async fn init_task(mut peripherals: arch::OptionalPeripherals) {
 
     #[cfg(feature = "usb")]
     let mut usb_builder = {
-        let usb_config = usb::config();
-
-        let usb_driver = arch::usb::driver(&mut peripherals);
-
         static CONFIG_DESC: ConstStaticCell<[u8; 256]> = ConstStaticCell::new([0; 256]);
         static BOS_DESC: ConstStaticCell<[u8; 256]> = ConstStaticCell::new([0; 256]);
         static MSOS_DESC: ConstStaticCell<[u8; 128]> = ConstStaticCell::new([0; 128]);
         static CONTROL_BUF: ConstStaticCell<[u8; 128]> = ConstStaticCell::new([0; 128]);
+
+        let usb_config = usb::config();
+
+        let usb_driver = arch::usb::driver(&mut peripherals);
+
         // Create embassy-usb DeviceBuilder using the driver and config.
         let builder = usb::UsbBuilder::new(
             usb_driver,
@@ -227,24 +229,25 @@ async fn init_task(mut peripherals: arch::OptionalPeripherals) {
             embassy_net::State as NetState, CdcNcmClass, State as CdcNcmState,
         };
 
+        static CDC_ECM_STATE: StaticCell<CdcNcmState> = StaticCell::new();
+        static NET_STATE: StaticCell<NetState<{ network::ETHERNET_MTU }, 4, 4>> = StaticCell::new();
+
         // Host's MAC addr. This is the MAC the host "thinks" its USB-to-ethernet adapter has.
         let host_mac_addr = [0x8A, 0x88, 0x88, 0x88, 0x88, 0x88];
 
         // Create classes on the builder.
-        static CDC_ECM_STATE: StaticCell<CdcNcmState> = StaticCell::new();
         let usb_cdc_ecm = CdcNcmClass::new(
             &mut usb_builder,
-            CDC_ECM_STATE.init_with(|| CdcNcmState::new()),
+            CDC_ECM_STATE.init_with(CdcNcmState::new),
             host_mac_addr,
             64,
         );
 
         let our_mac_addr = [0xCA, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC];
 
-        static NET_STATE: StaticCell<NetState<{ network::ETHERNET_MTU }, 4, 4>> = StaticCell::new();
         let (runner, device) = usb_cdc_ecm
             .into_embassy_net_device::<{ network::ETHERNET_MTU }, 4, 4>(
-                NET_STATE.init_with(|| NetState::new()),
+                NET_STATE.init_with(NetState::new),
                 our_mac_addr,
             );
 
@@ -283,6 +286,8 @@ async fn init_task(mut peripherals: arch::OptionalPeripherals) {
             "maximum number of concurrent sockets allowed by the network stack"
         );
 
+        static RESOURCES: StaticCell<StackResources<MAX_CONCURRENT_SOCKETS>> = StaticCell::new();
+
         #[cfg(not(any(feature = "usb-ethernet", feature = "wifi-cyw43", feature = "wifi-esp")))]
         // The creation of `device` is not organized in such a way that they could be put in a
         // cfg-if without larger refactoring; relying on unused variable lints to keep the
@@ -299,7 +304,6 @@ async fn init_task(mut peripherals: arch::OptionalPeripherals) {
         let seed = 1234u64;
 
         // Init network stack
-        static RESOURCES: StaticCell<StackResources<MAX_CONCURRENT_SOCKETS>> = StaticCell::new();
         let (stack, runner) = embassy_net::new(
             device,
             config,

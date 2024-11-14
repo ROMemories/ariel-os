@@ -34,16 +34,19 @@ pub use riot_rs_embassy_common::gpio::{DriveStrength, Level, Pull, Speed};
 macro_rules! inner_impl_input_methods {
     ($inner:ident) => {
         /// Returns whether the input level is high.
+        #[must_use]
         pub fn is_high(&self) -> bool {
             self.$inner.is_high()
         }
 
         /// Returns whether the input level is low.
+        #[must_use]
         pub fn is_low(&self) -> bool {
             self.$inner.is_low()
         }
 
         /// Returns the input level.
+        #[must_use]
         pub fn get_level(&self) -> Level {
             arch::gpio::input::into_level(self.$inner.get_level())
         }
@@ -196,6 +199,7 @@ pub mod input {
     pub use riot_rs_embassy_common::gpio::input::InterruptError;
 
     /// Builder type for [`Input`], can be obtained with [`Input::builder()`].
+    #[expect(clippy::module_name_repetitions)]
     pub struct InputBuilder<P: Peripheral<P: ArchInputPin>> {
         pub(crate) pin: P,
         pub(crate) pull: Pull,
@@ -209,6 +213,7 @@ pub mod input {
         ///
         /// Fails to compile if the architecture does not support configuring Schmitt trigger on
         /// inputs.
+        #[must_use]
         pub fn schmitt_trigger(self, enable: bool) -> Self {
             #[expect(
                 clippy::assertions_on_constants,
@@ -231,6 +236,7 @@ pub mod input {
         // commit to them being part of our API for now.
         // We may remove them in the future if we realize they are never useful.
         #[doc(hidden)]
+        #[must_use]
         pub fn opt_schmitt_trigger(self, enable: bool) -> Self {
             if arch::gpio::input::SCHMITT_TRIGGER_CONFIGURABLE {
                 // We cannot reuse the non-`opt_*()`, otherwise the const assert inside it would always
@@ -249,9 +255,12 @@ pub mod input {
     impl<P: Peripheral<P: ArchInputPin> + 'static> InputBuilder<P> {
         /// Returns an [`Input`] by finalizing the builder.
         pub fn build(self) -> Input {
-            let input = match arch::gpio::input::new(self.pin, self.pull, self.schmitt_trigger) {
-                Ok(input) => input,
-                Err(_) => unreachable!(),
+            #[allow(
+                irrefutable_let_patterns,
+                reason = "some archs have an non-Infaillible Error type"
+            )]
+            let Ok(input) = arch::gpio::input::new(self.pin, self.pull, self.schmitt_trigger) else {
+                unreachable!()
             };
 
             Input { input }
@@ -338,6 +347,7 @@ pub mod output {
     use super::{ArchDriveStrength, ArchSpeed, Output};
 
     /// Builder type for [`Output`], can be obtained with [`Output::builder()`].
+    #[expect(clippy::module_name_repetitions)]
     pub struct OutputBuilder<P: Peripheral<P: ArchOutputPin>> {
         pub(crate) pin: P,
         pub(crate) initial_level: Level,
@@ -355,6 +365,7 @@ pub mod output {
                 ///
                 /// Fails to compile if the architecture does not support configuring drive
                 /// strength of outputs.
+        #[must_use]
                 pub fn drive_strength(self, drive_strength: DriveStrength<ArchDriveStrength>) -> Self {
                     const {
                         assert!(
@@ -373,6 +384,7 @@ pub mod output {
                 // commit to them being part of our API for now.
                 // We may remove them in the future if we realize they are never useful.
                 #[doc(hidden)]
+                #[must_use]
                 // TODO: or `drive_strength_opt`?
                 pub fn opt_drive_strength(self, drive_strength: DriveStrength<ArchDriveStrength>) -> Self {
                     if arch::gpio::output::DRIVE_STRENGTH_CONFIGURABLE {
@@ -393,6 +405,7 @@ pub mod output {
                 ///
                 /// Fails to compile if the architecture does not support configuring speed of
                 /// outputs.
+                #[must_use]
                 pub fn speed(self, speed: Speed<ArchSpeed>) -> Self {
                     const {
                         assert!(
@@ -408,6 +421,7 @@ pub mod output {
                 // commit to them being part of our API for now.
                 // We may remove them in the future if we realize they are never useful.
                 #[doc(hidden)]
+                #[must_use]
                 // TODO: or `speed_opt`?
                 pub fn opt_speed(self, speed: Speed<ArchSpeed>) -> Self {
                     if arch::gpio::output::SPEED_CONFIGURABLE {

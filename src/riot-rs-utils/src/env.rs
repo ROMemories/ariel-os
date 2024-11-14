@@ -42,6 +42,7 @@ macro_rules! str_from_env_or {
     };
 }
 
+#[expect(clippy::module_name_repetitions)]
 #[macro_export]
 macro_rules! str_from_env {
     ($env_var:literal, $doc:literal) => {

@@ -1,5 +1,6 @@
 // Disable indexing lints for now
 #![allow(clippy::indexing_slicing)]
+#![expect(clippy::pedantic, reason = "should eventually be addressed")]
 
 use core::mem;
 

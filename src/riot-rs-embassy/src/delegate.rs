@@ -1,5 +1,7 @@
 //! Delegate or lend an object to another task
 
+#![expect(clippy::pedantic, reason = "should eventually be addressed")]
+
 use embassy_executor::Spawner;
 use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, signal::Signal};
 
@@ -31,7 +33,7 @@ use crate::sendcell::SendCell;
 /// }
 /// ```
 ///
-/// TODO: this is a PoC implementation.
+/// TODO: this is a proof-of-concept implementation.
 /// - takes 24b for each delegate (on arm), which seems too much.
 /// - doesn't protect at all against calling [`lend()`](Delegate::lend) or
 ///   [`with()`](Delegate::with) multiple times

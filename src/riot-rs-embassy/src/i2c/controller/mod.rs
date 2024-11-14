@@ -39,6 +39,7 @@ pub type I2cDevice = InnerI2cDevice<'static, CriticalSectionRawMutex, arch::i2c:
 ///
 /// This function is only intended to be used in a `const` context.
 /// It panics if no suitable frequency can be found.
+#[must_use]
 pub const fn highest_freq_in(
     range: core::ops::RangeInclusive<riot_rs_embassy_common::i2c::controller::Kilohertz>,
 ) -> arch::i2c::controller::Frequency {
@@ -91,7 +92,7 @@ pub const fn highest_freq_in(
         }
     }
 
-    return freq;
+    freq
 }
 
 #[cfg(test)]

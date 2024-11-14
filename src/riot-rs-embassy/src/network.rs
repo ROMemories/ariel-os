@@ -17,6 +17,7 @@ pub(crate) const ETHERNET_MTU: usize = 1514;
 /// A network stack.
 ///
 /// Required to create a UDP or TCP socket.
+#[expect(clippy::module_name_repetitions)]
 pub type NetworkStack = Stack<'static>;
 
 pub(crate) static STACK: OnceLock<SendCell<NetworkStack>> = OnceLock::new();
@@ -24,6 +25,7 @@ pub(crate) static STACK: OnceLock<SendCell<NetworkStack>> = OnceLock::new();
 /// Returns a new [`NetworkStack`].
 ///
 /// Returns [`None`] if networking is not yet initialized.
+#[expect(clippy::module_name_repetitions)]
 pub async fn network_stack() -> Option<NetworkStack> {
     STACK.get().await.get_async().await.copied()
 }
@@ -37,7 +39,7 @@ pub(crate) async fn net_task(mut runner: Runner<'static, NetworkDevice>) -> ! {
 pub(crate) fn config() -> embassy_net::Config {
     #[cfg(not(feature = "override-network-config"))]
     {
-        embassy_net::Config::dhcpv4(Default::default())
+        embassy_net::Config::dhcpv4(embassy_net::DhcpConfig::default())
     }
     #[cfg(feature = "override-network-config")]
     {
@@ -57,9 +59,7 @@ pub(crate) fn config() -> embassy_net::Config {
     reason = "constructor is only used in linter / documentation situations"
 )]
 pub(crate) fn new_dummy() -> DummyDriver {
-    panic!(
-        "DummyDriver must only ever be constructed for documentation and linting, not for running"
-    )
+    unimplemented!();
 }
 
 /// Stand-in for a network driver in documentation and linting.

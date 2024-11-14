@@ -28,6 +28,7 @@
 // Disable indexing lints for now, possible panics are documented or rely on internally-enforced
 // invariants
 #![allow(clippy::indexing_slicing)]
+#![expect(clippy::pedantic, reason = "should eventually be addressed")]
 
 mod arch;
 mod autostart_thread;
