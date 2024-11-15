@@ -5,7 +5,6 @@
 #![feature(used_with_arg)]
 #![feature(doc_auto_cfg)]
 
-pub mod define_peripherals;
 pub mod gpio;
 
 pub use riot_rs_arch as arch;
@@ -33,9 +32,9 @@ pub use static_cell::{ConstStaticCell, StaticCell};
 
 // All items of this module are re-exported at the root of `riot_rs`.
 pub mod api {
-    pub use crate::{
-        arch, asynch, define_peripherals, delegate, gpio, group_peripherals, EMBASSY_TASKS,
-    };
+    pub use riot_rs_embassy_common::{define_peripherals, group_peripherals};
+
+    pub use crate::{arch, asynch, delegate, gpio, EMBASSY_TASKS};
 
     #[cfg(feature = "time")]
     pub mod time {

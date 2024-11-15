@@ -5,6 +5,7 @@
 #![deny(clippy::pedantic)]
 #![deny(missing_docs)]
 
+pub mod define_peripherals;
 pub mod gpio;
 
 #[cfg(context = "cortex-m")]
