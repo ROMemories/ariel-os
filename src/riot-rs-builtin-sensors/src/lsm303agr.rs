@@ -5,12 +5,12 @@ use embassy_sync::{
 use embassy_time::{Duration, Timer};
 use embedded_hal_async::delay::DelayNs;
 use lsm303agr::{
-    interface::I2cInterface, mode::MagContinuous, AccelMode, AccelOutputDataRate, Lsm303agr,
-    MagMode, MagOutputDataRate,
+    interface::I2cInterface, mode::MagOneShot, AccelMode, AccelOutputDataRate, AccelScale,
+    Lsm303agr, MagMode, MagOutputDataRate,
 };
 use riot_rs_embassy::{arch, gpio, i2c::controller::I2cDevice, Spawner};
 use riot_rs_sensors::{
-    interrupts::{DeviceInterrupt, InterruptPin},
+    interrupts::{DeviceInterrupt, InterruptError, InterruptEvent, InterruptPin},
     sensor::{
         Accuracy, Mode as SensorMode, ReadingAxes, ReadingAxis, ReadingError, ReadingResult,
         ReadingWaiter, SetModeError, State, TriggerMeasurementError, Value, Values,
@@ -20,6 +20,7 @@ use riot_rs_sensors::{
     Category, Label, MeasurementUnit, Sensor,
 };
 
+// FIXME: allow to disable the accel or the mag
 #[derive(Debug)]
 #[non_exhaustive]
 pub struct Config {
@@ -39,9 +40,9 @@ pub struct Lsm303agrI2c {
     label: Option<&'static str>,
     // FIXME: find a way to change the mag mode
     sensor:
-        OnceLock<Mutex<CriticalSectionRawMutex, Lsm303agr<I2cInterface<I2cDevice>, MagContinuous>>>,
+        OnceLock<Mutex<CriticalSectionRawMutex, Lsm303agr<I2cInterface<I2cDevice>, MagOneShot>>>,
     signaling: SensorSignaling,
-    int1_accel: OnceLock<gpio::IntEnabledInput>,
+    int1_accel: OnceLock<Mutex<CriticalSectionRawMutex, gpio::IntEnabledInput>>,
 }
 
 impl Lsm303agrI2c {
@@ -77,24 +78,25 @@ impl Lsm303agrI2c {
                 .set_accel_mode_and_odr(
                     &mut accel_turn_on_delay,
                     AccelMode::Normal,
-                    AccelOutputDataRate::Hz10,
+                    AccelOutputDataRate::Hz100,
                 )
                 .await
                 .unwrap();
-            let mut mag_turn_on_delay = embassy_time::Delay;
-            // FIXME: configuration
-            driver
-                .set_mag_mode_and_odr(
-                    &mut mag_turn_on_delay,
-                    MagMode::HighResolution,
-                    MagOutputDataRate::Hz10,
-                )
-                .await
-                .unwrap();
-            let Ok(driver) = driver.into_mag_continuous().await else {
-                // FIXME
-                panic!();
-            };
+            // driver.set_accel_scale(AccelScale::G2).await.unwrap();
+            // let mut mag_turn_on_delay = embassy_time::Delay;
+            // // FIXME: configuration
+            // driver
+            //     .set_mag_mode_and_odr(
+            //         &mut mag_turn_on_delay,
+            //         MagMode::HighResolution,
+            //         MagOutputDataRate::Hz10,
+            //     )
+            //     .await
+            //     .unwrap();
+            // let Ok(driver) = driver.into_mag_continuous().await else {
+            //     // FIXME
+            //     panic!();
+            // };
 
             let _ = self.sensor.init(Mutex::new(driver));
 
@@ -148,13 +150,79 @@ impl Lsm303agrI2c {
         }
     }
 
+    // TODO: maybe make this async in case we need to access a mutex? may be annoying to use during
+    // non-async init
     pub fn register_interrupt_pin(
         &self,
         pin: gpio::IntEnabledInput,
         device_interrupt: DeviceInterrupt,
     ) {
-        let _ = self.int1_accel.init(pin);
+        let _ = self.int1_accel.init(Mutex::new(pin));
         // FIXME: store/do something with DeviceInterrupt, InterruptPin
+    }
+
+    // TODO: maybe make this async in case we need to access a mutex? may be annoying to use during
+    // non-async init
+    pub fn use_interrupt_for_data_ready_event(&self) {
+        todo!();
+    }
+
+    pub async fn wait_for_interrupt_event(
+        &self,
+        event: InterruptEvent,
+    ) -> Result<(), InterruptError> {
+        self.sensor
+            .get()
+            .await
+            .lock()
+            .await
+            .acc_set_int1_threshold(lsm303agr::AccelerationThreshold1::try_new(0x0c).unwrap())
+            .await
+            .unwrap();
+
+        self.sensor
+            .get()
+            .await
+            .lock()
+            .await
+            .acc_set_int1_duration(lsm303agr::AccelerationDuration::try_new(5).unwrap())
+            .await
+            .unwrap();
+
+        self.sensor
+            .get()
+            .await
+            .lock()
+            .await
+            .acc_enable_interrupt(lsm303agr::Interrupt::Aoi1)
+            .await
+            .unwrap();
+
+        loop {
+            self.int1_accel
+                .get()
+                .await
+                .lock()
+                .await
+                .wait_for_low()
+                .await;
+
+            // Check the interrupt bit on the sensor device
+            if self
+                .sensor
+                .get()
+                .await
+                .lock()
+                .await
+                .acc_reset_int1()
+                .await
+                .unwrap()
+            {
+                break;
+            }
+        }
+
+        Ok(())
     }
 }
 
