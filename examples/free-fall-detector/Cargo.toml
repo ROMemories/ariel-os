@@ -1,0 +1,22 @@
+[package]
+name = "free-fall-detector"
+version = "0.1.0"
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+publish = false
+
+[lints]
+workspace = true
+
+[dependencies]
+embassy-executor = { workspace = true, default-features = false }
+embassy-sync = { workspace = true }
+embassy-time = { workspace = true, default-features = false }
+embedded-hal-async = { workspace = true }
+once_cell = { workspace = true }
+riot-rs = { path = "../../src/riot-rs", features = [
+  "sensors",
+] }
+riot-rs-boards = { path = "../../src/riot-rs-boards" }
+riot-rs-builtin-sensors = { path = "../../src/riot-rs-builtin-sensors" }

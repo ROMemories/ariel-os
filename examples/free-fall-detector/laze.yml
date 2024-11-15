@@ -1,0 +1,10 @@
+apps:
+  - name: free-fall-detector
+    env:
+      global:
+        CARGO_ENV:
+          - CONFIG_ISR_STACKSIZE=16384
+    # context:
+    #   - microbit-v2
+    selects:
+      - ?release
