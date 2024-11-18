@@ -8,6 +8,7 @@ pub mod gpio;
 #[cfg(feature = "i2c")]
 pub mod i2c;
 
+#[doc(hidden)]
 pub mod identity {
     use riot_rs_embassy_common::identity;
 
@@ -18,12 +19,15 @@ pub mod identity {
 pub mod spi;
 
 #[cfg(feature = "wifi")]
+#[doc(hidden)]
 pub mod wifi;
 
+#[doc(hidden)]
 pub mod peripheral {
     pub use esp_hal::peripheral::Peripheral;
 }
 
+#[doc(hidden)]
 pub mod peripherals {
     pub use esp_hal::peripherals::*;
 
@@ -69,8 +73,10 @@ pub mod peripherals {
 pub use esp_hal::peripherals::OptionalPeripherals;
 
 #[cfg(feature = "executor-single-thread")]
+#[doc(hidden)]
 pub use esp_hal_embassy::Executor;
 
+#[doc(hidden)]
 pub fn init() -> OptionalPeripherals {
     let mut peripherals = OptionalPeripherals::from(esp_hal::init(esp_hal::Config::default()));
 
