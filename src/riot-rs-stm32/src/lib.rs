@@ -4,16 +4,19 @@
 
 pub mod gpio;
 
+#[doc(hidden)]
 pub mod peripheral {
     pub use embassy_stm32::Peripheral;
 }
 
 #[cfg(feature = "external-interrupts")]
+#[doc(hidden)]
 pub mod extint_registry;
 
 #[cfg(feature = "i2c")]
 pub mod i2c;
 
+#[doc(hidden)]
 pub mod identity;
 
 #[cfg(feature = "spi")]
@@ -21,7 +24,10 @@ pub mod spi;
 
 use embassy_stm32::Config;
 
-pub use embassy_stm32::{interrupt, peripherals, OptionalPeripherals, Peripherals};
+#[doc(hidden)]
+pub use embassy_stm32::{interrupt, peripherals, Peripherals};
+
+pub use embassy_stm32::OptionalPeripherals;
 
 #[cfg(feature = "executor-interrupt")]
 pub(crate) use embassy_executor::InterruptExecutor as Executor;
@@ -32,9 +38,11 @@ pub mod hwrng;
 #[cfg(feature = "usb")]
 cfg_if::cfg_if! {
     if #[cfg(feature = "stm32-usb")] {
+        #[doc(hidden)]
         #[path = "usb.rs"]
         pub mod usb;
     } else if #[cfg(feature = "stm32-usb-synopsis")] {
+        #[doc(hidden)]
         #[path = "usb_synopsis_otg.rs"]
         pub mod usb;
     } else {
@@ -55,6 +63,7 @@ static SHARED_DATA: MaybeUninit<SharedData> = MaybeUninit::uninit();
 #[cfg(feature = "executor-interrupt")]
 pub static EXECUTOR: Executor = Executor::new();
 
+#[doc(hidden)]
 pub fn init() -> OptionalPeripherals {
     let mut config = Config::default();
     board_config(&mut config);
