@@ -7,8 +7,12 @@ edition.workspace = true
 [lints]
 workspace = true
 
+[package.metadata.feature-groups]
+core-config.exactly-one = { features = ["multi-core", "single-core"] }
+
 [dependencies]
 cfg-if.workspace = true
+featurecomb = { workspace = true }
 linkme.workspace = true
 ariel-os-debug.workspace = true
 ariel-os-threads = { path = "../ariel-os-threads", optional = true }

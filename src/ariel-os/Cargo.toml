@@ -9,6 +9,7 @@ workspace = true
 
 [dependencies]
 document-features = { workspace = true }
+featurecomb = { workspace = true }
 linkme = { workspace = true }
 ariel-os-bench = { workspace = true, optional = true }
 ariel-os-boards = { path = "../ariel-os-boards" }
@@ -23,6 +24,9 @@ ariel-os-storage = { workspace = true, optional = true }
 ariel-os-threads = { path = "../ariel-os-threads", optional = true }
 ariel-os-utils = { workspace = true }
 static_cell = { workspace = true }
+
+[package.metadata.feature-groups.features]
+random.requires = { features = ["hwrng"] }
 
 [features]
 default = ["ariel-os-rt/_panic-handler"]
@@ -77,7 +81,7 @@ override-usb-config = ["ariel-os-embassy/override-usb-config"]
 
 #! ## Multicore functionality
 ## Enables support for core affinities (restricting threads to specific cores).
-core-affinity = ["multi-core", "ariel-os-threads?/core-affinity"]
+core-affinity = ["ariel-os-threads?/core-affinity"]
 #! Exactly one of the features below must be enabled at once.
 #! Selection of these should be done through laze configuration.
 ## Enables one single core, even if the hardware provides multiple cores.

@@ -5,6 +5,9 @@
 #![feature(used_with_arg)]
 #![feature(doc_auto_cfg)]
 
+#[featurecomb::comb]
+mod _featurecomb {}
+
 pub mod define_peripherals;
 pub mod gpio;
 
@@ -96,19 +99,6 @@ pub type Task = fn(asynch::Spawner, &mut hal::OptionalPeripherals);
 
 #[distributed_slice]
 pub static EMBASSY_TASKS: [Task] = [..];
-
-#[cfg(not(any(
-    feature = "executor-interrupt",
-    feature = "executor-none",
-    feature = "executor-single-thread",
-    feature = "executor-thread"
-)))]
-compile_error!(
-    r#"must select one of "executor-interrupt", "executor-single-thread", "executor-thread", "executor-none"!"#
-);
-
-#[cfg(all(feature = "threading", feature = "executor-single-thread"))]
-compile_error!(r#""executor-single-thread" and "threading" are mutually exclusive!"#);
 
 #[cfg(feature = "executor-interrupt")]
 #[distributed_slice(ariel_os_rt::INIT_FUNCS)]

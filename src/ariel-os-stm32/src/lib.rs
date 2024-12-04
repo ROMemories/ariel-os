@@ -5,6 +5,9 @@
 #![feature(type_alias_impl_trait)]
 #![deny(missing_docs)]
 
+#[featurecomb::comb]
+mod _featurecomb {}
+
 pub mod gpio;
 
 #[doc(hidden)]
@@ -39,20 +42,15 @@ pub(crate) use embassy_executor::InterruptExecutor as Executor;
 #[doc(hidden)]
 pub mod hwrng;
 
-#[cfg(feature = "usb")]
-cfg_if::cfg_if! {
-    if #[cfg(feature = "stm32-usb")] {
-        #[doc(hidden)]
-        #[path = "usb.rs"]
-        pub mod usb;
-    } else if #[cfg(feature = "stm32-usb-synopsis")] {
-        #[doc(hidden)]
-        #[path = "usb_synopsis_otg.rs"]
-        pub mod usb;
-    } else {
-        compile_error!("stm32: usb enabled but no flavor selected. Choose `stm32-usb` or `stm32-usb-synopsis`.");
-    }
-}
+#[cfg(feature = "stm32-usb")]
+#[doc(hidden)]
+#[path = "usb.rs"]
+pub mod usb;
+
+#[cfg(feature = "stm32-usb-synopsis")]
+#[doc(hidden)]
+#[path = "usb_synopsis_otg.rs"]
+pub mod usb;
 
 #[cfg(feature = "executor-interrupt")]
 include!(concat!(env!("OUT_DIR"), "/swi.rs"));

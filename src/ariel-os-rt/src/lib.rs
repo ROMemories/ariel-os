@@ -8,13 +8,11 @@
 // linkme
 #![feature(used_with_arg)]
 
+#[featurecomb::comb]
+mod _featurecomb {}
+
 #[cfg(feature = "threading")]
 mod threading;
-
-#[cfg(all(feature = "single-core", feature = "multi-core"))]
-compile_error!(
-    "feature \"single-core\" and feature \"multi-core\" cannot be enabled at the same time"
-);
 
 use ariel_os_debug::log::debug;
 

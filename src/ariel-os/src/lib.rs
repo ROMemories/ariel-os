@@ -11,6 +11,9 @@
 #![no_std]
 #![feature(doc_auto_cfg)]
 
+#[featurecomb::comb]
+mod _featurecomb {}
+
 pub mod buildinfo;
 
 #[cfg(feature = "bench")]

@@ -98,6 +98,7 @@ dependencies = [
  "ariel-os-threads",
  "ariel-os-utils",
  "document-features",
+ "featurecomb",
  "linkme",
  "static_cell",
 ]
@@ -173,6 +174,7 @@ version = "0.1.0"
 dependencies = [
  "defmt",
  "esp-println",
+ "featurecomb",
  "log 0.4.22",
  "rtt-target",
  "semihosting",
@@ -203,6 +205,7 @@ dependencies = [
  "embassy-usb",
  "embedded-hal 1.0.0",
  "embedded-hal-async",
+ "featurecomb",
  "heapless 0.8.0",
  "linkme",
  "once_cell",
@@ -349,6 +352,7 @@ dependencies = [
  "cortex-m-rt",
  "embassy-rp",
  "esp-hal",
+ "featurecomb",
  "linkme",
  "portable-atomic",
 ]
@@ -373,6 +377,7 @@ dependencies = [
  "embassy-executor",
  "embassy-stm32",
  "embedded-hal-async",
+ "featurecomb",
  "paste",
  "portable-atomic",
  "static_cell",
@@ -650,6 +655,17 @@ name = "byteorder"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1fd0f2584146f6f2ef48085050886acf353beff7305ebd1ae69500e27c67f64b"
+
+[[package]]
+name = "cargo-manifest"
+version = "0.16.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "999e8e607fe778257b51e0053903ed97594e56bc7a908c1f77320e9390c3b47b"
+dependencies = [
+ "serde",
+ "thiserror",
+ "toml 0.8.19",
+]
 
 [[package]]
 name = "cbindgen"
@@ -2257,6 +2273,28 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "486f806e73c5707928240ddc295403b1b93c96a02038563881c4a2fd84b81ac4"
 
 [[package]]
+name = "featurecomb"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7881a6987acb0e80b31e8ae951b2959076b56658b1acc64693f01f91a723cc49"
+dependencies = [
+ "cargo-manifest",
+ "featurecomb-schema",
+ "proc-macro2",
+ "quote",
+]
+
+[[package]]
+name = "featurecomb-schema"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4c486f63dbdcad99caa45f900ee8b51c8213483e7f53ff8992aa2b0c4d971362"
+dependencies = [
+ "indexmap 2.6.0",
+ "serde",
+]
+
+[[package]]
 name = "ff"
 version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2690,6 +2728,7 @@ checksum = "707907fe3c25f5424cce2cb7e1cbcafee6bdbe735ca90ef77c29e84591e5b9da"
 dependencies = [
  "equivalent",
  "hashbrown 0.15.1",
+ "serde",
 ]
 
 [[package]]
@@ -3603,9 +3642,9 @@ dependencies = [
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.89"
+version = "1.0.92"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f139b0662de085916d1fb67d2b4169d1addddda1919e696f3252b740b629986e"
+checksum = "37d3544b3f2748c54e147655edb5025752e2303145b5aefb3c3ea2c78b973bb0"
 dependencies = [
  "unicode-ident",
 ]
@@ -4517,6 +4556,7 @@ version = "0.8.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a1ed1f98e3fdc28d6d910e6737ae6ab1a93bf1985935a1193e68f93eeb68d24e"
 dependencies = [
+ "indexmap 2.6.0",
  "serde",
  "serde_spanned",
  "toml_datetime",

@@ -7,9 +7,28 @@ edition.workspace = true
 [lints]
 workspace = true
 
+[package.metadata.feature-groups]
+executor.exactly-one = { features = [
+  "executor-interrupt",
+  "executor-none",
+  "executor-single-thread",
+  "executor-thread",
+] }
+executor-with-threading.xor = { features = [
+  "executor-single-thread",
+  "threading",
+] }
+
+[package.metadata.feature-groups.features]
+override-network-config.requires = { features = ["net"] }
+override-usb-config.requires = { features = ["usb"] }
+usb-ethernet.requires = { features = ["usb"] }
+usb-hid.requires = { features = ["usb"] }
+
 [dependencies]
 const_panic.workspace = true
 critical-section.workspace = true
+featurecomb = { workspace = true }
 linkme.workspace = true
 static_cell.workspace = true
 cfg-if.workspace = true
@@ -71,11 +90,11 @@ spi = [
 
 ## Enables USB support.
 usb = ["dep:embassy-usb", "ariel-os-hal/usb"]
-usb-hid = ["dep:usbd-hid", "embassy-usb?/usbd-hid", "usb"]
+usb-hid = ["dep:usbd-hid", "embassy-usb?/usbd-hid"]
 
 # embassy-net requires embassy-time and support for timeouts in the executor
 net = ["dep:embassy-net", "time"]
-usb-ethernet = ["usb", "net"]
+usb-ethernet = ["net"]
 ## Use a hardware RNG to seed into the ariel-os-random system-wide RNG
 hwrng = ["ariel-os-hal/hwrng"]
 

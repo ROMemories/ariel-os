@@ -8,6 +8,14 @@ repository.workspace = true
 [lints]
 workspace = true
 
+[package.metadata.feature-groups]
+hwrng-peripheral.xor = { features = ["stm32-hash-rng", "stm32-rng"] }
+usb-variant.xor = { features = ["stm32-usb", "stm32-usb-synopsis"] }
+
+[package.metadata.feature-groups.features]
+hwrng.requires = { groups = ["hwrng-peripheral"] }
+usb.requires = { groups = ["usb-variant"] }
+
 [dependencies]
 cfg-if = { workspace = true }
 defmt = { workspace = true, optional = true }
@@ -17,6 +25,7 @@ embassy-executor = { workspace = true, default-features = false, features = [
 ] }
 embassy-stm32 = { workspace = true, default-features = false }
 embedded-hal-async = { workspace = true }
+featurecomb = { workspace = true }
 paste = { workspace = true }
 portable-atomic = { workspace = true }
 ariel-os-embassy-common = { workspace = true }

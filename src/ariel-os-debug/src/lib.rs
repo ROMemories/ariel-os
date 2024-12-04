@@ -1,18 +1,8 @@
 #![cfg_attr(not(test), no_std)]
 #![cfg_attr(test, no_main)]
 
-#[cfg(all(feature = "rtt-target", feature = "esp-println"))]
-compile_error!(
-    r#"feature "rtt-target" and feature "esp-println" cannot be enabled at the same time"#
-);
-
-#[cfg(all(
-    feature = "debug-console",
-    not(any(feature = "rtt-target", feature = "esp-println"))
-))]
-compile_error!(
-    r#"feature "debug-console" enabled but no backend. Select feature "rtt-target" or feature "esp-println"."#
-);
+#[featurecomb::comb]
+mod _featurecomb {}
 
 pub const EXIT_SUCCESS: Result<(), ()> = Ok(());
 pub const EXIT_FAILURE: Result<(), ()> = Err(());

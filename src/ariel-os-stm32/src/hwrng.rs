@@ -1,9 +1,6 @@
 use embassy_stm32::rng::Rng;
 use embassy_stm32::{bind_interrupts, peripherals, rng};
 
-#[cfg(not(any(feature = "stm32-hash-rng", feature = "stm32-rng")))]
-compile_error!("no stm32 rng feature enabled");
-
 #[cfg(feature = "stm32-hash-rng")]
 bind_interrupts!(struct Irqs {
     HASH_RNG => rng::InterruptHandler<peripherals::RNG>;
