@@ -233,9 +233,14 @@ async fn init_task(mut peripherals: hal::OptionalPeripherals) {
         use embassy_usb::class::cdc_ncm::{
             embassy_net::State as NetState, CdcNcmClass, State as CdcNcmState,
         };
+        // Not going through the ariel_os::identity / ariel_os_identity convenience wrappers
+        // because that would be a circular dependency.
+        use ariel_os_embassy_common::identity::DeviceId;
 
         // Host's MAC addr. This is the MAC the host "thinks" its USB-to-ethernet adapter has.
-        let host_mac_addr = [0x8A, 0x88, 0x88, 0x88, 0x88, 0x88];
+        let host_mac_addr = crate::hal::identity::DeviceId::get()
+            .map(|d| d.interface_eui48(1))
+            .unwrap_or([0x8A, 0x88, 0x88, 0x88, 0x88, 0x88]);
 
         // Create classes on the builder.
         static CDC_ECM_STATE: StaticCell<CdcNcmState> = StaticCell::new();
@@ -246,7 +251,9 @@ async fn init_task(mut peripherals: hal::OptionalPeripherals) {
             64,
         );
 
-        let our_mac_addr = [0xCA, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC];
+        let our_mac_addr = crate::hal::identity::DeviceId::get()
+            .map(|d| d.interface_eui48(0))
+            .unwrap_or([0xCA, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC]);
 
         static NET_STATE: StaticCell<NetState<{ network::ETHERNET_MTU }, 4, 4>> = StaticCell::new();
         let (runner, device) = usb_cdc_ecm
