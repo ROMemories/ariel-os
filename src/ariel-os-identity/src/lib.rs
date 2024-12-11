@@ -56,6 +56,10 @@ pub fn device_id_bytes() -> Result<impl AsRef<[u8]>, impl core::error::Error> {
 ///
 /// On devices that have access to globally unique EUI-48 identifiers, those are returned
 /// for interface indices up to the number of available identifiers.
+///
+/// # Errors
+///
+/// Same as in [`device_id_bytes()`].
 pub fn interface_eui48(if_index: u32) -> Result<[u8; 6], impl core::error::Error> {
     use ariel_os_embassy_common::identity::DeviceId;
 
