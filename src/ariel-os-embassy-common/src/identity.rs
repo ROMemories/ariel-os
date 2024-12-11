@@ -54,7 +54,10 @@ pub trait DeviceId: Sized {
         // possibilities can just be calculated on a graphics card in an hour.
         //
         // We do hash the board identifier, just to be sure to have a nice and random-looking
-        // starting point.
+        // starting point. The sha1 function was chosen because it is widespread (enabling
+        // re-implementation of the algorithm outside to predict addresses), available in a const
+        // implementation, and because its output is large enough to spread the input over the full
+        // address; it is not expected to be secure.
 
         // FIXME: Can't depend on ariel_os due to cyclic dependencies.
         const BOARD: &str = ariel_os_utils::str_from_env_or!(
