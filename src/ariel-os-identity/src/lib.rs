@@ -51,7 +51,10 @@ pub fn device_id_bytes() -> Result<impl AsRef<[u8]>, impl core::error::Error> {
 /// `?2-??-??-??-??-??`: Their bits set to individual (I/G, unicast), administratively
 /// locally administered (U/L, not indicating any particular manufacturer), and following the
 /// SLAP (Structured Local Address Plan) semantics, they fall into the AII (Administratively
-/// Assigned Identifier) quadrant. The randomly generated identifiers aim to appear random, but can
+/// Assigned Identifier) quadrant. Wikipedia has a [good description of those address
+/// details](https://en.wikipedia.org/wiki/MAC_address#Address_details).
+///
+/// The randomly generated identifiers aim to appear random, but can
 /// be traced back to the device ID it is calculated from.
 ///
 /// On devices that have access to globally unique EUI-48 identifiers, those are returned
