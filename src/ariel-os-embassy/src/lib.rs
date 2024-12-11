@@ -233,8 +233,6 @@ async fn init_task(mut peripherals: hal::OptionalPeripherals) {
         use embassy_usb::class::cdc_ncm::{
             embassy_net::State as NetState, CdcNcmClass, State as CdcNcmState,
         };
-        // Not going through the ariel_os::identity / ariel_os_identity convenience wrappers
-        // because that would be a circular dependency.
         use ariel_os_embassy_common::identity::DeviceId;
 
         // Host's MAC addr. This is the MAC the host "thinks" its USB-to-ethernet adapter has.

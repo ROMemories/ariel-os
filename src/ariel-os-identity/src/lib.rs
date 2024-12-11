@@ -41,7 +41,7 @@ pub fn device_id_bytes() -> Result<impl AsRef<[u8]>, impl core::error::Error> {
     ariel_os_embassy::hal::identity::DeviceId::get().map(|d| d.bytes())
 }
 
-/// Generates an EUI-48 identifier ("6 byte MAC address") based on the device identity.
+/// Generates an EUI-48 identifier ("6-byte MAC address") based on the device identity.
 ///
 /// The argument `if_index` allows the system to generate addresses for consecutive interfaces.
 ///
@@ -54,7 +54,7 @@ pub fn device_id_bytes() -> Result<impl AsRef<[u8]>, impl core::error::Error> {
 /// Assigned Identifier) quadrant. The randomly generated identifiers aim to appear random, but can
 /// be traced back to the device ID it is calculated from.
 ///
-/// On devices that have access to globally unique EUI-48 identifiers, that those are returned
+/// On devices that have access to globally unique EUI-48 identifiers, those are returned
 /// for interface indices up to the number of available identifiers.
 pub fn interface_eui48(if_index: u32) -> Result<[u8; 6], impl core::error::Error> {
     use ariel_os_embassy_common::identity::DeviceId;
