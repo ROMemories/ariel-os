@@ -68,7 +68,7 @@ pub trait DeviceId: Sized {
         const BOARD_HASH: [u8; 20] = const_sha1::sha1(BOARD.as_bytes()).as_bytes();
         // Once feature(const_option) is stable in our compiler, the unwrap and dereference can
         // move in too.
-        let mut eui48: [u8; 6] = *const { BOARD_HASH.first_chunk() }.unwrap();
+        let truncated_board_hash: [u8; 6] = *const { BOARD_HASH.first_chunk() }.unwrap();
 
         // We use the whole device identity to be sure to use the variable parts even if they are
         // just in some location (which may not be the first or the last bits of the bytes(), in
@@ -82,45 +82,51 @@ pub trait DeviceId: Sized {
         // runs a risk of having a realistic chance of a MAC collision in 32 bit space will use
         // globally unique addresses or actually manage addresses anyway.
 
-        let bytes = self.bytes();
+        let device_id_bytes = self.bytes();
 
-        // This alternative algorithm is identical (as easily evidenced by running both on
-        // arbitrary inputs) but rustc doesn't optimize this simple version:
-        //
-        // ```
-        // for (index, byte) in bytes.as_ref().into_iter().enumerate() {
-        //     eui48[1 + index % 4] ^= byte;
-        // }
-        // ```
-
-        // This would work the same in either little and big endian, but most machines are little
-        // these days (and Rust has no simple and safe host-endianness conversion).
-        let mut xor_me: u32 = u32::from_le_bytes(eui48[1..5].try_into().unwrap());
-        for chunk in bytes.as_ref().chunks(4) {
-            let mut full = [0; 4];
-            #[allow(
-                clippy::indexing_slicing,
-                reason = "Works by construction; the equivalent array chunks based construction with accessing the `.remainder` is neither stable nor equally concise"
-            )]
-            full[..chunk.len()].copy_from_slice(chunk);
-            xor_me ^= u32::from_le_bytes(full);
-        }
-        eui48[1..5].copy_from_slice(&xor_me.to_le_bytes()[..]);
-
-        // Enforce the `?2-??-??-??-??-??` pattern of an AII (Administratively Assigned Identifier)
-        eui48[0] &= 0xf0;
-        eui48[0] |= 0x02;
-
-        // There is some optimization potential in making everything above this line into a
-        // function and inlining the rest, because then constant propagation may eliminate this
-        // unaligned thing, but let's delay that until someone measures it.
-
-        let with_if_index =
-            u32::from_be_bytes(eui48[2..6].try_into().unwrap()).wrapping_add(if_index);
-        eui48[2..6].copy_from_slice(&(with_if_index).to_be_bytes()[..]);
-
-        eui48
+        generate_aai_mac_address(truncated_board_hash, device_id_bytes.as_ref(), if_index)
     }
+}
+
+fn generate_aai_mac_address(truncated_board_hash: [u8; 6], device_id_bytes: &[u8], if_index: u32) -> [u8; 6] {
+    // This alternative algorithm is identical (as easily evidenced by running both on
+    // arbitrary inputs) but rustc doesn't optimize this simple version:
+    //
+    // ```
+    // for (index, byte) in bytes.as_ref().into_iter().enumerate() {
+    //     eui48[1 + index % 4] ^= byte;
+    // }
+    // ```
+
+    let mut eui48 = truncated_board_hash;
+
+    // This would work the same in either little and big endian, but most machines are little
+    // these days (and Rust has no simple and safe host-endianness conversion).
+    let mut xor_me: u32 = u32::from_le_bytes(eui48[1..5].try_into().unwrap());
+    for chunk in device_id_bytes.chunks(4) {
+        let mut full = [0; 4];
+        #[allow(
+            clippy::indexing_slicing,
+            reason = "Works by construction; the equivalent array chunks based construction with accessing the `.remainder` is neither stable nor equally concise"
+        )]
+        full[..chunk.len()].copy_from_slice(chunk);
+        xor_me ^= u32::from_le_bytes(full);
+    }
+    eui48[1..5].copy_from_slice(&xor_me.to_le_bytes()[..]);
+
+    // Enforce the `?2-??-??-??-??-??` pattern of an AII (Administratively Assigned Identifier)
+    eui48[0] &= 0xf0;
+    eui48[0] |= 0x02;
+
+    // There is some optimization potential in making everything above this line into a
+    // function and inlining the rest, because then constant propagation may eliminate this
+    // unaligned thing, but let's delay that until someone measures it.
+
+    let with_if_index =
+        u32::from_be_bytes(eui48[2..6].try_into().unwrap()).wrapping_add(if_index);
+    eui48[2..6].copy_from_slice(&(with_if_index).to_be_bytes()[..]);
+
+    eui48
 }
 
 /// An uninhabited type implementing [`DeviceId`] that always errs.
