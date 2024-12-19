@@ -22,7 +22,7 @@ async fn coap_run() {
     let buffer = scroll_ring::Buffer::<512>::default();
     // FIXME: Why doesn't scroll_ring provide that?
     struct Stdout<'a>(&'a scroll_ring::Buffer<512>);
-    impl<'a> core::fmt::Write for Stdout<'a> {
+    impl core::fmt::Write for Stdout<'_> {
         fn write_str(&mut self, s: &str) -> Result<(), core::fmt::Error> {
             self.0.write(s.as_bytes());
             Ok(())

@@ -6,14 +6,14 @@ use cortex_m::{
 use crate::Error;
 
 #[allow(missing_docs)]
-pub fn benchmark<F: FnMut() -> ()>(iterations: usize, mut f: F) -> Result<usize, Error> {
+pub fn benchmark<F: FnMut()>(iterations: usize, mut f: F) -> Result<usize, Error> {
     let mut p = unsafe { Peripherals::steal() };
     //
     p.SCB.clear_sleepdeep();
 
     //
     p.SYST.set_clock_source(SystClkSource::Core);
-    p.SYST.set_reload(0x00FFFFFF);
+    p.SYST.set_reload(0x00FF_FFFF);
     p.SYST.clear_current();
     p.SYST.enable_counter();
 

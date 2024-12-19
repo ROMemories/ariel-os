@@ -125,7 +125,7 @@ unsafe extern "C" fn PendSV() {
     };
 }
 
-#[cfg(any(armv6m))]
+#[cfg(armv6m)]
 #[naked]
 #[no_mangle]
 #[allow(non_snake_case)]

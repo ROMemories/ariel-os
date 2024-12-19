@@ -167,7 +167,7 @@ fn init() {
 
     static EXECUTOR: StaticCell<thread_executor::Executor> = StaticCell::new();
     EXECUTOR
-        .init_with(|| thread_executor::Executor::new())
+        .init_with(thread_executor::Executor::new)
         .run(|spawner| spawner.must_spawn(init_task(p)));
 }
 

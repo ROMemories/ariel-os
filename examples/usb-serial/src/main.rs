@@ -44,7 +44,7 @@ async fn main() {
         .with(|builder| {
             CdcAcmClass::new(
                 builder,
-                STATE.init_with(|| State::new()),
+                STATE.init_with(State::new),
                 MAX_FULL_SPEED_PACKET_SIZE.into(),
             )
         })

@@ -40,6 +40,7 @@ impl Executor {
     /// # Panics
     ///
     /// This function panics when called without a running thread.
+    #[expect(clippy::new_without_default)]
     pub fn new() -> Self {
         let current_thread = current_pid().unwrap();
         Self {
