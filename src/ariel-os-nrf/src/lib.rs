@@ -42,11 +42,11 @@ pub use embassy_executor::InterruptExecutor as Executor;
 
 #[cfg(feature = "executor-interrupt")]
 #[cfg(context = "nrf52")]
-ariel_os_embassy_common::executor_swi!(EGU0_SWI0);
+ariel_os_embassy_common::executor_swi!(crate::EXECUTOR, EGU0_SWI0);
 
 #[cfg(feature = "executor-interrupt")]
 #[cfg(context = "nrf5340")]
-ariel_os_embassy_common::executor_swi!(EGU0);
+ariel_os_embassy_common::executor_swi!(crate::EXECUTOR, EGU0);
 
 use embassy_nrf::config::Config;
 

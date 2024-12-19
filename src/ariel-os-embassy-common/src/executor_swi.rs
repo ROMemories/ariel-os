@@ -9,7 +9,7 @@
 /// The macro turns this:
 ///
 /// ```Rust
-/// executor_swi!(SWI_IRQ_1);
+/// executor_swi!(crate::EXECUTOR, SWI_IRQ_1);
 /// ```
 ///
 /// into this:
@@ -26,7 +26,7 @@
 /// type.
 #[macro_export]
 macro_rules! executor_swi {
-    ($swi:ident) => {
+    ($executor:path, $swi:ident) => {
         pub use interrupt::$swi as SWI;
         #[interrupt]
         unsafe fn $swi() {
@@ -36,7 +36,7 @@ macro_rules! executor_swi {
             //   (This macro just adds "only enable it after starting the executor" to the
             //   requirements of the unsafe interrupt starting; the safe start() function
             //    trusts the user to pass the right number.)
-            unsafe { crate::EXECUTOR.on_interrupt() }
+            unsafe { $executor.on_interrupt() }
         }
     };
 }

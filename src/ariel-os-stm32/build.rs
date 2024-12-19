@@ -11,7 +11,11 @@ fn main() {
         if let Ok(var) = env::var("CONFIG_SWI") {
             fs::write(
                 &dest_path,
-                format!("ariel_os_embassy_common::executor_swi!({});\n", var).as_bytes(),
+                format!(
+                    "ariel_os_embassy_common::executor_swi!(crate::EXECUTOR, {});\n",
+                    var
+                )
+                .as_bytes(),
             )
             .expect("write failed");
         } else {

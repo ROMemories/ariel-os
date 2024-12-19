@@ -58,7 +58,7 @@ pub use embassy_executor::InterruptExecutor as Executor;
 pub use embassy_rp::interrupt;
 
 #[cfg(feature = "executor-interrupt")]
-ariel_os_embassy_common::executor_swi!(SWI_IRQ_1);
+ariel_os_embassy_common::executor_swi!(crate::EXECUTOR, SWI_IRQ_1);
 
 #[cfg(feature = "executor-interrupt")]
 #[doc(hidden)]
