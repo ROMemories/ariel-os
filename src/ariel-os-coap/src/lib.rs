@@ -81,7 +81,7 @@ pub async fn coap_run(handler: impl coap_handler::Handler + coap_handler::Report
     let coap = COAP.init_with(embedded_nal_coap::CoAPShared::new);
     let (client, server) = coap.split();
     CLIENT
-        .init(SendCell::new_async(client).await)
+        .init(SendCell::new(client).await)
         .ok()
         .expect("CLIENT can not be populated when COAP was just not populated.");
 

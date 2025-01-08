@@ -1,6 +1,5 @@
 //! Delegate or lend an object to another task
 
-use embassy_executor::Spawner;
 use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, signal::Signal};
 
 use crate::sendcell::SendCell;
@@ -56,9 +55,8 @@ impl<T> Delegate<T> {
     ///
     /// This blocks until another task called [`with()`](Delegate::with).
     pub async fn lend<'a, 'b: 'a>(&'a self, something: &'b mut T) {
-        let spawner = Spawner::for_current_executor().await;
         self.send
-            .signal(SendCell::new(something as *mut T, spawner));
+            .signal(SendCell::new(something as *mut T));
 
         self.reply.wait().await
     }
@@ -68,7 +66,6 @@ impl<T> Delegate<T> {
     /// This blocks until another task called [`lend(something)`](Delegate::lend).
     pub async fn with<U>(&self, func: impl FnOnce(&mut T) -> U) -> U {
         let data = self.send.wait().await;
-        let spawner = Spawner::for_current_executor().await;
         // SAFETY:
         // - SendCell guarantees that data `lend()`ed stays on the same executor,
         //   which is single-threaded
@@ -79,7 +76,7 @@ impl<T> Delegate<T> {
         // - the lifetime bound on `lend` enforces that the raw pointer outlives this `Delegate`
         //   instance
         // TODO: it is actually possible to call `with()` twice, which breaks assumptions.
-        let result = func(unsafe { data.get(spawner).unwrap().as_mut().unwrap() });
+        let result = func(unsafe { data.get().unwrap().as_mut().unwrap() });
         self.reply.signal(());
         result
     }

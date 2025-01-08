@@ -332,10 +332,7 @@ async fn init_task(mut peripherals: hal::OptionalPeripherals) {
 
         spawner.spawn(network::net_task(runner)).unwrap();
 
-        if crate::network::STACK
-            .init(SendCell::new(stack, spawner))
-            .is_err()
-        {
+        if crate::network::STACK.init(SendCell::new(stack)).is_err() {
             unreachable!();
         }
     }

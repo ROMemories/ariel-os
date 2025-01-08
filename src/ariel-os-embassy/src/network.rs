@@ -25,7 +25,7 @@ pub(crate) static STACK: OnceLock<SendCell<NetworkStack>> = OnceLock::new();
 ///
 /// Returns [`None`] if networking is not yet initialized.
 pub async fn network_stack() -> Option<NetworkStack> {
-    STACK.get().await.get_async().await.copied()
+    STACK.get().await.get().copied()
 }
 
 #[embassy_executor::task]

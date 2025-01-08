@@ -6,8 +6,6 @@
 //!
 //! [`SendCell`] checks for the correct executor *at runtime*.
 
-use embassy_executor::Spawner;
-
 // SAFETY:
 // SendCell guarantees at runtime that its content stays on the same embassy
 // executor. Those are single threaded, so it is guaranteed that the content
@@ -26,41 +24,31 @@ unsafe impl<T> Send for SendCell<T> {}
 /// e.g., in closures. Otherwise, the async versions are also fine.
 #[derive(Debug)]
 pub struct SendCell<T> {
-    executor_id: usize,
+    #[cfg(feature = "threading")]
+    tid: ariel_os_threads::ThreadId,
     inner: T,
 }
 
 impl<T> SendCell<T> {
     /// Creates a new [`SendCell`].
-    pub fn new(inner: T, spawner: Spawner) -> Self {
+    pub fn new(inner: T) -> Self {
         Self {
-            executor_id: spawner.executor_id(),
+            #[cfg(feature = "threading")]
+            tid: ariel_os_threads::current_pid().unwrap(),
             inner,
         }
     }
 
     /// Gets the contents of this [`SendCell`].
-    pub fn get(&self, spawner: Spawner) -> Option<&T> {
-        if spawner.executor_id() == self.executor_id {
+    pub fn get(&self) -> Option<&T> {
+        #[cfg(not(feature = "threading"))]
+        return Some(&self.inner);
+
+        #[cfg(feature = "threading")]
+        if ariel_os_threads::current_pid() == Some(self.tid) {
             Some(&self.inner)
         } else {
             None
         }
-    }
-
-    /// Creates a new [`SendCell`] (async version).
-    ///
-    /// Despite being async, this function never blocks/yields, it returns instantly.
-    pub async fn new_async(inner: T) -> Self {
-        let spawner = Spawner::for_current_executor().await;
-        SendCell::new(inner, spawner)
-    }
-
-    /// Gets the contents of this [`SendCell`] (async version).
-    ///
-    /// Despite being async, this function never blocks/yields, it returns instantly.
-    pub async fn get_async(&self) -> Option<&T> {
-        let spawner = Spawner::for_current_executor().await;
-        self.get(spawner)
     }
 }
