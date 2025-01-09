@@ -7,8 +7,14 @@ edition.workspace = true
 [lints]
 workspace = true
 
+[package.metadata.feature-groups]
+core-config.exactly-one = { features = ["multi-core", "single-core"] }
+executor-single-thread.xor = { features = ["executor-single-thread", "threading"] }
+esp-mcu.exactly-one = { features = ["_esp32", "_esp32c3", "_esp32c6", "_esp32s3"] }
+
 [dependencies]
 cfg-if.workspace = true
+featurecomb = { workspace = true }
 linkme.workspace = true
 ariel-os-debug.workspace = true
 ariel-os-threads = { path = "../ariel-os-threads", optional = true }
@@ -40,7 +46,7 @@ executor-single-thread = []
 silent-panic = []
 _panic-handler = []
 single-core = ["cortex-m/critical-section-single-core"]
-multi-core = ["embassy-rp/critical-section-impl"]
+multi-core = ["dep:embassy-rp", "embassy-rp?/critical-section-impl"]
 
 # internal
 # These features are used by `build.rs`, which doesn't "see" context
