@@ -2,7 +2,6 @@
 
 - [Introduction](./introduction.md)
 - [Hardware & Functionality Support](./hardware_functionality_support.md)
-- [Multithreading](./multithreading.md)
 
 # User Guide
 
@@ -10,6 +9,7 @@
 - [Building an Application](./application.md)
 - [Debug Logging](./debug_logging.md)
 - [Networking](./networking.md)
+- [Multithreading](./multithreading.md)
 - [Testing](./testing.md)
 - [Tooling](./tooling/index.md)
   - [CoAP](./tooling/coap.md)
