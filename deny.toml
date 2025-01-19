@@ -57,6 +57,8 @@ allow-git = [
   "https://github.com/seanmonstar/try-lock",
   "https://gitlab.com/etonomy/riot-module-examples",
   "https://github.com/Nugine/const-str",
+  # while https://github.com/twittner/minicbor/pull/9 is open
+  "https://github.com/chrysn-pull-requests/minicbor",
 ]
 
 [sources.allow-org]
