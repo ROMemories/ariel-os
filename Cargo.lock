@@ -1571,7 +1571,7 @@ dependencies = [
 [[package]]
 name = "embassy-net"
 version = "0.6.0"
-source = "git+https://github.com/ariel-os/embassy?branch=embassy-net-v0.6.0%2Bariel-os#cb1a5a303302a3c9ec8ed542033299c450809e82"
+source = "git+https://github.com/ariel-os/embassy?branch=embassy-net-v0.6.0%2Bariel-os#3d9f77ee05cdb18f1cd676233bcda9b6f7be3369"
 dependencies = [
  "defmt",
  "document-features",
