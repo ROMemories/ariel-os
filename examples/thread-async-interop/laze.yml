@@ -1,7 +1,4 @@
 apps:
   - name: thread-async-interop
-    context:
-      - nrf
-      - rp
     selects:
       - sw/threading
