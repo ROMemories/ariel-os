@@ -20,6 +20,8 @@ const MAX_SUPPORTED_PEER_NONCE_LEN: usize = 16;
 
 /// Maximum size a CWT processed by this module can have (at least when it needs to be copied)
 const MAX_SUPPORTED_ACCESSTOKEN_LEN: usize = 256;
+/// Maximum size of a COSE_Encrypt0 protected header (used to size the AAD buffer)
+const MAX_SUPPORTED_ENCRYPT_PROTECTED_LEN: usize = 32;
 
 /// The content of an application/ace+cbor file.
 ///
@@ -155,8 +157,8 @@ impl CoseEncrypt0<'_> {
             protected: self.protected,
             external_aad: &[],
         };
-        // FIXME: This is overkill by far; usually we get away with like 16 byte.
-        let mut aad_encoded = heapless::Vec::<u8, MAX_SUPPORTED_ACCESSTOKEN_LEN>::new();
+        const AADSIZE: usize = 1 + 1 + 8 + 1 + MAX_SUPPORTED_ENCRYPT_PROTECTED_LEN + 1;
+        let mut aad_encoded = heapless::Vec::<u8, AADSIZE>::new();
         minicbor::encode(&aad, minicbor_adapters::WriteToHeapless(&mut aad_encoded))
             .map_err(|_| CredentialErrorDetail::ConstraintExceeded)?;
         trace!("Serialized AAD: {:02x}", aad_encoded); // :02x could be :cbor
