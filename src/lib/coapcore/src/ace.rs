@@ -367,6 +367,7 @@ pub fn process_acecbor_authz_info<Scope>(
         return Err(CredentialErrorDetail::UnsupportedAlgorithm.into());
     }
 
+    // FIXME: Duplicated with process_edhoc_token
     #[derive(minicbor::Encode)]
     struct Encrypt0<'a> {
         #[n(0)]
@@ -430,43 +431,86 @@ pub fn process_edhoc_token<Scope>(
     ead3: &[u8],
     authorities: &impl crate::seccfg::ServerSecurityConfig<Scope = Scope>,
 ) -> Result<(lakers::Credential, Scope), CredentialError> {
-    let sign1: SignedCwt = minicbor::decode(ead3)?;
-    let protected: HeaderMap = minicbor::decode(sign1.protected)?;
-    trace!(
-        "Decoded protected header map {:?} inside sign1 container {:?}",
-        &protected,
-        &sign1
-    );
-    let headers = sign1.unprotected.updated_with(protected);
+    let mut buffer: heapless::Vec<u8, MAX_SUPPORTED_ACCESSTOKEN_LEN>;
 
-    #[derive(minicbor::Encode)]
-    struct SigStructureForSignature1<'a> {
-        #[n(0)]
-        context: &'static str,
-        #[cbor(b(1), with = "minicbor::bytes")]
-        body_protected: &'a [u8],
-        #[cbor(b(2), with = "minicbor::bytes")]
-        external_aad: &'a [u8],
-        #[cbor(b(3), with = "minicbor::bytes")]
-        payload: &'a [u8],
-    }
-    let aad = SigStructureForSignature1 {
-        context: "Signature1",
-        body_protected: sign1.protected,
-        external_aad: &[],
-        payload: sign1.payload,
+    // Trying and falling back means that the minicbor error is not too great ("Expected tag 16"
+    // rather than "Expected tag 16 or 18"), but we don't
+    // show much of that anyway.
+    let (scope, claims) = if let Ok(encrypt0) = minicbor::decode::<EncryptedCwt>(ead3) {
+        let protected: HeaderMap = minicbor::decode(encrypt0.protected)?;
+        let headers = encrypt0.unprotected.updated_with(protected);
+
+        // FIXME: Duplicated with process_acecbor_authz_info
+        #[derive(minicbor::Encode)]
+        struct Encrypt0<'a> {
+            #[n(0)]
+            context: &'static str,
+            #[cbor(b(1), with = "minicbor::bytes")]
+            protected: &'a [u8],
+            #[cbor(b(2), with = "minicbor::bytes")]
+            external_aad: &'a [u8],
+        }
+        let aad = Encrypt0 {
+            context: "Encrypt0",
+            protected: encrypt0.protected,
+            external_aad: &[],
+        };
+        let mut aad_encoded = heapless::Vec::<u8, MAX_SUPPORTED_ACCESSTOKEN_LEN>::new();
+        minicbor::encode(&aad, minicbor_adapters::WriteToHeapless(&mut aad_encoded))
+            .map_err(|_| CredentialErrorDetail::ConstraintExceeded)?;
+        trace!("Serialized AAD: {:02x}", aad_encoded); // :02x could be :cbor
+                                                       //
+        buffer = heapless::Vec::from_slice(encrypt0.encrypted)
+            .map_err(|_| CredentialErrorDetail::ConstraintExceeded)?;
+
+        authorities.decrypt_symmetric_token(
+            &headers,
+            &aad_encoded,
+            &mut buffer,
+            crate::PrivateMethod,
+        )?
+    } else if let Ok(sign1) = minicbor::decode::<SignedCwt>(ead3) {
+        let protected: HeaderMap = minicbor::decode(sign1.protected)?;
+        trace!(
+            "Decoded protected header map {:?} inside sign1 container {:?}",
+            &protected,
+            &sign1
+        );
+        let headers = sign1.unprotected.updated_with(protected);
+
+        #[derive(minicbor::Encode)]
+        struct SigStructureForSignature1<'a> {
+            #[n(0)]
+            context: &'static str,
+            #[cbor(b(1), with = "minicbor::bytes")]
+            body_protected: &'a [u8],
+            #[cbor(b(2), with = "minicbor::bytes")]
+            external_aad: &'a [u8],
+            #[cbor(b(3), with = "minicbor::bytes")]
+            payload: &'a [u8],
+        }
+        let aad = SigStructureForSignature1 {
+            context: "Signature1",
+            body_protected: sign1.protected,
+            external_aad: &[],
+            payload: sign1.payload,
+        };
+        buffer = heapless::Vec::new();
+        minicbor::encode(&aad, minicbor_adapters::WriteToHeapless(&mut buffer))?;
+        trace!("Serialized AAD: {:#02x}", buffer);
+
+        let (scope, claims) = authorities.verify_asymmetric_token(
+            &headers,
+            &buffer,
+            sign1.signature,
+            sign1.payload,
+            crate::PrivateMethod,
+        )?;
+
+        (scope, claims)
+    } else {
+        return Err(CredentialErrorDetail::UnsupportedExtension.into());
     };
-    let mut signed_data = heapless::Vec::<u8, MAX_SUPPORTED_ACCESSTOKEN_LEN>::new();
-    minicbor::encode(&aad, minicbor_adapters::WriteToHeapless(&mut signed_data))?;
-    trace!("Serialized AAD: {:#02x}", signed_data);
-
-    let (scope, claims) = authorities.verify_asymmetric_token(
-        &headers,
-        &signed_data,
-        sign1.signature,
-        sign1.payload,
-        crate::PrivateMethod,
-    )?;
 
     // FIXME: Check iat/exp against raytime
 
