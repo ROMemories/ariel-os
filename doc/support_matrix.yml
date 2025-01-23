@@ -181,7 +181,7 @@ boards:
       user_usb: not_available
       ethernet_over_usb: not_available
 
-  nrf52840-dk:
+  nrf52840dk:
     name: nRF52840-DK
     url: https://web.archive.org/web/20250112154748/https://www.nordicsemi.com/Products/Development-hardware/nrf52840-dk
     chip: nrf52840
@@ -189,7 +189,7 @@ boards:
       user_usb: supported
       ethernet_over_usb: supported
 
-  nrf5340-dk:
+  nrf5340dk:
     name: nRF5340-DK
     url: https://web.archive.org/web/20250115224621/https://www.nordicsemi.com/Products/Development-hardware/nrf5340-dk
     chip: nrf53xx
@@ -197,7 +197,7 @@ boards:
       user_usb: supported
       ethernet_over_usb: supported
 
-  rp-pico:
+  rpi-pico:
     name: Raspberry Pi Pico
     url: https://web.archive.org/web/20250101022830/https://www.raspberrypi.com/products/raspberry-pi-pico/
     chip: rp2040
@@ -205,7 +205,7 @@ boards:
       user_usb: supported
       ethernet_over_usb: supported
 
-  rp-pico-w:
+  rpi-pico-w:
     name: Raspberry Pi Pico W
     url: https://web.archive.org/web/20250101022830/https://www.raspberrypi.com/products/raspberry-pi-pico/
     chip: rp2040
@@ -214,7 +214,7 @@ boards:
       wifi: supported
       ethernet_over_usb: supported
 
-  esp32-c6-devkitc-1:
+  espressif-esp32-c6-devkitc-1:
     name: Espressif ESP32-C6-DevKitC-1
     url: https://web.archive.org/web/20250122153727/https://www.espressif.com/en/dev-board/esp32-c6-devkitc-1-en
     chip: esp32-c6
