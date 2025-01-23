@@ -19,7 +19,7 @@ use miette::Diagnostic;
 
 const TABLE_TEMPLATE: &str =
 r##"<!-- This table is auto-generated. Do not edit manually. -->
-<table>
+<table class="support-matrix">
   <thead>
     <tr>
       <th>Chip</th>
@@ -47,6 +47,11 @@ r##"<!-- This table is auto-generated. Do not edit manually. -->
   </tbody>
 </table>
 <style>
+.support-matrix {
+    position: relative;
+    left: 50%;
+    transform: translate(-50%, 0);
+}
 .support-cell {
   text-align: center;
 }
