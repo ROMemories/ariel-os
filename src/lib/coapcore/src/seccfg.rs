@@ -60,11 +60,11 @@ pub trait ServerSecurityConfig: crate::Sealed {
     )]
     // The method is already sealed by the use of a HeaderMap and CwtClaimsSet, but that may become
     // more public over time, and that should not impct this method's publicness.
-    fn decrypt_symmetric_token<'buf, const N: usize>(
+    fn decrypt_symmetric_token<'buf>(
         &self,
         headers: &HeaderMap,
         aad: &[u8],
-        ciphertext_buffer: &'buf mut heapless::Vec<u8, N>,
+        ciphertext_buffer: &'buf mut [u8],
         _: crate::PrivateMethod,
     ) -> Result<(Self::Scope, crate::ace::CwtClaimsSet<'buf>), CredentialError> {
         Err(CredentialErrorDetail::KeyNotPresent.into())
@@ -182,11 +182,11 @@ impl ServerSecurityConfig for ConfigBuilder {
 
     type Scope = crate::scope::UnionScope;
 
-    fn decrypt_symmetric_token<'buf, const N: usize>(
+    fn decrypt_symmetric_token<'buf>(
         &self,
         headers: &HeaderMap,
         aad: &[u8],
-        ciphertext_buffer: &'buf mut heapless::Vec<u8, N>,
+        ciphertext_buffer: &'buf mut [u8],
         _: crate::PrivateMethod,
     ) -> Result<(Self::Scope, crate::ace::CwtClaimsSet<'buf>), CredentialError> {
         use ccm::aead::AeadInPlace;
@@ -233,9 +233,7 @@ impl ServerSecurityConfig for ConfigBuilder {
                 CredentialErrorDetail::VerifyFailed
             })?;
 
-        ciphertext_buffer.truncate(ciphertext_len);
-
-        let claims: crate::ace::CwtClaimsSet = minicbor::decode(ciphertext_buffer.as_slice())
+        let claims: crate::ace::CwtClaimsSet = minicbor::decode(ciphertext)
             .map_err(|_| CredentialErrorDetail::UnsupportedExtension)?;
 
         let scope = crate::scope::AifValue::parse(claims.scope)

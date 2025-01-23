@@ -69,7 +69,7 @@ pub struct HeaderMap<'a> {
 
 impl HeaderMap<'_> {
     /// Merge two header maps, using the latter's value in case of conflict.
-    fn updated_with(self, other: Self) -> Self {
+    fn updated_with(&self, other: Self) -> Self {
         Self {
             alg: self.alg.or(other.alg),
             iv: self.iv.or(other.iv),
@@ -120,6 +120,57 @@ struct CoseEncrypt0<'a> {
     unprotected: HeaderMap<'a>,
     #[cbor(b(2), with = "minicbor::bytes")]
     encrypted: &'a [u8],
+}
+
+impl CoseEncrypt0<'_> {
+    /// Performs the common steps of processing the inner headers and building an AAD before
+    /// passing the output on to an authority's `.decrypt_symmetric_token` method.
+    ///
+    /// The buffer could be initialized anew and place-returned, but as it is large, it is taken as
+    /// a reference so that (eg. in `process_edhoc_token`) it can be guaranteed to be shared with
+    /// the large buffer of the other path.
+    fn prepare_decryption<'t>(
+        &self,
+        buffer: &'t mut heapless::Vec<u8, MAX_SUPPORTED_ACCESSTOKEN_LEN>,
+    ) -> Result<(HeaderMap<'_>, impl AsRef<[u8]>, &'t mut [u8]), CredentialError> {
+        trace!("Preparing decryption of {:?}", self);
+
+        // Could have the extra exception for empty byte strings expressing the empty map, but we don't
+        // encounter this here
+        let protected: HeaderMap = minicbor::decode(self.protected)?;
+        trace!("Protected decoded as header map: {:?}", protected);
+        let headers = self.unprotected.updated_with(protected);
+
+        #[derive(minicbor::Encode)]
+        struct Encrypt0<'a> {
+            #[n(0)]
+            context: &'static str,
+            #[cbor(b(1), with = "minicbor::bytes")]
+            protected: &'a [u8],
+            #[cbor(b(2), with = "minicbor::bytes")]
+            external_aad: &'a [u8],
+        }
+        let aad = Encrypt0 {
+            context: "Encrypt0",
+            protected: self.protected,
+            external_aad: &[],
+        };
+        // FIXME: This is overkill by far; usually we get away with like 16 byte.
+        let mut aad_encoded = heapless::Vec::<u8, MAX_SUPPORTED_ACCESSTOKEN_LEN>::new();
+        minicbor::encode(&aad, minicbor_adapters::WriteToHeapless(&mut aad_encoded))
+            .map_err(|_| CredentialErrorDetail::ConstraintExceeded)?;
+        trace!("Serialized AAD: {:02x}", aad_encoded); // :02x could be :cbor
+
+        buffer.clear();
+        // Copying around is not a constraint of this function (well that too but that could
+        // change) -- but the callers don't usually get their data in a mutable buffer for in-place
+        // decryption.
+        buffer
+            .extend_from_slice(self.encrypted)
+            .map_err(|_| CredentialErrorDetail::ConstraintExceeded)?;
+
+        Ok((headers, aad_encoded, buffer))
+    }
 }
 
 type EncryptedCwt<'a> = CoseEncrypt0<'a>;
@@ -349,15 +400,8 @@ pub fn process_acecbor_authz_info<Scope>(
 
     let encrypt0: EncryptedCwt = minicbor::decode(access_token)?;
 
-    trace!("Token decoded as Encrypt0: {:?}", encrypt0);
-
-    // Could have the extra exception for empty byte strings expressing the empty map, but we don't
-    // encounter this here
-    let protected: HeaderMap = minicbor::decode(encrypt0.protected)?;
-
-    trace!("Protected decoded as header map: {:?}", protected);
-
-    let headers = encrypt0.unprotected.updated_with(protected);
+    let mut buffer = Default::default();
+    let (headers, aad_encoded, buffer) = encrypt0.prepare_decryption(&mut buffer)?;
 
     // Can't go through liboscore's decryption backend b/c that expects unprotect-in-place; doing
     // something more custom on a bounded copy instead, and this is part of where dcaf on alloc
@@ -367,34 +411,10 @@ pub fn process_acecbor_authz_info<Scope>(
         return Err(CredentialErrorDetail::UnsupportedAlgorithm.into());
     }
 
-    // FIXME: Duplicated with process_edhoc_token
-    #[derive(minicbor::Encode)]
-    struct Encrypt0<'a> {
-        #[n(0)]
-        context: &'static str,
-        #[cbor(b(1), with = "minicbor::bytes")]
-        protected: &'a [u8],
-        #[cbor(b(2), with = "minicbor::bytes")]
-        external_aad: &'a [u8],
-    }
-    let aad = Encrypt0 {
-        context: "Encrypt0",
-        protected: encrypt0.protected,
-        external_aad: &[],
-    };
-    let mut aad_encoded = heapless::Vec::<u8, MAX_SUPPORTED_ACCESSTOKEN_LEN>::new();
-    minicbor::encode(&aad, minicbor_adapters::WriteToHeapless(&mut aad_encoded))
-        .map_err(|_| CredentialErrorDetail::ConstraintExceeded)?;
-    trace!("Serialized AAD: {:02x}", aad_encoded); // :02x could be :cbor
-
-    let mut ciphertext_buffer =
-        heapless::Vec::<u8, MAX_SUPPORTED_ACCESSTOKEN_LEN>::from_slice(encrypt0.encrypted)
-            .map_err(|_| CredentialErrorDetail::ConstraintExceeded)?;
-
     let (scope, claims) = authorities.decrypt_symmetric_token(
         &headers,
-        &aad_encoded,
-        &mut ciphertext_buffer,
+        aad_encoded.as_ref(),
+        buffer,
         crate::PrivateMethod,
     )?;
 
@@ -431,42 +451,18 @@ pub fn process_edhoc_token<Scope>(
     ead3: &[u8],
     authorities: &impl crate::seccfg::ServerSecurityConfig<Scope = Scope>,
 ) -> Result<(lakers::Credential, Scope), CredentialError> {
-    let mut buffer: heapless::Vec<u8, MAX_SUPPORTED_ACCESSTOKEN_LEN>;
+    let mut buffer = heapless::Vec::<u8, MAX_SUPPORTED_ACCESSTOKEN_LEN>::new();
 
     // Trying and falling back means that the minicbor error is not too great ("Expected tag 16"
     // rather than "Expected tag 16 or 18"), but we don't
     // show much of that anyway.
     let (scope, claims) = if let Ok(encrypt0) = minicbor::decode::<EncryptedCwt>(ead3) {
-        let protected: HeaderMap = minicbor::decode(encrypt0.protected)?;
-        let headers = encrypt0.unprotected.updated_with(protected);
-
-        // FIXME: Duplicated with process_acecbor_authz_info
-        #[derive(minicbor::Encode)]
-        struct Encrypt0<'a> {
-            #[n(0)]
-            context: &'static str,
-            #[cbor(b(1), with = "minicbor::bytes")]
-            protected: &'a [u8],
-            #[cbor(b(2), with = "minicbor::bytes")]
-            external_aad: &'a [u8],
-        }
-        let aad = Encrypt0 {
-            context: "Encrypt0",
-            protected: encrypt0.protected,
-            external_aad: &[],
-        };
-        let mut aad_encoded = heapless::Vec::<u8, MAX_SUPPORTED_ACCESSTOKEN_LEN>::new();
-        minicbor::encode(&aad, minicbor_adapters::WriteToHeapless(&mut aad_encoded))
-            .map_err(|_| CredentialErrorDetail::ConstraintExceeded)?;
-        trace!("Serialized AAD: {:02x}", aad_encoded); // :02x could be :cbor
-                                                       //
-        buffer = heapless::Vec::from_slice(encrypt0.encrypted)
-            .map_err(|_| CredentialErrorDetail::ConstraintExceeded)?;
+        let (headers, aad_encoded, buffer) = encrypt0.prepare_decryption(&mut buffer)?;
 
         authorities.decrypt_symmetric_token(
             &headers,
-            &aad_encoded,
-            &mut buffer,
+            aad_encoded.as_ref(),
+            buffer,
             crate::PrivateMethod,
         )?
     } else if let Ok(sign1) = minicbor::decode::<SignedCwt>(ead3) {
