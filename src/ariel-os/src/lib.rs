@@ -49,7 +49,10 @@ pub use ariel_os_embassy::api::*;
 pub mod config {
     //! Provides configuration to the system and the application.
 
-    pub use ariel_os_utils::{str_from_env, str_from_env_or};
+    pub use ariel_os_utils::{
+        ipv4_addr_from_env, ipv4_addr_from_env_or, ipv6_addr_from_env, ipv6_addr_from_env_or,
+        str_from_env, str_from_env_or,
+    };
 }
 
 /// This module contains all third party crates as used by Ariel OS.

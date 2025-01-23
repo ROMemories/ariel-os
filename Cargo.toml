@@ -123,6 +123,7 @@ ariel-os-storage = { path = "src/ariel-os-storage" }
 ariel-os-utils = { path = "src/ariel-os-utils", default-features = false }
 
 const_panic = { version = "0.2.8", default-features = false }
+const-str = { git = "https://github.com/Nugine/const-str", rev = "91d01909fd83939008bee8d0287c935dbac48f7f" }
 defmt = { version = "0.3.7" }
 document-features = "0.2.8"
 fugit = { version = "0.3.7", default-features = false }

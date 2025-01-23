@@ -9,5 +9,6 @@ workspace = true
 
 [dependencies]
 const_panic = { workspace = true }
+const-str = { workspace = true }
 # env utils
 konst = { workspace = true, features = ["parsing"] }

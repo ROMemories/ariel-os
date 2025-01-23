@@ -76,3 +76,97 @@ macro_rules! str_from_env {
 }
 #[expect(unused_imports, reason = "used for docs of str_from_env_or")]
 pub(crate) use str_from_env;
+
+/// Reads an IPv4 address at compile time from the given environment variable, produces an
+/// [`Ipv4Addr`](core::net::Ipv4Addr).
+///
+/// Produces a compile-time error if the environment variable is not found.
+/// The `$doc` parameter allows to provide a documentation string for this tunable (see
+///   [`str_from_env!`](str_from_env)).
+///
+/// Produces a compile-time error when [`option_env!`](option_env) does.
+#[macro_export]
+macro_rules! ipv4_addr_from_env {
+    // $doc is currently unused
+    ($env_var:literal, $doc:literal $(,)?) => {
+        if let Some(str_value) = option_env!($env_var) {
+            $crate::const_str::ip_addr!(v4, str_value)
+        } else {
+            $crate::env::const_panic::concat_panic!(
+                "`",
+                $env_var,
+                "` environment variable was expected to provide the ",
+                $doc,
+            );
+        }
+    };
+}
+
+/// Reads an IPv4 address at compile time from the given environment variable, produces an
+/// [`Ipv4Addr`](core::net::Ipv4Addr).
+///
+/// - The `$default` parameter allows to provide a fallback value for when the environment variable
+///   is not found.
+/// - The `$doc` parameter allows to provide a documentation string for this tunable (see
+///   [`str_from_env!`](str_from_env)).
+///
+/// Produces a compile-time error when [`option_env!`](option_env) does.
+#[macro_export]
+macro_rules! ipv4_addr_from_env_or {
+    // $doc is currently unused
+    ($env_var:literal, $default:literal, $doc:literal $(,)?) => {{
+        let str_addr = if let Some(str_value) = option_env!($env_var) {
+            str_value
+        } else {
+            $default
+        };
+        $crate::const_str::ip_addr!(v4, str_addr)
+    }};
+}
+
+/// Reads an IPv6 address at compile time from the given environment variable, produces an
+/// [`Ipv6Addr`](core::net::Ipv6Addr).
+///
+/// Produces a compile-time error if the environment variable is not found.
+/// The `$doc` parameter allows to provide a documentation string for this tunable (see
+///   [`str_from_env!`](str_from_env)).
+///
+/// Produces a compile-time error when [`option_env!`](option_env) does.
+#[macro_export]
+macro_rules! ipv6_addr_from_env {
+    // $doc is currently unused
+    ($env_var:literal, $doc:literal $(,)?) => {
+        if let Some(str_value) = option_env!($env_var) {
+            $crate::const_str::ip_addr!(v6, str_value)
+        } else {
+            $crate::env::const_panic::concat_panic!(
+                "`",
+                $env_var,
+                "` environment variable was expected to provide the ",
+                $doc,
+            );
+        }
+    };
+}
+
+/// Reads an IPv6 address at compile time from the given environment variable, produces an
+/// [`Ipv6Addr`](core::net::Ipv6Addr).
+///
+/// - The `$default` parameter allows to provide a fallback value for when the environment variable
+///   is not found.
+/// - The `$doc` parameter allows to provide a documentation string for this tunable (see
+///   [`str_from_env!`](str_from_env)).
+///
+/// Produces a compile-time error when [`option_env!`](option_env) does.
+#[macro_export]
+macro_rules! ipv6_addr_from_env_or {
+    // $doc is currently unused
+    ($env_var:literal, $default:literal, $doc:literal $(,)?) => {{
+        let str_addr = if let Some(str_value) = option_env!($env_var) {
+            str_value
+        } else {
+            $default
+        };
+        $crate::const_str::ip_addr!(v6, str_addr)
+    }};
+}

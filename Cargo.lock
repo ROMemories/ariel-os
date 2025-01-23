@@ -449,6 +449,7 @@ dependencies = [
 name = "ariel-os-utils"
 version = "0.1.0"
 dependencies = [
+ "const-str",
  "const_panic",
  "konst",
 ]
@@ -1112,8 +1113,7 @@ checksum = "0d8a42181e0652c2997ae4d217f25b63c5337a52fd2279736e97b832fa0a3cff"
 [[package]]
 name = "const-str"
 version = "0.5.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3618cccc083bb987a415d85c02ca6c9994ea5b44731ec28b9ecf09658655fba9"
+source = "git+https://github.com/Nugine/const-str?rev=91d01909fd83939008bee8d0287c935dbac48f7f#91d01909fd83939008bee8d0287c935dbac48f7f"
 
 [[package]]
 name = "const_panic"

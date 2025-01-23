@@ -56,6 +56,7 @@ allow-git = [
   "https://gitlab.com/oscore/liboscore",
   "https://github.com/seanmonstar/try-lock",
   "https://gitlab.com/etonomy/riot-module-examples",
+  "https://github.com/Nugine/const-str",
 ]
 
 [sources.allow-org]

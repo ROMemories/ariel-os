@@ -13,7 +13,7 @@ workspace = true
 [dependencies]
 ariel-os-debug-log = { workspace = true }
 ariel-os-utils = { workspace = true }
-const-str = "0.5.7"
+const-str = { workspace = true }
 log = { workspace = true, optional = true }
 rtt-target = { workspace = true, optional = true }
 semihosting = { workspace = true, optional = true }
