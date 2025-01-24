@@ -15,18 +15,14 @@ jobs:
       ${{ github.event.workflow_run.event == 'pull_request' &&
       github.event.workflow_run.conclusion == 'success' }}
     steps:
-      - name: Dump GitHub context
-        env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
-        run: echo "$GITHUB_CONTEXT"
-
       - name: "Get PR number"
         uses: actions/download-artifact@v4
         with:
-          name: workflow_run-${{ github.event.workflow_run.id }}-pr
+          run-id: ${{ github.event.workflow_run.id }}
+          name: pr-number
           path: ./pr
 
-      - name: "Store PR number"
+      - name: "Store PR number in output"
         id: "pr"
         run: echo "pr=$(cat pr)" >> $GITHUB_OUTPUT
 
