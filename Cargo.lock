@@ -574,7 +574,7 @@ dependencies = [
 
 [[package]]
 name = "bench_sched_flags"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "ariel-os",
  "ariel-os-boards",
@@ -582,7 +582,7 @@ dependencies = [
 
 [[package]]
 name = "bench_sched_yield"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "ariel-os",
  "ariel-os-boards",
@@ -590,7 +590,7 @@ dependencies = [
 
 [[package]]
 name = "benchmark"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "ariel-os",
  "ariel-os-boards",
@@ -669,7 +669,7 @@ checksum = "8f68f53c83ab957f72c32642f3868eec03eb974d1fb82e453128456482613d36"
 
 [[package]]
 name = "blinky"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "ariel-os",
  "ariel-os-boards",
@@ -905,7 +905,7 @@ dependencies = [
 
 [[package]]
 name = "coap"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "ariel-os",
  "ariel-os-boards",
@@ -926,7 +926,7 @@ dependencies = [
 
 [[package]]
 name = "coap-blinky"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "ariel-os",
  "ariel-os-boards",
@@ -937,7 +937,7 @@ dependencies = [
 
 [[package]]
 name = "coap-client"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "ariel-os",
  "ariel-os-boards",
@@ -1072,7 +1072,7 @@ dependencies = [
 
 [[package]]
 name = "coap-server"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "ariel-os",
  "ariel-os-boards",
@@ -1437,7 +1437,7 @@ dependencies = [
 
 [[package]]
 name = "device-metadata"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "ariel-os",
  "ariel-os-boards",
@@ -2464,7 +2464,7 @@ dependencies = [
 
 [[package]]
 name = "example-log"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "ariel-os",
  "ariel-os-boards",
@@ -2472,7 +2472,7 @@ dependencies = [
 
 [[package]]
 name = "example-random"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "ariel-os",
  "ariel-os-boards",
@@ -2717,7 +2717,7 @@ checksum = "a8d1add55171497b4705a648c6b583acafb01d58050a51727785f0b2c8e0a2b2"
 
 [[package]]
 name = "gpio"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "ariel-os",
  "ariel-os-boards",
@@ -2726,7 +2726,7 @@ dependencies = [
 
 [[package]]
 name = "gpio-interrupt-nrf"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "ariel-os",
  "ariel-os-boards",
@@ -2734,7 +2734,7 @@ dependencies = [
 
 [[package]]
 name = "gpio-interrupt-stm32"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "ariel-os",
  "ariel-os-boards",
@@ -2903,7 +2903,7 @@ checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
 
 [[package]]
 name = "hello-world"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "ariel-os",
  "ariel-os-boards",
@@ -2911,7 +2911,7 @@ dependencies = [
 
 [[package]]
 name = "hello-world-threading"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "ariel-os",
  "ariel-os-boards",
@@ -2955,7 +2955,7 @@ dependencies = [
 
 [[package]]
 name = "http-client"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "ariel-os",
  "ariel-os-boards",
@@ -2966,7 +2966,7 @@ dependencies = [
 
 [[package]]
 name = "http-server"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "ariel-os",
  "ariel-os-boards",
@@ -2984,7 +2984,7 @@ checksum = "7d71d3574edd2771538b901e6549113b4006ece66150fb69c0fb6d9a2adae946"
 
 [[package]]
 name = "i2c-controller"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "ariel-os",
  "ariel-os-boards",
@@ -3533,7 +3533,7 @@ dependencies = [
 
 [[package]]
 name = "minimal"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "ariel-os",
  "ariel-os-boards",
@@ -4690,7 +4690,7 @@ dependencies = [
 
 [[package]]
 name = "spi-loopback"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "ariel-os",
  "ariel-os-boards",
@@ -4702,7 +4702,7 @@ dependencies = [
 
 [[package]]
 name = "spi-main"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "ariel-os",
  "ariel-os-boards",
@@ -4858,7 +4858,7 @@ dependencies = [
 
 [[package]]
 name = "storage"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "ariel-os",
  "ariel-os-boards",
@@ -4964,7 +4964,7 @@ checksum = "42a4d50cdb458045afc8131fd91b64904da29548bcb63c7236e0844936c13078"
 
 [[package]]
 name = "tcp-echo"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "ariel-os",
  "ariel-os-boards",
@@ -5008,7 +5008,7 @@ dependencies = [
 
 [[package]]
 name = "testing"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "ariel-os",
  "ariel-os-boards",
@@ -5017,7 +5017,7 @@ dependencies = [
 
 [[package]]
 name = "tests_gpio"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "ariel-os",
  "ariel-os-boards",
@@ -5066,7 +5066,7 @@ dependencies = [
 
 [[package]]
 name = "thread-async-interop"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "ariel-os",
  "ariel-os-boards",
@@ -5075,7 +5075,7 @@ dependencies = [
 
 [[package]]
 name = "threading"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "ariel-os",
  "ariel-os-boards",
@@ -5083,7 +5083,7 @@ dependencies = [
 
 [[package]]
 name = "threading-channel"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "ariel-os",
  "ariel-os-boards",
@@ -5091,7 +5091,7 @@ dependencies = [
 
 [[package]]
 name = "threading-dynamic-prios"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "ariel-os",
  "ariel-os-boards",
@@ -5100,7 +5100,7 @@ dependencies = [
 
 [[package]]
 name = "threading-event"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "ariel-os",
  "ariel-os-boards",
@@ -5108,7 +5108,7 @@ dependencies = [
 
 [[package]]
 name = "threading-lock"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "ariel-os",
  "ariel-os-boards",
@@ -5117,7 +5117,7 @@ dependencies = [
 
 [[package]]
 name = "threading-multicore"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "ariel-os",
  "ariel-os-boards",
@@ -5125,7 +5125,7 @@ dependencies = [
 
 [[package]]
 name = "threading-mutex"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "ariel-os",
  "ariel-os-boards",
@@ -5275,7 +5275,7 @@ checksum = "e36a83ea2b3c704935a01b4642946aadd445cea40b10935e3f8bd8052b8193d6"
 
 [[package]]
 name = "udp-echo"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "ariel-os",
  "ariel-os-boards",
@@ -5340,7 +5340,7 @@ dependencies = [
 
 [[package]]
 name = "usb-keyboard"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "ariel-os",
  "ariel-os-boards",
@@ -5350,7 +5350,7 @@ dependencies = [
 
 [[package]]
 name = "usb-serial"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "ariel-os",
  "ariel-os-boards",

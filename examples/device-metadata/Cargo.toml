@@ -1,6 +1,5 @@
 [package]
 name = "device-metadata"
-version = "0.1.0"
 license.workspace = true
 edition.workspace = true
 publish = false

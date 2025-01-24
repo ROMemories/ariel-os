@@ -1,6 +1,5 @@
 [package]
 name = "gpio-interrupt-nrf"
-version = "0.1.0"
 license.workspace = true
 edition.workspace = true
 publish = false
