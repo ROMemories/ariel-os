@@ -51,6 +51,9 @@ jobs:
         with:
           toolchain: ${{ steps.get_toolchain.outputs.toolchain }}
 
+      - name: rust cache
+        uses: Swatinem/rust-cache@v2
+
       # Docs of HAL crates must be generated after that of the main crate,
       # otherwise this would result in broken links, as they use `--no-deps` for
       # faster generation.
