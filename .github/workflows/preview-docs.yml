@@ -18,6 +18,7 @@ jobs:
       - name: "Get PR number"
         uses: actions/download-artifact@v4
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ github.event.workflow_run.id }}
           name: pr-number
           path: ./pr
@@ -28,6 +29,7 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           name: pr-${{ steps.pr.outputs.pr }}-docs
           path: ./_site
 
