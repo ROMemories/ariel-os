@@ -20,9 +20,19 @@ jobs:
           GITHUB_CONTEXT: ${{ toJson(github) }}
         run: echo "$GITHUB_CONTEXT"
 
+      - name: "Get PR number"
+        uses: actions/download-artifact@v4
+        with:
+          name: workflow_run-${{ github.event.workflow_run.id }}-pr
+          path: ./pr
+
+      - name: "Store PR number"
+        id: "pr"
+        run: echo "pr=$(cat pr)" >> $GITHUB_OUTPUT
+
       - uses: actions/download-artifact@v4
         with:
-          name: pr-${{ github.event.workflow_run.event.number }}-docs
+          name: pr-${{ steps.pr.outputs.pr }}-docs
           path: ./_site
 
       - uses: actions/setup-node@v4
@@ -34,7 +44,7 @@ jobs:
 
       - name: Deploy PR preview
         run: |
-          surge ./_site ${{ github.repository_owner }}-docs-preview-pr${{ github.event.workflow_run.event.number }}.surge.sh --token ${{ secrets.SURGE_TOKEN }}
+          surge ./_site ${{ github.repository_owner }}-docs-preview-pr${{ steps.pr.output.pr }}.surge.sh --token ${{ secrets.SURGE_TOKEN }}
 
       - name: Comment URL
         uses: marocchino/sticky-pull-request-comment@v2
@@ -42,4 +52,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           number: ${{ github.event.workflow_run.event.number }}
           message: |
-            🚀 PR preview deployed to <https://${{ github.repository_owner }}-docs-preview-pr${{ github.event.workflow_run.event.number }}.surge.sh>
+            🚀 PR preview deployed to <https://${{ github.repository_owner }}-docs-preview-pr${{ steps.pr.output.pr }}.surge.sh>

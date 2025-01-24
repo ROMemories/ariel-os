@@ -160,6 +160,20 @@ jobs:
           name: pr-${{ github.event.number }}-docs
           path: ./_site
 
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
+
+      - run: echo "${{ github.event.number }}" > pr
+
+      - name: Upload artifact (PR number)
+        if: github.event_name == 'pull_request' && steps.check.conclusion == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: workflow_run-${{ github.event.workflow_run.id }}-pr
+          path: ./pr
+
   deploy:
     if: github.event_name != 'pull_request'
     environment:
