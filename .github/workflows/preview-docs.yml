@@ -21,7 +21,6 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ github.event.workflow_run.id }}
           name: pr-number
-          path: ./pr
 
       - name: "Store PR number in output"
         id: "pr"
