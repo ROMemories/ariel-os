@@ -66,7 +66,13 @@ impl<'a> ConnectedUdp<'a> {
         local: SocketAddr,
         remote: SocketAddr,
     ) -> Result<Self, Error> {
-        socket.bind(sockaddr_nal2smol(local)?)?;
+        // Workaround for https://github.com/smoltcp-rs/smoltcp/issues/1037
+        let bind_to = sockaddr_nal2smol(local)?;
+        if bind_to.addr.is_unspecified() {
+            socket.bind(bind_to.port)?;
+        } else {
+            socket.bind(bind_to)?;
+        }
 
         Ok(ConnectedUdp {
             remote: sockaddr_nal2smol(remote)?,
@@ -111,7 +117,13 @@ impl<'a> UnconnectedUdp<'a> {
         mut socket: udp::UdpSocket<'a>,
         local: SocketAddr,
     ) -> Result<Self, Error> {
-        socket.bind(sockaddr_nal2smol(local)?)?;
+        // Workaround for https://github.com/smoltcp-rs/smoltcp/issues/1037
+        let bind_to = sockaddr_nal2smol(local)?;
+        if bind_to.addr.is_unspecified() {
+            socket.bind(bind_to.port)?;
+        } else {
+            socket.bind(bind_to)?;
+        }
 
         Ok(UnconnectedUdp { socket })
     }

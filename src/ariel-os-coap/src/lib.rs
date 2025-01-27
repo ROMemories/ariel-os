@@ -79,9 +79,7 @@ pub async fn coap_run(handler: impl coap_handler::Handler + coap_handler::Report
 
     info!("Starting up CoAP server");
 
-    // Can't that even bind to the Any address??
-    // let local_any = "0.0.0.0:5683".parse().unwrap(); // shame
-    let local_any = "10.42.0.61:5683".parse().unwrap(); // shame
+    let local_any = "0.0.0.0:5683".parse().unwrap(); // shame
     let mut unconnected = udp_nal::UnconnectedUdp::bind_multiple(socket, local_any)
         .await
         .unwrap();
