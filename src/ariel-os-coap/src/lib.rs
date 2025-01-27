@@ -79,7 +79,7 @@ pub async fn coap_run(handler: impl coap_handler::Handler + coap_handler::Report
 
     info!("Starting up CoAP server");
 
-    let local_any = "0.0.0.0:5683".parse().unwrap(); // shame
+    let local_any = "[::]:5683".parse().unwrap();
     let mut unconnected = udp_nal::UnconnectedUdp::bind_multiple(socket, local_any)
         .await
         .unwrap();
