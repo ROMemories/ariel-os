@@ -56,8 +56,9 @@ async fn coap_run() {
 async fn run_client_operations(mut stdout: impl core::fmt::Write) {
     let client = ariel_os::coap::coap_client().await;
 
-    // shame
-    let addr = "10.42.0.1:1234";
+    // Corresponding to the fixed network setup, we select a fixed server address; this may need to
+    // be updated on hosts that are configured differently.
+    let addr = "10.42.0.1:1234"; // IPv4 🔔
     let demoserver = addr.parse().unwrap();
 
     use coap_request::Stack;

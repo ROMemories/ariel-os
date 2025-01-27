@@ -31,8 +31,9 @@ async fn run_client_operations() {
 
     let client = ariel_os::coap::coap_client().await;
 
-    // Corresponding to the fixed network setup, we select a fixed server address.
-    let addr = "10.42.0.1:5683";
+    // Corresponding to the fixed network setup, we select a fixed server address; this may need to
+    // be updated on hosts that are configured differently.
+    let addr = "10.42.0.1:5683"; // IPv4 🔔
     let demoserver = addr.parse().unwrap();
 
     info!("Sending POST to {}...", demoserver);
