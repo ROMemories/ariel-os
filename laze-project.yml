@@ -1019,7 +1019,7 @@ builders:
     env:
       BOARD: rpi-pico-w
 
-  - name: ai-c3
+  - name: ai-thinker-esp-c3-m1-i-kit
     parent: esp-c3-01m
 
   - name: espressif-esp32-devkitc

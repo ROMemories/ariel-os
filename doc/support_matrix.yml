@@ -104,6 +104,21 @@ chips:
       storage: supported
       wifi: not_available
 
+  esp32c3:
+    name: ESP32-C3
+    support:
+      gpio: supported
+      debug_output: supported
+      hwrng: supported
+      i2c_controller: trivial_porting
+      spi_main: trivial_porting
+      logging: supported
+      storage: not_currently_supported
+      wifi:
+        status: supported_with_caveats
+        comments:
+          - not currently compatible with threading
+
   esp32c6:
     name: ESP32-C6
     support:
@@ -215,6 +230,14 @@ boards:
       user_usb: supported
       wifi: supported
       ethernet_over_usb: supported
+
+  ai-thinker-esp-c3-m1-i-kit:
+    name: Ai-Thinker ESP-C3-M1-I-Kit
+    url: https://web.archive.org/web/20220813115557/https://docs.ai-thinker.com/_media/esp32/docs/esp-c3-01m-kit-v1.0_specification.pdf
+    chip: esp32c3
+    support:
+      user_usb: not_currently_supported
+      ethernet_over_usb: not_currently_supported
 
   espressif-esp32-c6-devkitc-1:
     name: Espressif ESP32-C6-DevKitC-1

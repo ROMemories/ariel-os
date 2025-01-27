@@ -132,7 +132,7 @@ jobs:
         if: github.event_name != 'schedule'
         run: |
           source ~/source-this-first.sh
-          echo "LAZE_BUILDERS=ai-c3,espressif-esp32-c6-devkitc-1,espressif-esp32-s3-devkitc-1,bbc-microbit-v2,nrf52840dk,nrf5340dk,rpi-pico,rpi-pico-w,st-nucleo-h755zi-q,st-nucleo-wb55" >> "$GITHUB_ENV"
+          echo "LAZE_BUILDERS=ai-thinker-esp-c3-m1-i-kit,espressif-esp32-c6-devkitc-1,espressif-esp32-s3-devkitc-1,bbc-microbit-v2,nrf52840dk,nrf5340dk,rpi-pico,rpi-pico-w,st-nucleo-h755zi-q,st-nucleo-wb55" >> "$GITHUB_ENV"
 
       - name: "ariel-os compilation test"
         if: steps.result-cache.outputs.cache-hit != 'true'
