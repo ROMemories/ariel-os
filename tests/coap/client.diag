@@ -1,5 +1,5 @@
 {
-  "coap://10.42.0.61/*": {
+  "coap://*": {
     "edhoc-oscore": {
       "suite": 2,
       "method": 3,
