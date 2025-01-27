@@ -42,7 +42,7 @@ jobs:
 
       - name: Deploy PR preview
         run: |
-          surge ./_site ${{ github.repository_owner }}-docs-preview-pr${{ steps.pr.output.pr }}.surge.sh --token ${{ secrets.SURGE_TOKEN }}
+          surge ./_site ${{ github.repository_owner }}-docs-preview-pr${{ steps.pr.outputs.pr }}.surge.sh --token ${{ secrets.SURGE_TOKEN }}
 
       - name: Comment URL
         uses: marocchino/sticky-pull-request-comment@v2
@@ -50,4 +50,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           number: ${{ github.event.workflow_run.event.number }}
           message: |
-            🚀 PR preview deployed to <https://${{ github.repository_owner }}-docs-preview-pr${{ steps.pr.output.pr }}.surge.sh>
+            🚀 PR preview deployed to <https://${{ github.repository_owner }}-docs-preview-pr${{ steps.pr.outputs.pr }}.surge.sh>
