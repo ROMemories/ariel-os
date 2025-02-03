@@ -49,6 +49,9 @@ i2c = ["ariel-os-embassy-common/i2c", "embassy-stm32/time"]
 ## Enables SPI support.
 spi = ["ariel-os-embassy-common/spi"]
 
+## Enables storage support.
+storage = []
+
 ## Enables USB support.
 usb = []
 # These are chosen automatically by ariel-os-boards and select the correct stm32

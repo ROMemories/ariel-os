@@ -25,6 +25,10 @@ pub mod identity;
 #[cfg(feature = "spi")]
 pub mod spi;
 
+#[cfg(feature = "storage")]
+#[doc(hidden)]
+pub mod storage;
+
 use embassy_stm32::Config;
 
 #[doc(hidden)]

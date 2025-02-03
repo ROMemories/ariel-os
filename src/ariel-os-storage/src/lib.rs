@@ -35,9 +35,14 @@ static STORAGE: OnceLock<Mutex<CriticalSectionRawMutex, Storage<Flash>>> = OnceL
 /// which configures an offset between the linker flash address map and the
 /// flash driver address map.
 fn flash_range_from_linker() -> Range<u32> {
+    #[cfg(context = "nrf")]
+    const OFFSET: usize = 0x0;
     #[cfg(context = "rp2040")]
-    const OFFSET: usize = 0x10000000;
-    #[cfg(not(context = "rp2040"))]
+    const OFFSET: usize = 0x1000_0000;
+    #[cfg(context = "stm32")]
+    const OFFSET: usize = 0x0800_0000;
+    // Default for platform-independent tooling.
+    #[cfg(not(context = "ariel-os"))]
     const OFFSET: usize = 0x0;
 
     extern "C" {
@@ -131,6 +136,8 @@ where
 /// All items in flash have to be read and deserialized to find the items with the key.
 /// This is unlikely to be cached well.
 /// </div>
+// STM32 flash drivers do not implement `MultiwriteNorFlash`.
+#[cfg(not(context = "stm32"))]
 pub async fn remove(key: &str) -> Result<(), sequential_storage::Error<FlashError>> {
     lock().await.remove(key).await
 }

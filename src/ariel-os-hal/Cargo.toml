@@ -73,7 +73,7 @@ storage = [
   #"ariel-os-esp/storage",
   "ariel-os-nrf/storage",
   "ariel-os-rp/storage",
-  #"ariel-os-stm32/storage",
+  "ariel-os-stm32/storage",
 ]
 
 wifi-cyw43 = ["ariel-os-rp/wifi-cyw43"]
