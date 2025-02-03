@@ -99,6 +99,7 @@ dependencies = [
  "ariel-os-threads",
  "ariel-os-utils",
  "document-features",
+ "featurecomb",
  "linkme",
  "static_cell",
 ]

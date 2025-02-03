@@ -9,6 +9,7 @@ workspace = true
 
 [dependencies]
 document-features = { workspace = true }
+featurecomb = { workspace = true }
 linkme = { workspace = true }
 ariel-os-bench = { workspace = true, optional = true }
 ariel-os-boards = { path = "../ariel-os-boards" }
@@ -24,6 +25,43 @@ ariel-os-storage = { workspace = true, optional = true }
 ariel-os-threads = { path = "../ariel-os-threads", optional = true }
 ariel-os-utils = { workspace = true }
 static_cell = { workspace = true }
+
+[package.metadata.feature-groups]
+executor.exactly-one = { features = [
+  "executor-interrupt",
+  "executor-none",
+  "executor-single-thread",
+  "executor-thread",
+] }
+executor-with-threading.xor = { features = [
+  "executor-single-thread",
+  "threading",
+] }
+# TODO
+debug-output.exactly-one = { features = [
+  "esp-println",
+  "rtt-target",
+  "semihosting",
+] }
+
+[package.metadata.feature-groups.features]
+coap.requires = { features = ["net"] }
+core-affinity.requires = { features = ["multi-core"] }
+debug-output.requires = { groups = ["debug-output"] }
+defmt.requires = { features = ["debug-output"] }
+dns.requires = { features = ["net"] }
+log.requires = { features = ["debug-output"] }
+mdns.requires = { features = ["net"] }
+network-config-static.requires = { features = ["net"] }
+tcp.requires = { features = ["net"] }
+override-network-config.requires = { features = ["net"] }
+override-usb-config.requires = { features = ["usb"] }
+random.requires = { features = ["hwrng"] }
+udp.requires = { features = ["net"] }
+usb-ethernet.requires = { features = ["net", "usb"] }
+usb-hid.requires = { features = ["usb"] }
+wifi-cyw43 = { features = ["net"] }
+wifi-esp = { features = ["net"] }
 
 [features]
 default = ["ariel-os-rt/_panic-handler"]

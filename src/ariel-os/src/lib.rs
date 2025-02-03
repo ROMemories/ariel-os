@@ -23,6 +23,9 @@
 #![feature(doc_auto_cfg)]
 #![deny(missing_docs)]
 
+#[featurecomb::comb]
+mod _featurecomb {}
+
 #[cfg(feature = "bench")]
 #[doc(inline)]
 pub use ariel_os_bench as bench;
