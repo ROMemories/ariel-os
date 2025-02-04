@@ -265,6 +265,7 @@ dependencies = [
  "esp-alloc",
  "esp-hal",
  "esp-hal-embassy",
+ "esp-storage",
  "esp-wifi",
  "fugit",
  "once_cell",
@@ -2270,6 +2271,16 @@ dependencies = [
  "document-features",
  "riscv",
  "riscv-rt-macros",
+]
+
+[[package]]
+name = "esp-storage"
+version = "0.4.0"
+source = "git+https://github.com/ariel-os/esp-hal?branch=v0.23.1%2Bariel-os#6569d3a6c6b78c5d66b639f03c7d7558cb69255c"
+dependencies = [
+ "critical-section",
+ "embedded-storage",
+ "esp-build",
 ]
 
 [[package]]
@@ -5767,8 +5778,3 @@ dependencies = [
  "quote",
  "syn 2.0.96",
 ]
-
-[[patch.unused]]
-name = "esp-storage"
-version = "0.4.0"
-source = "git+https://github.com/ariel-os/esp-hal?branch=v0.23.1%2Bariel-os#6569d3a6c6b78c5d66b639f03c7d7558cb69255c"

@@ -5,7 +5,7 @@ const KIBIBYTES: u32 = 1024;
 fn main() {
     // NOTE(hal): values of `flash_page_size` from the datasheets, confirmed by HAL's constants.
     let (storage_size_total, flash_page_size) =
-        if is_in_current_contexts(&["nrf52", "nrf5340", "rp2040", "stm32wb55rgvx"]) {
+        if is_in_current_contexts(&["esp32c6", "nrf52", "nrf5340", "rp2040", "stm32wb55rgvx"]) {
             (8 * KIBIBYTES, 4 * KIBIBYTES)
         } else if is_in_current_contexts(&["stm32f401retx", "stm32h755zitx"]) {
             (256 * KIBIBYTES, 128 * KIBIBYTES)

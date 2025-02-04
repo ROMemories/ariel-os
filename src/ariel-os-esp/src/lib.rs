@@ -29,6 +29,10 @@ pub mod identity {
 #[cfg(feature = "spi")]
 pub mod spi;
 
+#[cfg(feature = "storage")]
+#[doc(hidden)]
+pub mod storage;
+
 #[cfg(feature = "usb")]
 #[doc(hidden)]
 pub mod usb;

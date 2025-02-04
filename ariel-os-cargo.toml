@@ -12,6 +12,8 @@ debug = true        # Required for defmt
 lto = false
 opt-level = "s"
 
+[profile.release.package.esp-storage]
+opt-level = 3
 [profile.release.package.esp-wifi]
 opt-level = 3
 

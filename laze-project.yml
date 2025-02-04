@@ -666,6 +666,7 @@ modules:
 
   - name: sw/storage
     context:
+      - esp32c6
       - rp2040
       - nrf52840
       - nrf5340
