@@ -155,7 +155,10 @@ chips:
       i2c_controller: supported
       spi_main: supported
       logging: supported
-      storage: not_currently_supported
+      storage:
+        status: supported_with_caveats
+        comments:
+          - removing items not supported
       wifi: not_available
 
   stm32wb55rgvx:
@@ -167,7 +170,10 @@ chips:
       i2c_controller: supported
       spi_main: supported
       logging: supported
-      storage: not_currently_supported
+      storage:
+        status: supported_with_caveats
+        comments:
+          - removing items not supported
       wifi: not_available
 
 # Encodes support status for each board.
