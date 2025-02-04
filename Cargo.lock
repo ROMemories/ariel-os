@@ -2353,6 +2353,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "esp32-c6"
+version = "0.1.0"
+
+[[package]]
 name = "esp32c2"
 version = "0.24.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2424,6 +2428,7 @@ version = "0.1.0"
 dependencies = [
  "ariel-os-debug",
  "ariel-os-rt",
+ "esp32-c6",
 ]
 
 [[package]]
