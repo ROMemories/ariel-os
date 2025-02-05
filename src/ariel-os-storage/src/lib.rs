@@ -37,6 +37,7 @@ static STORAGE: OnceLock<Mutex<CriticalSectionRawMutex, Storage<Flash>>> = OnceL
 fn flash_range_from_linker() -> Range<u32> {
     #[cfg(context = "esp32c6")]
     // External Memory
+    // FIXME: could need + 0x20
     const OFFSET: usize = 0x4200_0000;
     #[cfg(context = "nrf")]
     const OFFSET: usize = 0x0;
