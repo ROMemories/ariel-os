@@ -24,6 +24,7 @@ nrf52840-mdk = { optional = true, path = "nrf52840-mdk" }
 nrf52840dk = { optional = true, path = "nrf52840dk" }
 nrf52dk = { optional = true, path = "nrf52dk" }
 nrf5340dk = { optional = true, path = "nrf5340dk" }
+st-f429i-discovery = { optional = true, path = "st-f429i-discovery" }
 st-nucleo-f401re = { optional = true, path = "st-nucleo-f401re" }
 st-nucleo-wb55 = { optional = true, path = "st-nucleo-wb55" }
 rpi-pico = { optional = true, path = "rpi-pico" }

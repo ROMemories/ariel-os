@@ -35,6 +35,8 @@ cfg_if! {
     } else if #[cfg(feature = "rpi-pico-w")] {
         // sharing rpi-pico
         pub use rpi_pico as board;
+    } else if #[cfg(feature = "st-f429i-discovery")] {
+        pub use st_f429i_discovery as board;
     } else if #[cfg(feature = "st-nucleo-f401re")] {
         pub use st_nucleo_f401re as board;
     } else if #[cfg(feature = "st-nucleo-wb55")] {

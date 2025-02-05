@@ -133,6 +133,7 @@ dependencies = [
  "nrf5340dk",
  "particle-xenon",
  "rpi-pico",
+ "st-f429i-discovery",
  "st-nucleo-f401re",
  "st-nucleo-h755zi-q",
  "st-nucleo-wb55",
@@ -4756,6 +4757,15 @@ checksum = "f3e6ad23b128192ed337dfa4f1b8099ced0c2bf30d61e551b65fda5916dbb850"
 dependencies = [
  "encode_unicode",
  "serde",
+]
+
+[[package]]
+name = "st-f429i-discovery"
+version = "0.1.0"
+dependencies = [
+ "ariel-os-debug",
+ "ariel-os-rt",
+ "embassy-stm32",
 ]
 
 [[package]]

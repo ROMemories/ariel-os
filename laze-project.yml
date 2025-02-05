@@ -341,6 +341,19 @@ contexts:
         # This ISR is unused on a naked board. Configured here for testing.
         - CONFIG_SWI=USART2
 
+  - name: stm32f429zitx
+    parent: stm32
+    selects:
+      - thumbv7em-none-eabi # actually eabihf, but ariel-os doesn't support hard float yet
+    env:
+      PROBE_RS_CHIP: STM32F429ZITx
+      PROBE_RS_PROTOCOL: swd
+      RUSTFLAGS:
+        - --cfg context=\"stm32f429zitx\"
+      CARGO_ENV:
+        # This ISR is unused on a naked board. Configured here for testing.
+        - CONFIG_SWI=USART2
+
   - name: stm32wb55rgvx
     parent: stm32
     selects:
@@ -1097,6 +1110,9 @@ builders:
 
   - name: nrf5340dk
     parent: nrf5340
+
+  - name: st-f429i-discovery
+    parent: stm32f429zitx
 
   - name: st-nucleo-f401re
     parent: stm32f401retx
