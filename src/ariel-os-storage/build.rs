@@ -24,6 +24,7 @@ fn main() {
 
     // Could also be aliased with a linker script instead.
     let region = if is_in_current_contexts(&["esp"]) {
+        // Defined by upstream `esp-hal`'s linker scripts.
         "ROM"
     } else {
         "FLASH"
