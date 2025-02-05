@@ -63,6 +63,8 @@ builders:
   - Add a context for the MCU (if it does not already exist).
     - `parent`: The closest Embassy HAL's context.
     - `selects`: A [rustc-target](#adding-support-for-a-processor-architecture) module.
+    - Some environment variables need to be provided:
+      - `PROBE_RS_CHIP`: The list of chips can [be found on probe-rs website](https://probe.rs/targets/)
 
 MCU-specific items inside Ariel OS crates are gated behind
 `#[cfg(context = $CONTEXT)]` attributes, where `$CONTEXT` is the [MCU's `laze
