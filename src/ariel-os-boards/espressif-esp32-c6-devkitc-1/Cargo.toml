@@ -7,4 +7,3 @@ edition.workspace = true
 [dependencies]
 ariel-os-rt = { workspace = true, features = ["_esp32c6"] }
 ariel-os-debug.workspace = true
-esp32-c6 = { path = "../../ariel-os-chips/esp32-c6" }

@@ -22,9 +22,17 @@ fn main() {
     // Put the linker script somewhere the linker can find it
     let out = &PathBuf::from(env::var_os("OUT_DIR").unwrap());
 
+    // Could also be aliased with a linker script instead.
+    let region = if is_in_current_contexts(&["esp"]) {
+        "ROM"
+    } else {
+        "FLASH"
+    };
+
     let mut storage_template = std::fs::read_to_string("storage.ld.in").unwrap();
     storage_template = storage_template.replace("${ALIGNMENT}", &format!("{flash_page_size}"));
     storage_template = storage_template.replace("${SIZE}", &format!("{storage_size_total}"));
+    storage_template = storage_template.replace("${REGION}", region);
 
     std::fs::write(out.join("storage.x"), &storage_template).unwrap();
 

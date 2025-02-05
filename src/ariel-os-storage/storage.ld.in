@@ -3,7 +3,7 @@ SECTIONS {
         __storage_start = .;
         . += ${SIZE};
         __storage_end = .;
-    } > FLASH
+    } > ${REGION}
 }
 
 INSERT AFTER .rodata
