@@ -7,7 +7,10 @@ ariel_os::hal::define_peripherals!(LedPeripherals {
 });
 
 #[cfg(context = "nrf52840dk")]
-ariel_os::hal::define_peripherals!(LedPeripherals { led: P0_13 });
+ariel_os::hal::define_peripherals!(InputPeripheral { input: P1_13 });
+
+#[cfg(context = "nrf52840dk")]
+ariel_os::hal::define_peripherals!(OutputPeripheral { output: P1_14 });
 
 #[cfg(context = "nrf5340dk")]
 ariel_os::hal::define_peripherals!(LedPeripherals { led: P0_28 });
@@ -16,7 +19,9 @@ ariel_os::hal::define_peripherals!(LedPeripherals { led: P0_28 });
 ariel_os::hal::define_peripherals!(LedPeripherals { led: P1_12 });
 
 #[cfg(context = "rp")]
-ariel_os::hal::define_peripherals!(LedPeripherals { led: PIN_1 });
+ariel_os::hal::define_peripherals!(InputPeripheral { input: PIN_0 });
+#[cfg(context = "rp")]
+ariel_os::hal::define_peripherals!(OutputPeripheral { output: PIN_1 });
 
 #[cfg(context = "esp")]
 ariel_os::hal::define_peripherals!(LedPeripherals { led: GPIO0 });

@@ -1,3 +1,5 @@
+//! The input and output GPIO pins need to be connected.
+
 #![no_main]
 #![no_std]
 #![feature(impl_trait_in_assoc_type)]
@@ -6,20 +8,36 @@
 mod pins;
 
 use ariel_os::{
-    gpio::{Level, Output},
-    time::{Duration, Timer},
+    debug::log::info,
+    gpio::{Input, Level, Output, Pull},
+    time::{Duration, Instant, Timer},
 };
+use embassy_futures::yield_now;
 
 #[ariel_os::task(autostart, peripherals)]
-async fn blinky(peripherals: pins::LedPeripherals) {
-    let mut led = Output::new(peripherals.led, Level::Low);
+async fn main(peripherals: pins::InputPeripheral) {
+    let mut input = Input::builder(peripherals.input, Pull::Up)
+        .build_with_interrupt()
+        .unwrap();
 
-    // The micro:bit uses an LED matrix; pull the column line low.
-    #[cfg(context = "bbc-microbit-v2")]
-    let _led_col1 = Output::new(peripherals.led_col1, Level::Low);
+    // Wait for the other task to start
+    input.wait_for_any_edge().await;
+
+    let now = Instant::now();
+    for _ in 0..1000 {
+        input.wait_for_any_edge().await;
+    }
+    info!("{}", now.elapsed());
+}
+
+#[ariel_os::task(autostart, peripherals)]
+async fn toggle(peripherals: pins::OutputPeripheral) {
+    let mut output = Output::new(peripherals.output, Level::High);
+
+    Timer::after(Duration::from_millis(10)).await;
 
     loop {
-        led.toggle();
-        Timer::after(Duration::from_millis(500)).await;
+        output.toggle();
+        yield_now().await;
     }
 }
