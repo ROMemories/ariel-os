@@ -706,6 +706,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "blinky-neopixel"
+version = "0.0.0"
+dependencies = [
+ "ariel-os",
+ "ariel-os-boards",
+ "smart-leds-trait",
+ "ws2812-async",
+]
+
+[[package]]
 name = "block-buffer"
 version = "0.10.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5759,6 +5769,16 @@ name = "writeable"
 version = "0.5.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1e9df38ee2d2c3c5948ea468a8406ff0db0b29ae1ffde1bcf20ef305bcc95c51"
+
+[[package]]
+name = "ws2812-async"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d7c5ad5e4bdc121601e401fdf7271b312dc0fa066ba7d1d6a899e65b3a3b723d"
+dependencies = [
+ "embedded-hal-async",
+ "smart-leds-trait",
+]
 
 [[package]]
 name = "xtensa-lx"
