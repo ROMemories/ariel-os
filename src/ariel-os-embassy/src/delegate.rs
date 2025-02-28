@@ -47,6 +47,7 @@ impl<T> !Send for Delegate<T> {}
 
 impl<T> Delegate<T> {
     /// Creates a new [`Delegate`].
+    #[must_use]
     pub const fn new() -> Self {
         Self {
             send: Signal::new(),
@@ -67,7 +68,7 @@ impl<T> Delegate<T> {
         self.send
             .signal(SendCell::new(something as *mut T, spawner));
 
-        self.reply.wait().await
+        self.reply.wait().await;
     }
 
     /// Calls a closure on a lent object.

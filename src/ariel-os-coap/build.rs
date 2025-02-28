@@ -50,8 +50,8 @@ impl Permission {
 impl SinglePermission {
     /// The `Tperm` unsigned integer representation of the REST-specific AIF model described in
     /// RFC9237.
-    fn mask(&self) -> u32 {
-        1 << (*self as u8 - 1)
+    fn mask(self) -> u32 {
+        1 << (self as u8 - 1)
     }
 }
 
@@ -91,7 +91,7 @@ fn main() {
                 minicbor::encode(data, &mut bytes).unwrap();
                 format!("coapcore::scope::UnionScope::AifValue(coapcore::scope::AifValue::parse(&{bytes:?}).unwrap())")
             }
-            e => panic!("Scope configuration {e:?} is not recognized"),
+            e @ Scope::String(_) => panic!("Scope configuration {e:?} is not recognized"),
         };
         write!(
             chain_once_per_kccs,

@@ -5,6 +5,7 @@
 #![feature(used_with_arg)]
 #![feature(doc_auto_cfg)]
 #![feature(negative_impls)]
+#![expect(clippy::items_after_statements)]
 
 pub mod gpio;
 
