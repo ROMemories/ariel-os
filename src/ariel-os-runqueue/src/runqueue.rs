@@ -58,145 +58,145 @@ impl From<ThreadId> for usize {
 /// The current implementation needs an usize for the bit cache,
 /// an `[u8; N_QUEUES]` array for the list tail indexes
 /// and an `[u8; N_THREADS]` for the list next indexes.
-#[derive(Default)]
-pub struct RunQueue<const N_QUEUES: usize, const N_THREADS: usize> {
-    /// Bitcache that represents the currently used queues
-    /// in `0..N_QUEUES`.
-    bitcache: usize,
-    queues: clist::CList<N_QUEUES, N_THREADS>,
-}
-
-impl<const N_QUEUES: usize, const N_THREADS: usize> RunQueue<{ N_QUEUES }, { N_THREADS }> {
-    /// Returns a new [`RunQueue`].
-    #[must_use]
-    pub const fn new() -> RunQueue<{ N_QUEUES }, { N_THREADS }> {
-        // unfortunately we cannot assert!() on N_QUEUES and N_THREADS,
-        // as panics in const fn's are not (yet) implemented.
-        RunQueue {
-            bitcache: 0,
-            queues: CList::new(),
-        }
-    }
-
-    /// Adds thread with tid `n` to runqueue number `rq`.
-    pub fn add(&mut self, n: ThreadId, rq: RunqueueId) {
-        debug_assert!(usize::from(n) < N_THREADS);
-        debug_assert!(usize::from(rq) < N_QUEUES);
-        self.bitcache |= 1 << rq.0;
-        self.queues.push(n.0, rq.0);
-    }
-
-    /// Returns the head of the runqueue without removing it.
-    pub fn peek_head(&self, rq: RunqueueId) -> Option<ThreadId> {
-        self.queues.peek_head(rq.0).map(ThreadId::new)
-    }
-
-    /// Removes thread with tid `n` from runqueue number `rq`.
-    ///
-    /// # Panics
-    ///
-    /// Panics if `n` is not the queue's head.
-    /// This is fine, Ariel OS only ever calls `pop_head()` for the current thread.
-    pub fn pop_head(&mut self, n: ThreadId, rq: RunqueueId) {
-        debug_assert!(usize::from(n) < N_THREADS);
-        debug_assert!(usize::from(rq) < N_QUEUES);
-        let popped = self.queues.pop_head(rq.0);
-        //
-        assert_eq!(popped, Some(n.0));
-        if self.queues.is_empty(rq.0) {
-            self.bitcache &= !(1 << rq.0);
-        }
-    }
-
-    /// Removes thread with tid `n`.
-    pub fn del(&mut self, n: ThreadId) {
-        if let Some(empty_runqueue) = self.queues.del(n.0) {
-            self.bitcache &= !(1 << empty_runqueue);
-        }
-    }
-
-    /// Returns the tid that should run next.
-    ///
-    /// Returns the next runnable thread of
-    /// the runqueue with the highest index.
-    #[must_use]
-    pub fn get_next(&self) -> Option<ThreadId> {
-        self.get_next_with_rq().map(|(tid, _)| tid)
-    }
-
-    /// Returns the tid that should run next and the runqueue it is in.
-    #[must_use]
-    pub fn get_next_with_rq(&self) -> Option<(ThreadId, RunqueueId)> {
-        let rq_ffs = ffs(self.bitcache);
-        if rq_ffs == 0 {
-            return None;
-        }
-        let rq = rq_ffs as u8 - 1;
-        self.queues
-            .peek_head(rq)
-            .map(|id| (ThreadId::new(id), RunqueueId::new(rq)))
-    }
-
-    /// Returns the next thread from the runqueue that fulfills the predicate.
-    pub fn get_next_filter<F: FnMut(&ThreadId) -> bool>(
-        &self,
-        mut predicate: F,
-    ) -> Option<ThreadId> {
-        let (next, prio) = self.get_next_with_rq()?;
-        if predicate(&next) {
-            return Some(next);
-        }
-        self.iter_from(next, prio).find(predicate)
-    }
-
-    /// Pop the thread that should run next.
-    ///
-    /// Pops the next runnable thread of
-    /// the runqueue with the highest index.
-    pub fn pop_next(&mut self) -> Option<ThreadId> {
-        let rq_ffs = ffs(self.bitcache);
-        if rq_ffs == 0 {
-            return None;
-        }
-        let rq = (rq_ffs - 1) as u8;
-        let head = self.queues.pop_head(rq).map(ThreadId::new);
-        if self.queues.is_empty(rq) {
-            self.bitcache &= !(1 << rq);
-        }
-        head
-    }
-
-    /// Advances runqueue number `rq`.
-    ///
-    /// This is used to "yield" to another thread of *the same* priority.
-    ///
-    /// Returns `false` if the operation had no effect, i.e. when the runqueue
-    /// is empty or only contains a single thread.
-    pub fn advance(&mut self, rq: RunqueueId) -> bool {
-        debug_assert!((usize::from(rq)) < N_QUEUES);
-        self.queues.advance(rq.0)
-    }
-
-    /// Checks if a runqueue is empty.
-    pub fn is_empty(&mut self, rq: RunqueueId) -> bool {
-        debug_assert!((rq.0 as usize) < N_QUEUES);
-        self.queues.is_empty(rq.0)
-    }
-
-    /// Returns an iterator over the [`RunQueue`], starting after thread `start` in runqueue `rq`.
-    ///
-    /// The `start` is not included in the iterator.
-    #[must_use]
-    pub fn iter_from(&self, start: ThreadId, rq: RunqueueId) -> RunQueueIter<N_QUEUES, N_THREADS> {
-        RunQueueIter {
-            prev: start.0,
-            rq_head: self.queues.peek_head(rq.0),
-            // Clear higher priority runqueues.
-            bitcache: self.bitcache % (1 << (rq.0 + 1)),
-            queues: &self.queues,
-        }
-    }
-}
+// #[derive(Default)]
+// pub struct RunQueue<const N_QUEUES: usize, const N_THREADS: usize> {
+//     /// Bitcache that represents the currently used queues
+//     /// in `0..N_QUEUES`.
+//     bitcache: usize,
+//     queues: clist::CList<N_QUEUES, N_THREADS>,
+// }
+//
+// impl<const N_QUEUES: usize, const N_THREADS: usize> RunQueue<{ N_QUEUES }, { N_THREADS }> {
+//     /// Returns a new [`RunQueue`].
+//     #[must_use]
+//     pub const fn new() -> RunQueue<{ N_QUEUES }, { N_THREADS }> {
+//         // unfortunately we cannot assert!() on N_QUEUES and N_THREADS,
+//         // as panics in const fn's are not (yet) implemented.
+//         RunQueue {
+//             bitcache: 0,
+//             queues: CList::new(),
+//         }
+//     }
+//
+//     /// Adds thread with tid `n` to runqueue number `rq`.
+//     pub fn add(&mut self, n: ThreadId, rq: RunqueueId) {
+//         debug_assert!(usize::from(n) < N_THREADS);
+//         debug_assert!(usize::from(rq) < N_QUEUES);
+//         self.bitcache |= 1 << rq.0;
+//         self.queues.push(n.0, rq.0);
+//     }
+//
+//     /// Returns the head of the runqueue without removing it.
+//     pub fn peek_head(&self, rq: RunqueueId) -> Option<ThreadId> {
+//         self.queues.peek_head(rq.0).map(ThreadId::new)
+//     }
+//
+//     /// Removes thread with tid `n` from runqueue number `rq`.
+//     ///
+//     /// # Panics
+//     ///
+//     /// Panics if `n` is not the queue's head.
+//     /// This is fine, Ariel OS only ever calls `pop_head()` for the current thread.
+//     pub fn pop_head(&mut self, n: ThreadId, rq: RunqueueId) {
+//         debug_assert!(usize::from(n) < N_THREADS);
+//         debug_assert!(usize::from(rq) < N_QUEUES);
+//         let popped = self.queues.pop_head(rq.0);
+//         //
+//         assert_eq!(popped, Some(n.0));
+//         if self.queues.is_empty(rq.0) {
+//             self.bitcache &= !(1 << rq.0);
+//         }
+//     }
+//
+//     /// Removes thread with tid `n`.
+//     pub fn del(&mut self, n: ThreadId) {
+//         if let Some(empty_runqueue) = self.queues.del(n.0) {
+//             self.bitcache &= !(1 << empty_runqueue);
+//         }
+//     }
+//
+//     /// Returns the tid that should run next.
+//     ///
+//     /// Returns the next runnable thread of
+//     /// the runqueue with the highest index.
+//     #[must_use]
+//     pub fn get_next(&self) -> Option<ThreadId> {
+//         self.get_next_with_rq().map(|(tid, _)| tid)
+//     }
+//
+//     /// Returns the tid that should run next and the runqueue it is in.
+//     #[must_use]
+//     pub fn get_next_with_rq(&self) -> Option<(ThreadId, RunqueueId)> {
+//         let rq_ffs = ffs(self.bitcache);
+//         if rq_ffs == 0 {
+//             return None;
+//         }
+//         let rq = rq_ffs as u8 - 1;
+//         self.queues
+//             .peek_head(rq)
+//             .map(|id| (ThreadId::new(id), RunqueueId::new(rq)))
+//     }
+//
+//     /// Returns the next thread from the runqueue that fulfills the predicate.
+//     pub fn get_next_filter<F: FnMut(&ThreadId) -> bool>(
+//         &self,
+//         mut predicate: F,
+//     ) -> Option<ThreadId> {
+//         let (next, prio) = self.get_next_with_rq()?;
+//         if predicate(&next) {
+//             return Some(next);
+//         }
+//         self.iter_from(next, prio).find(predicate)
+//     }
+//
+//     /// Pop the thread that should run next.
+//     ///
+//     /// Pops the next runnable thread of
+//     /// the runqueue with the highest index.
+//     pub fn pop_next(&mut self) -> Option<ThreadId> {
+//         let rq_ffs = ffs(self.bitcache);
+//         if rq_ffs == 0 {
+//             return None;
+//         }
+//         let rq = (rq_ffs - 1) as u8;
+//         let head = self.queues.pop_head(rq).map(ThreadId::new);
+//         if self.queues.is_empty(rq) {
+//             self.bitcache &= !(1 << rq);
+//         }
+//         head
+//     }
+//
+//     /// Advances runqueue number `rq`.
+//     ///
+//     /// This is used to "yield" to another thread of *the same* priority.
+//     ///
+//     /// Returns `false` if the operation had no effect, i.e. when the runqueue
+//     /// is empty or only contains a single thread.
+//     pub fn advance(&mut self, rq: RunqueueId) -> bool {
+//         debug_assert!((usize::from(rq)) < N_QUEUES);
+//         self.queues.advance(rq.0)
+//     }
+//
+//     /// Checks if a runqueue is empty.
+//     pub fn is_empty(&mut self, rq: RunqueueId) -> bool {
+//         debug_assert!((rq.0 as usize) < N_QUEUES);
+//         self.queues.is_empty(rq.0)
+//     }
+//
+//     /// Returns an iterator over the [`RunQueue`], starting after thread `start` in runqueue `rq`.
+//     ///
+//     /// The `start` is not included in the iterator.
+//     #[must_use]
+//     pub fn iter_from(&self, start: ThreadId, rq: RunqueueId) -> RunQueueIter<N_QUEUES, N_THREADS> {
+//         RunQueueIter {
+//             prev: start.0,
+//             rq_head: self.queues.peek_head(rq.0),
+//             // Clear higher priority runqueues.
+//             bitcache: self.bitcache % (1 << (rq.0 + 1)),
+//             queues: &self.queues,
+//         }
+//     }
+// }
 
 #[inline]
 fn ffs(val: usize) -> u32 {
@@ -208,39 +208,39 @@ fn ffs(val: usize) -> u32 {
 /// It starts from the highest priority queue and continues switching to lower
 /// priority queues after circling through a queue once, until all queues
 /// that are included in this iterator have been iterated.
-pub struct RunQueueIter<'a, const N_QUEUES: usize, const N_THREADS: usize> {
-    queues: &'a clist::CList<N_QUEUES, N_THREADS>,
-    // Predecessor in the circular runqueue list.
-    prev: u8,
-    // Head of the currently iterated runqueue.
-    rq_head: Option<u8>,
-    // Bitcache with the remaining queues that have to be iterated.
-    bitcache: usize,
-}
-
-impl<const N_QUEUES: usize, const N_THREADS: usize> Iterator
-    for RunQueueIter<'_, { N_QUEUES }, { N_THREADS }>
-{
-    type Item = ThreadId;
-    fn next(&mut self) -> Option<Self::Item> {
-        let mut next = self.queues.peek_next(self.prev);
-        if next == self.rq_head? {
-            // Circled through whole queue, so switch to next one.
-            let rq = ffs(self.bitcache) as u8 - 1;
-            // Clear current runqueue from bitcache.
-            self.bitcache &= !(1 << rq);
-            // Get head from remaining highest priority runqueue.
-            self.rq_head = if self.bitcache > 0 {
-                self.queues.peek_head(ffs(self.bitcache) as u8 - 1)
-            } else {
-                None
-            };
-            next = self.rq_head?;
-        }
-        self.prev = next;
-        Some(ThreadId(next))
-    }
-}
+// pub struct RunQueueIter<'a, const N_QUEUES: usize, const N_THREADS: usize> {
+//     queues: &'a clist::CList<N_QUEUES, N_THREADS>,
+//     // Predecessor in the circular runqueue list.
+//     prev: u8,
+//     // Head of the currently iterated runqueue.
+//     rq_head: Option<u8>,
+//     // Bitcache with the remaining queues that have to be iterated.
+//     bitcache: usize,
+// }
+//
+// impl<const N_QUEUES: usize, const N_THREADS: usize> Iterator
+//     for RunQueueIter<'_, { N_QUEUES }, { N_THREADS }>
+// {
+//     type Item = ThreadId;
+//     fn next(&mut self) -> Option<Self::Item> {
+//         let mut next = self.queues.peek_next(self.prev);
+//         if next == self.rq_head? {
+//             // Circled through whole queue, so switch to next one.
+//             let rq = ffs(self.bitcache) as u8 - 1;
+//             // Clear current runqueue from bitcache.
+//             self.bitcache &= !(1 << rq);
+//             // Get head from remaining highest priority runqueue.
+//             self.rq_head = if self.bitcache > 0 {
+//                 self.queues.peek_head(ffs(self.bitcache) as u8 - 1)
+//             } else {
+//                 None
+//             };
+//             next = self.rq_head?;
+//         }
+//         self.prev = next;
+//         Some(ThreadId(next))
+//     }
+// }
 
 mod clist {
     //! This module implements an array of `N_QUEUES` circular linked lists over an
@@ -248,19 +248,36 @@ mod clist {
     //!
     //! The array is used for "next" pointers, so each integer value in the array
     //! corresponds to one element, which can only be in one of the lists.
-    #[derive(Debug, Copy, Clone)]
-    pub struct CList<const N_QUEUES: usize, const N_THREADS: usize> {
+
+    const SENTINEL: u8 = 0xff;
+
+    // FIXME
+    const N_QUEUES: usize = 4;
+    const N_THREADS: usize = 16;
+
+    #[derive(Copy, Clone)]
+    #[cfg_attr(hax, hax_lib::attributes)]
+    pub struct CList {
+        #[refine(hax_lib::forall(|i: usize| hax_lib::implies(
+            i < tail.len(),
+            tail[i] == SENTINEL || tail[i] as (usize) < N_THREADS
+        )))]
         tail: [u8; N_QUEUES],
+        #[refine(hax_lib::forall(|i: usize| hax_lib::implies(
+            i < tail.len().max(next_idxs.len()),
+            (i >= N_THREADS || (next_idxs[i] == SENTINEL || next_idxs[i] as (usize) < N_THREADS)) && (i >= N_QUEUES || next_idxs[tail[i] as usize] != SENTINEL)
+        )))]
         next_idxs: [u8; N_THREADS],
     }
 
-    impl<const N_QUEUES: usize, const N_THREADS: usize> Default for CList<N_QUEUES, N_THREADS> {
+    impl Default for CList {
         fn default() -> Self {
             Self::new()
         }
     }
 
-    impl<const N_QUEUES: usize, const N_THREADS: usize> CList<N_QUEUES, N_THREADS> {
+    #[cfg_attr(hax, hax_lib::attributes)]
+    impl CList {
         pub const fn new() -> Self {
             // TODO: ensure N fits in u8
             // assert!(N<255); is not allowed in const because it could panic
@@ -271,62 +288,65 @@ mod clist {
         }
 
         pub const fn sentinel() -> u8 {
-            0xFF
+            SENTINEL
         }
 
+        #[requires(rq as (usize) < N_QUEUES)]
         pub fn is_empty(&self, rq: u8) -> bool {
             self.tail[rq as usize] == Self::sentinel()
         }
 
-        pub fn push(&mut self, n: u8, rq: u8) {
-            assert!(n < Self::sentinel());
-            if self.next_idxs[n as usize] != Self::sentinel() {
-                return;
-            }
-
-            if let Some(head) = self.peek_head(rq) {
-                // rq has an entry already, so
-                // 1. n.next = old_tail.next ("first" in list)
-                self.next_idxs[n as usize] = head;
-                // 2. old_tail.next = n
-                self.next_idxs[self.tail[rq as usize] as usize] = n;
-                // 3. tail = n
-                self.tail[rq as usize] = n;
-            } else {
-                // rq is empty, link both tail and n.next to n
-                self.tail[rq as usize] = n;
-                self.next_idxs[n as usize] = n;
-            }
-        }
+        // #[requires(n != SENTINEL && n as (usize) < N_THREADS && rq as (usize) < N_QUEUES)]
+        // pub fn push(&mut self, n: u8, rq: u8) {
+        //     assert!(n < Self::sentinel());
+        //     if self.next_idxs[n as usize] != Self::sentinel() {
+        //         return;
+        //     }
+        //
+        //     if let Some(head) = self.peek_head(rq) {
+        //         // rq has an entry already, so
+        //         // 1. n.next = old_tail.next ("first" in list)
+        //         self.next_idxs[n as usize] = head;
+        //         // 2. old_tail.next = n
+        //         self.next_idxs[self.tail[rq as usize] as usize] = n;
+        //         // 3. tail = n
+        //         self.tail[rq as usize] = n;
+        //     } else {
+        //         // rq is empty, link both tail and n.next to n
+        //         self.tail[rq as usize] = n;
+        //         self.next_idxs[n as usize] = n;
+        //     }
+        // }
 
         /// Removes a thread from the list.
         ///
         /// If the thread was the only thread in its runqueue, `Some` is returned
         /// with the ID of the now empty runqueue.
-        pub fn del(&mut self, n: u8) -> Option<u8> {
-            if self.next_idxs[n as usize] == Self::sentinel() {
-                return None;
-            }
-            let mut empty_runqueue = None;
+        // pub fn del(&mut self, n: u8) -> Option<u8> {
+        //     if self.next_idxs[n as usize] == Self::sentinel() {
+        //         return None;
+        //     }
+        //     let mut empty_runqueue = None;
+        //
+        //     // Find previous thread in circular runqueue.
+        //     let prev = position(&self.next_idxs, n)?;
+        //
+        //     // Handle if thread is tail of a runqueue.
+        //     if let Some(rq) = position(&self.tail, n) {
+        //         if prev == n as usize {
+        //             // Runqueue is empty now.
+        //             self.tail[rq] = Self::sentinel();
+        //             empty_runqueue = Some(rq as u8);
+        //         } else {
+        //             self.tail[rq] = prev as u8;
+        //         }
+        //     }
+        //     self.next_idxs[prev] = self.next_idxs[n as usize];
+        //     self.next_idxs[n as usize] = Self::sentinel();
+        //     empty_runqueue
+        // }
 
-            // Find previous thread in circular runqueue.
-            let prev = position(&self.next_idxs, n)?;
-
-            // Handle if thread is tail of a runqueue.
-            if let Some(rq) = position(&self.tail, n) {
-                if prev == n as usize {
-                    // Runqueue is empty now.
-                    self.tail[rq] = Self::sentinel();
-                    empty_runqueue = Some(rq as u8);
-                } else {
-                    self.tail[rq] = prev as u8;
-                }
-            }
-            self.next_idxs[prev] = self.next_idxs[n as usize];
-            self.next_idxs[n as usize] = Self::sentinel();
-            empty_runqueue
-        }
-
+        #[requires(rq as (usize) < N_QUEUES)]
         pub fn pop_head(&mut self, rq: u8) -> Option<u8> {
             let head = self.peek_head(rq)?;
 
@@ -346,6 +366,7 @@ mod clist {
             Some(head)
         }
 
+        #[requires(rq as (usize) < N_QUEUES)]
         #[inline]
         pub fn peek_head(&self, rq: u8) -> Option<u8> {
             if self.is_empty(rq) {
@@ -355,10 +376,13 @@ mod clist {
             }
         }
 
+
+        #[requires(curr as (usize) < N_THREADS)]
         pub fn peek_next(&self, curr: u8) -> u8 {
             self.next_idxs[curr as usize]
         }
 
+        #[requires(rq as (usize) < N_QUEUES)]
         pub fn advance(&mut self, rq: u8) -> bool {
             let tail = self.tail[rq as usize];
             let head = self.next_idxs[tail as usize];

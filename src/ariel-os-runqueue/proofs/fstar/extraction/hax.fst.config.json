@@ -1,0 +1,11 @@
+{
+  "fstar_exe": "fstar.exe",
+  "include_dirs": [
+    "../../../../../../hacl-star/lib",
+    "",
+    "/home/romain/.cargo/git/checkouts/hax-62040e6a6d802cb8/4dec0f8/hax-lib/proofs/fstar/extraction",
+    "/home/romain/.cargo/git/checkouts/hax-62040e6a6d802cb8/4dec0f8/proof-libs/fstar/core",
+    "/home/romain/.cargo/git/checkouts/hax-62040e6a6d802cb8/4dec0f8/proof-libs/fstar/rust_primitives",
+    "/home/romain/Work/InriaSaclay/source/ariel-os/src/ariel-os-runqueue/proofs/fstar/extraction"
+  ]
+}

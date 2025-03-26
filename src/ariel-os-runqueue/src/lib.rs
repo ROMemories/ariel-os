@@ -4,7 +4,7 @@
 #![deny(missing_docs)]
 
 mod runqueue;
-pub use runqueue::{RunQueue, RunqueueId, ThreadId};
+pub use runqueue::{/* RunQueue, */ RunqueueId, ThreadId};
 
 #[cfg(test)]
 mod tests {
