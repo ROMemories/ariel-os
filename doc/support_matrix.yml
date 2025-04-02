@@ -155,8 +155,8 @@ chips:
       storage: not_currently_supported
       wifi: supported
 
-  stm32c031c6tx:
-    name: STM32C031C6TX
+  stm32c031c6:
+    name: STM32C031C6
     support:
       gpio: supported
       debug_output: supported
@@ -172,8 +172,8 @@ chips:
       user_usb: not_available
       wifi: not_available
 
-  stm32f401retx:
-    name: STM32F401RETX
+  stm32f401re:
+    name: STM32F401RE
     support:
       gpio: supported
       debug_output: supported
@@ -187,8 +187,8 @@ chips:
           - unsupported heterogeneous flash organization
       wifi: not_available
 
-  stm32h755zitx:
-    name: STM32H755ZITX
+  stm32h755zi:
+    name: STM32H755ZI
     support:
       gpio: supported
       debug_output: supported
@@ -202,8 +202,8 @@ chips:
           - removing items not supported
       wifi: not_available
 
-  stm32wb55rgvx:
-    name: STM32WB55RGVX
+  stm32wb55rg:
+    name: STM32WB55RG
     support:
       gpio: supported
       debug_output: supported
@@ -296,13 +296,13 @@ boards:
   st-nucleo-c031c6:
     name: ST NUCLEO-C031C6
     url: https://web.archive.org/web/20241114214921/https://www.st.com/en/evaluation-tools/nucleo-c031c6.html
-    chip: stm32c031c6tx
+    chip: stm32c031c6
     support:
 
   st-nucleo-f401re:
     name: ST NUCLEO-F401RE
     url: https://web.archive.org/web/20250115005425/https://www.st.com/en/evaluation-tools/nucleo-f401re.html
-    chip: stm32f401retx
+    chip: stm32f401re
     support:
       user_usb: not_available
       wifi: not_available
@@ -311,7 +311,7 @@ boards:
   st-nucleo-h755zi-q:
     name: ST NUCLEO-H755ZI-Q
     url: https://web.archive.org/web/20240524105149/https://www.st.com/en/evaluation-tools/nucleo-h755zi-q.html
-    chip: stm32h755zitx
+    chip: stm32h755zi
     support:
       user_usb: supported
       wifi: not_available
@@ -320,7 +320,7 @@ boards:
   st-nucleo-wb55:
     name: ST NUCLEO-WB55RG
     url: https://web.archive.org/web/20240803070523/https://www.st.com/en/evaluation-tools/nucleo-wb55rg.html
-    chip: stm32wb55rgvx
+    chip: stm32wb55rg
     support:
       user_usb: supported
       wifi: not_available
