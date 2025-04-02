@@ -16,13 +16,13 @@ pub fn init(peripherals: &mut crate::OptionalPeripherals) {
 
     // Take all I2c peripherals and do nothing with them.
     cfg_if::cfg_if! {
-        if #[cfg(context = "stm32c031c6tx")] {
+        if #[cfg(context = "stm32c031c6")] {
             take_all_i2c_peripherals!(I2C1);
-        } else if #[cfg(context = "stm32f401retx")] {
+        } else if #[cfg(context = "stm32f401re")] {
             take_all_i2c_peripherals!(I2C1, I2C2, I2C3);
-        } else if #[cfg(context = "stm32h755zitx")] {
+        } else if #[cfg(context = "stm32h755zi")] {
             take_all_i2c_peripherals!(I2C1, I2C2, I2C3, I2C4);
-        } else if #[cfg(context = "stm32wb55rgvx")] {
+        } else if #[cfg(context = "stm32wb55rg")] {
             take_all_i2c_peripherals!(I2C1, I2C3);
         } else {
             compile_error!("this STM32 chip is not supported");

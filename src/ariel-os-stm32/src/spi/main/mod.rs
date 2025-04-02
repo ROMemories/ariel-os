@@ -16,13 +16,13 @@ use embassy_stm32::{
 // TODO: we could consider making this `pub`
 // NOTE(hal): values from the datasheets.
 // When peripherals support different frequencies, the smallest one is used.
-#[cfg(context = "stm32c031c6tx")]
+#[cfg(context = "stm32c031c6")]
 const MAX_FREQUENCY: Kilohertz = Kilohertz::MHz(24);
-#[cfg(context = "stm32f401retx")]
+#[cfg(context = "stm32f401re")]
 const MAX_FREQUENCY: Kilohertz = Kilohertz::MHz(21);
-#[cfg(context = "stm32h755zitx")]
+#[cfg(context = "stm32h755zi")]
 const MAX_FREQUENCY: Kilohertz = Kilohertz::MHz(150);
-#[cfg(context = "stm32wb55rgvx")]
+#[cfg(context = "stm32wb55rg")]
 const MAX_FREQUENCY: Kilohertz = Kilohertz::MHz(32);
 
 /// SPI bus configuration.
@@ -135,17 +135,17 @@ macro_rules! define_spi_drivers {
 }
 
 // Define a driver per peripheral
-#[cfg(context = "stm32c031c6tx")]
+#[cfg(context = "stm32c031c6")]
 define_spi_drivers!(
    SPI1 => SPI1,
 );
-#[cfg(context = "stm32f401retx")]
+#[cfg(context = "stm32f401re")]
 define_spi_drivers!(
    SPI1 => SPI1,
    SPI2 => SPI2,
    SPI3 => SPI3,
 );
-#[cfg(context = "stm32h755zitx")]
+#[cfg(context = "stm32h755zi")]
 define_spi_drivers!(
    SPI1 => SPI1,
    SPI2 => SPI2,
@@ -154,7 +154,7 @@ define_spi_drivers!(
    SPI5 => SPI5,
    SPI6 => SPI6,
 );
-#[cfg(context = "stm32wb55rgvx")]
+#[cfg(context = "stm32wb55rg")]
 define_spi_drivers!(
    SPI1 => SPI1,
    SPI2 => SPI2,

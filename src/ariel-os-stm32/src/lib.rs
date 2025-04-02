@@ -102,7 +102,7 @@ fn board_config(config: &mut Config) {
         config.rcc.mux.clk48sel = mux::Clk48sel::HSI48;
     }
 
-    #[cfg(context = "stm32h755zitx")]
+    #[cfg(context = "stm32h755zi")]
     {
         use embassy_stm32::rcc::*;
 

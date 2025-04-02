@@ -31,17 +31,17 @@ ariel_os::hal::define_peripherals!(Peripherals {
     i2c_scl: PIN_13,
 });
 
-#[cfg(context = "stm32h755zitx")]
+#[cfg(context = "stm32h755zi")]
 pub type SensorI2c = i2c::controller::I2C1;
-#[cfg(context = "stm32h755zitx")]
+#[cfg(context = "stm32h755zi")]
 ariel_os::hal::define_peripherals!(Peripherals {
     i2c_sda: PB9,
     i2c_scl: PB8,
 });
 
-#[cfg(context = "stm32wb55rgvx")]
+#[cfg(context = "stm32wb55rg")]
 pub type SensorI2c = i2c::controller::I2C1;
-#[cfg(context = "stm32wb55rgvx")]
+#[cfg(context = "stm32wb55rg")]
 ariel_os::hal::define_peripherals!(Peripherals {
     i2c_sda: PB9,
     i2c_scl: PB8,
