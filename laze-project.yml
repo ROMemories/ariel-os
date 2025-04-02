@@ -392,7 +392,7 @@ contexts:
     env:
       OPENOCD_ARGS: foo
 
-  - name: stm32c031c6tx
+  - name: stm32c031c6
     parent: stm32
     selects:
       - cortex-m0-plus
@@ -409,7 +409,7 @@ contexts:
         # This ISR is unused on a naked board. Configured here for testing.
         - CONFIG_SWI=USART2
 
-  - name: stm32f401retx
+  - name: stm32f401re
     parent: stm32
     selects:
       - cortex-m4f
@@ -423,7 +423,7 @@ contexts:
         # This ISR is unused on a naked board. Configured here for testing.
         - CONFIG_SWI=USART2
 
-  - name: stm32h755zitx
+  - name: stm32h755zi
     parent: stm32
     selects:
       # TODO: also has a cortex-m4f
@@ -442,7 +442,7 @@ contexts:
         # This ISR is unused on a naked board. Configured here for testing.
         - CONFIG_SWI=UART5
 
-  - name: stm32wb55rgvx
+  - name: stm32wb55rg
     parent: stm32
     selects:
       - cortex-m4f
@@ -459,7 +459,7 @@ contexts:
         # This ISR is unused on a naked board. Configured here for testing.
         - CONFIG_SWI=LPUART1
 
-  - name: stm32wba55cgux
+  - name: stm32wba55cg
     parent: stm32
     selects:
       - cortex-m33f
@@ -1399,27 +1399,27 @@ builders:
       - has_usb_device_port
 
   - name: st-nucleo-c031c6
-    parent: stm32c031c6tx
+    parent: stm32c031c6
 
   # TODO: there also is a companion nrf52840 on this board
   - name: nrf9160dk
     parent: nrf9160
 
   - name: st-nucleo-f401re
-    parent: stm32f401retx
+    parent: stm32f401re
 
   - name: st-nucleo-h755zi-q
-    parent: stm32h755zitx
+    parent: stm32h755zi
     provides:
       - has_usb_device_port
 
   - name: st-nucleo-wb55
-    parent: stm32wb55rgvx
+    parent: stm32wb55rg
     provides:
       - has_usb_device_port
 
   - name: st-nucleo-wba55
-    parent: stm32wba55cgux
+    parent: stm32wba55cg
 
 apps:
   # define a dummy host application so the host tasks work
