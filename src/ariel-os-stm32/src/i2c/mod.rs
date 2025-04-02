@@ -7,7 +7,7 @@ pub mod controller;
 pub fn init(peripherals: &mut crate::OptionalPeripherals) {
     // This macro has to be defined in this function so that the `peripherals` variables exists.
     macro_rules! take_all_i2c_peripherals {
-        ($peripherals:ident, $( $peripheral:ident ),*) => {
+        ($( $peripheral:ident ),*) => {
             $(
                 let _ = peripherals.$peripheral.take().unwrap();
             )*

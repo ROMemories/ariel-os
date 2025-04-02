@@ -4,7 +4,7 @@ use ariel_os_embassy_common::{i2c::controller::Kilohertz, impl_async_i2c_for_dri
 use embassy_embedded_hal::adapter::{BlockingAsync, YieldingAsync};
 use embassy_stm32::{
     Peripheral, bind_interrupts,
-    i2c::{ErrorInterruptHandler, EventInterruptHandler, I2c as InnerI2c, SclPin, SdaPin},
+    i2c::{EventInterruptHandler, I2c as InnerI2c, SclPin, SdaPin},
     mode::Blocking,
     peripherals,
     time::Hertz,
@@ -120,7 +120,7 @@ impl From<Frequency> for Hertz {
 }
 
 macro_rules! define_i2c_drivers {
-    ($( $ev_interrupt:ident + $er_interrupt:ident => $peripheral:ident ),* $(,)?) => {
+    ($( $ev_interrupt:ident $( + $er_interrupt:ident )? => $peripheral:ident ),* $(,)?) => {
         $(
             /// Peripheral-specific I2C driver.
             // NOTE(hal): this is not required in this HAL, as the inner I2C type is
@@ -148,7 +148,7 @@ macro_rules! define_i2c_drivers {
                     bind_interrupts!(
                         struct Irqs {
                             $ev_interrupt => EventInterruptHandler<peripherals::$peripheral>;
-                            $er_interrupt => ErrorInterruptHandler<peripherals::$peripheral>;
+                            $( $er_interrupt => embassy_stm32::i2c::ErrorInterruptHandler<peripherals::$peripheral>; )?
                         }
                     );
 
@@ -214,7 +214,7 @@ fn from_error(err: embassy_stm32::i2c::Error) -> ariel_os_embassy_common::i2c::c
 // Define a driver per peripheral
 #[cfg(context = "stm32c031c6")]
 define_i2c_drivers!(
-   I2C1_EV + I2C1_ER => I2C1,
+   I2C1 => I2C1,
 );
 #[cfg(context = "stm32f401re")]
 define_i2c_drivers!(

@@ -8,5 +8,6 @@ apps:
       - nrf9160
       - rp2040
       - rp235xa
+      - st-nucleo-c031c6
       - st-nucleo-h755zi-q
       - st-nucleo-wb55
