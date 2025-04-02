@@ -119,7 +119,7 @@ jobs:
                   spi,
                   " \
               -p ariel-os-nrf
-          RUSTDOCFLAGS='-D warnings --cfg context="stm32wb55rgvx"' cargo doc \
+          RUSTDOCFLAGS='-D warnings --cfg context="stm32wb55rg"' cargo doc \
               --no-deps \
               --features "
                   embassy-stm32/stm32wb55rg,

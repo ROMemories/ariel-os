@@ -198,7 +198,7 @@ jobs:
             --
             --deny warnings
 
-      - run: echo 'RUSTFLAGS=--cfg context="stm32wb55rgvx"' >> $GITHUB_ENV
+      - run: echo 'RUSTFLAGS=--cfg context="stm32wb55rg"' >> $GITHUB_ENV
       - name: clippy for STM32
         uses: clechasseur/rs-clippy-check@v3
         with:
@@ -315,7 +315,7 @@ jobs:
 
       - name: rustdoc for STM32
         run: |
-            RUSTDOCFLAGS='-D warnings --cfg context="stm32wb55rgvx"' cargo doc \
+            RUSTDOCFLAGS='-D warnings --cfg context="stm32wb55rg"' cargo doc \
                 --no-deps \
                 --features "
                     embassy-stm32/stm32wb55rg,
