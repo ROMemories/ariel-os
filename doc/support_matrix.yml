@@ -162,7 +162,7 @@ chips:
       debug_output: supported
       ethernet_over_usb: not_available
       hwrng: not_available
-      i2c_controller: needs_testing
+      i2c_controller: supported
       spi_main: needs_testing
       logging: supported
       storage:
