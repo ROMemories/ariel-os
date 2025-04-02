@@ -35,7 +35,7 @@ Example for the `st-nucleo-f401re` board:
 builders:
   # ...
   - name: st-nucleo-f401re
-    parent: stm32f401retx
+    parent: stm32f401re
 ```
 
 ## Adding Support for an MCU from a Supported MCU family
@@ -61,7 +61,7 @@ Example for the `stm32f401retx` MCU:
 ```yaml
 contexts:
   # ...
-  - name: stm32f401retx
+  - name: stm32f401re
     parent: stm32
     selects:
       - cortex-m4f
