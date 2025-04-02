@@ -7,7 +7,7 @@
 // This CSV file is generated from the JSON files from
 // https://github.com/embassy-rs/stm32-data-generated/tree/main/data/chips
 // using the following command in that directory:
-// jq --raw-output --slurp 'map(. as $chip | .packages | map([.name | ascii_downcase, $chip.name | ascii_downcase])) | flatten(1)[] | @csv' *.json
+// jq --raw-output --slurp 'map([.name | ascii_downcase]) | flatten(0)[] | @csv' *.json
 const MAPPING_FILE_NAME: &str = "stm32_mapping.csv";
 
 const START_PATTERN: &str = "BEGIN AUTO-GENERATED STM32 MAPPING";
@@ -40,9 +40,9 @@ fn main() {
 fn generate_target_table(row: &str) -> String {
     let mut cols = row.split(',');
 
-    let mcu_context = cols.next().unwrap();
+    let mcu = cols.next().unwrap();
     let cargo_feature = {
-        let mut mcu_base = cols.next().unwrap().to_string();
+        let mut mcu_base = mcu.to_owned();
         let skip_leading_quotation_mark = &mcu_base[1..];
         if CM4_CM7_MCU_PREFIXES
             .iter()
@@ -66,7 +66,7 @@ fn generate_target_table(row: &str) -> String {
     // The TOML quotation marks come from the already-quoted CSV strings.
     format!(
         r#"
-[target.'cfg(context = {mcu_context})'.dependencies]
+[target.'cfg(context = {mcu})'.dependencies]
 embassy-stm32 = {{ workspace = true, features = [{cargo_feature}] }}
 "#,
     )
