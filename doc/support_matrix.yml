@@ -158,6 +158,21 @@ chips:
         comments:
           - not currently compatible with threading
 
+  esp32c3fx4:
+    name: ESP32-C3Fx4
+    support:
+      gpio: supported
+      debug_output: supported
+      hwrng: supported
+      i2c_controller: supported
+      spi_main: supported
+      logging: supported
+      storage: not_currently_supported
+      wifi:
+        status: supported_with_caveats
+        comments:
+          - not currently compatible with threading
+
   esp32c6:
     name: ESP32-C6
     support:
@@ -343,7 +358,7 @@ boards:
   espressif-esp32-c3-lcdkit:
     name: Espressif ESP32-C3-LCDkit
     url: https://web.archive.org/web/20250408100740/https://www.espressif.com/en/dev-board/esp32-c3-lcdkit-en
-    chip: esp32c3
+    chip: esp32c3fx4
     support:
       user_usb: not_currently_supported
       ethernet_over_usb: not_currently_supported
