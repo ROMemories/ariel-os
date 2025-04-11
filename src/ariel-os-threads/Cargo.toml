@@ -36,7 +36,6 @@ esp-hal = { workspace = true, features = ["esp32c6"] }
 
 [target.'cfg(context = "esp32s3")'.dependencies]
 esp-hal = { workspace = true, features = ["esp32s3"] }
-static_cell = { workspace = true, optional = true }
 
 [target.'cfg(context = "cortex-m")'.dependencies]
 # cortex-m specifics
@@ -46,18 +45,12 @@ cortex-m-semihosting.workspace = true
 panic-semihosting = { version = "0.6.0", features = ["exit"] }
 
 [target.'cfg(context = "rp")'.dependencies]
-static_cell = { workspace = true, optional = true }
 rp-pac = { workspace = true, optional = true }
 embassy-rp = { workspace = true, optional = true }
 
 [features]
 defmt = ["dep:defmt", "ariel-os-runqueue/defmt"]
-multi-core = [
-  "dep:static_cell",
-  "dep:rp-pac",
-  "dep:embassy-rp",
-  "embassy-rp/fifo-handler",
-]
+multi-core = ["dep:rp-pac", "dep:embassy-rp", "embassy-rp/fifo-handler"]
 core-affinity = ["multi-core"]
 
 _test = []
