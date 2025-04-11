@@ -22,20 +22,11 @@ static_cell.workspace = true
 
 defmt = { workspace = true, optional = true }
 
-[target.'cfg(context = "esp32")'.dependencies]
-esp-hal = { workspace = true, features = ["esp32"] }
+[target.'cfg(context = "esp")'.dependencies]
+esp-hal = { workspace = true }
 
 [target.'cfg(context = "xtensa")'.dependencies]
 xtensa-lx-rt = { workspace = true, features = ["float-save-restore"] }
-
-[target.'cfg(context = "esp32c3")'.dependencies]
-esp-hal = { workspace = true, features = ["esp32c3"] }
-
-[target.'cfg(context = "esp32c6")'.dependencies]
-esp-hal = { workspace = true, features = ["esp32c6"] }
-
-[target.'cfg(context = "esp32s3")'.dependencies]
-esp-hal = { workspace = true, features = ["esp32s3"] }
 
 [target.'cfg(context = "cortex-m")'.dependencies]
 # cortex-m specifics
