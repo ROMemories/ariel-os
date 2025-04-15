@@ -8,5 +8,6 @@ publish = false
 workspace = true
 
 [dependencies]
-ariel-os = { path = "../../src/ariel-os", features = ["time"] }
+ariel-os = { path = "../../src/ariel-os", features = ["i2c", "time"] }
 ariel-os-boards = { path = "../../src/ariel-os-boards" }
+embedded-hal-async = { workspace = true }

@@ -1,4 +1,4 @@
-use ariel_os::hal::peripherals;
+use ariel_os::hal::{i2c, peripherals};
 
 #[cfg(context = "bbc-microbit-v2")]
 ariel_os::hal::define_peripherals!(LedPeripherals {
@@ -13,7 +13,14 @@ ariel_os::hal::define_peripherals!(LedPeripherals { led: GPIO15 });
 ariel_os::hal::define_peripherals!(LedPeripherals { led: P0_29 });
 
 #[cfg(context = "nrf52840dk")]
-ariel_os::hal::define_peripherals!(LedPeripherals { led: P0_13 });
+ariel_os::hal::define_peripherals!(LedPeripherals {
+    led: P0_13,
+    uart0: UARTE0,
+    // uart_rx: P0_00,
+    // uart_tx: P0_01,
+    i2c_sda: P0_26,
+    i2c_scl: P0_27,
+});
 
 #[cfg(context = "nrf5340dk")]
 ariel_os::hal::define_peripherals!(LedPeripherals { led: P0_28 });
@@ -50,3 +57,16 @@ ariel_os::hal::define_peripherals!(LedPeripherals { led: PB4 });
 
 #[cfg(context = "stm32u083c-dk")]
 ariel_os::hal::define_peripherals!(LedPeripherals { led: PA5 });
+
+#[cfg(any(context = "nrf52833", context = "nrf52840"))]
+pub type SensorI2c = i2c::controller::TWISPI0;
+#[cfg(any(context = "nrf5340", context = "nrf91"))]
+pub type SensorI2c = i2c::controller::SERIAL0;
+#[cfg(all(
+    context = "nrf",
+    not(any(context = "bbc-microbit-v2", context = "nordic-thingy-91-x-nrf9151"))
+))]
+ariel_os::hal::define_peripherals!(Peripherals {
+    i2c_sda: P0_00,
+    i2c_scl: P0_01,
+});

@@ -720,6 +720,7 @@ version = "0.0.0"
 dependencies = [
  "ariel-os",
  "ariel-os-boards",
+ "embedded-hal-async",
 ]
 
 [[package]]
