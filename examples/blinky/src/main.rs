@@ -4,7 +4,7 @@
 mod pins;
 
 use ariel_os::{
-    debug::log::info,
+    debug::log::{defmt, info, error},
     hal,
     i2c::controller::{Kilohertz, highest_freq_in},
 };
@@ -22,6 +22,8 @@ async fn blinky(peripherals: pins::LedPeripherals) {
 
     let mut i2c_bus = pins::SensorI2c::new(peripherals.i2c_sda, peripherals.i2c_scl, i2c_config);
 
+    let mut parser = nmea0183::Parser::new();
+
     loop {
         i2c_bus.read(TARGET_I2C_ADDR, &mut rx_buffer).await.unwrap();
 
@@ -36,5 +38,22 @@ async fn blinky(peripherals: pins::LedPeripherals) {
         let nmea = str::from_utf8(&rx_buffer[..end_index]).unwrap();
 
         info!("NMEA: {}", nmea);
+
+        for result in parser.parse_from_bytes(&rx_buffer) {
+            match result {
+                Ok(nmea0183::ParseResult::RMC(Some(rmc))) => {
+                    info!("RMC: {:?}", defmt::Debug2Format(&rmc));
+                }, // Got RMC sentence
+                Ok(nmea0183::ParseResult::GGA(Some(gga))) => {
+                    info!("GGA: {:?}", defmt::Debug2Format(&gga));
+                }, // Got GGA sentence without valid data, receiver ok but has no solution
+                Ok(other) => {
+                    info!("Other: {:?}", defmt::Debug2Format(&other));
+                }, // Some other sentences..
+                Err(err) => {
+                    error!("Error: {:?}", err);
+                } // Got parse error
+            }
+        }
     }
 }

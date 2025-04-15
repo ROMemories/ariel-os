@@ -721,6 +721,7 @@ dependencies = [
  "ariel-os",
  "ariel-os-boards",
  "embedded-hal-async",
+ "nmea0183",
 ]
 
 [[package]]
@@ -3805,6 +3806,12 @@ name = "new_debug_unreachable"
 version = "1.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "650eef8c711430f1a879fdd01d4745a7deea475becfb90269c06775983bbf086"
+
+[[package]]
+name = "nmea0183"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e55ec95816179f517fa9991508b87f9d1cce7e1e8574449f6802489abf4dc46c"
 
 [[package]]
 name = "nom"
