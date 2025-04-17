@@ -173,6 +173,21 @@ chips:
         comments:
           - not currently compatible with threading
 
+  esp32c6fx4:
+    name: ESP32-C6Fx4
+    support:
+      gpio: supported
+      debug_output: supported
+      hwrng: supported
+      i2c_controller: supported
+      spi_main: supported
+      logging: supported
+      storage: not_currently_supported
+      wifi:
+        status: supported_with_caveats
+        comments:
+          - not currently compatible with threading
+
   esp32s3:
     name: ESP32-S3
     support:
@@ -339,6 +354,14 @@ boards:
       user_usb: supported
       wifi: supported
       ethernet_over_usb: supported
+
+  dfrobot-firebeetle2-esp32-c6:
+    name: DFRobot FireBeetle 2 ESP32-C6
+    url: https://web.archive.org/web/20250214091848/https://wiki.dfrobot.com/SKU_DFR1075_FireBeetle_2_Board_ESP32_C6
+    chip: esp32c6fx4
+    support:
+      user_usb: not_currently_supported
+      ethernet_over_usb: not_currently_supported
 
   espressif-esp32-c3-lcdkit:
     name: Espressif ESP32-C3-LCDkit
