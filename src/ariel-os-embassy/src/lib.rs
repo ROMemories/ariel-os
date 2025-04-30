@@ -39,6 +39,8 @@ use linkme::distributed_slice;
 // All items of this module are re-exported at the root of `ariel_os`.
 pub mod api {
     pub use crate::{EMBASSY_TASKS, asynch, delegate, gpio, hal};
+    // FIXME: remove this
+    pub use crate::{print, println};
 
     pub mod cell {
         //! Shareable containers.
@@ -177,7 +179,8 @@ fn init() {
         .run(|spawner| spawner.must_spawn(init_task(p)));
 }
 
-mod debug {
+#[doc(hidden)]
+pub mod debug {
     pub(crate) static DEBUG_UART: embassy_sync::once_lock::OnceLock<
         embassy_sync::mutex::Mutex<
             embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex,
@@ -252,12 +255,6 @@ async fn init_task(mut peripherals: hal::OptionalPeripherals) {
         );
 
         let _ = debug::DEBUG_UART.init(embassy_sync::mutex::Mutex::new(uart));
-
-        loop {
-            let test = core::hint::black_box(1);
-            println!("Test: {}", 42 + test);
-            api::time::Timer::after_millis(1000).await;
-        }
     }
 
     debug!("ariel-os-embassy::init_task()");
