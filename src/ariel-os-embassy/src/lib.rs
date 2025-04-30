@@ -183,6 +183,63 @@ async fn init_task(mut peripherals: hal::OptionalPeripherals) {
     let spawner = asynch::Spawner::for_current_executor().await;
     asynch::set_spawner(spawner.make_send());
 
+    {
+        #[cfg(context = "nrf52840dk")]
+        let uart_rx = peripherals.P0_08.take().unwrap();
+        #[cfg(context = "nrf52840dk")]
+        let uart_tx = peripherals.P0_06.take().unwrap();
+
+        static DEBUG_UART: embassy_sync::once_lock::OnceLock<
+            embassy_sync::mutex::Mutex<
+                embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex,
+                embassy_nrf::uarte::Uarte<embassy_nrf::peripherals::UARTE0>,
+            >,
+        > = embassy_sync::once_lock::OnceLock::new();
+
+        embassy_nrf::bind_interrupts!(struct Irqs {
+            UARTE0 => embassy_nrf::uarte::InterruptHandler<embassy_nrf::peripherals::UARTE0>;
+        });
+
+        let uart = embassy_nrf::uarte::Uarte::new(
+            peripherals.UARTE0.take().unwrap(),
+            Irqs,
+            uart_rx,
+            uart_tx,
+            // &mut rx_buf,
+            // &mut tx_buf,
+            // config,
+            embassy_nrf::uarte::Config::default(),
+        );
+
+        let _ = DEBUG_UART.init(embassy_sync::mutex::Mutex::new(uart));
+
+        struct DebugUart;
+
+        impl core::fmt::Write for DebugUart {
+            fn write_str(&mut self, s: &str) -> core::fmt::Result {
+                use embedded_io_async::Write;
+
+                // FIXME: do not unwrap
+                embassy_futures::block_on(async {
+                    let mut uart = DEBUG_UART.get().await.lock().await;
+                    uart.write(s.as_bytes()).await.unwrap();
+                    // TODO: is flushing needed here?
+                    uart.flush().await.unwrap();
+                });
+                Ok(())
+            }
+        }
+
+        use core::fmt::Write;
+        loop {
+            let test = core::hint::black_box(1);
+            DebugUart
+                .write_fmt(format_args!("Test: {}", 42 + test))
+                .unwrap();
+            api::time::Timer::after_millis(1000).await;
+        }
+    }
+
     debug!("ariel-os-embassy::init_task()");
 
     #[cfg(all(context = "stm32", feature = "external-interrupts"))]

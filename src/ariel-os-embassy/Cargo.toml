@@ -24,12 +24,14 @@ embassy-net = { workspace = true, optional = true, features = [
   "dhcpv4",
   "medium-ethernet",
 ] }
+embassy-nrf = { workspace = true }
 embassy-sync = { workspace = true }
 embassy-time = { workspace = true, optional = true }
 embassy-usb = { workspace = true, optional = true }
 
 embedded-hal = { workspace = true }
 embedded-hal-async = { workspace = true }
+embedded-io-async = { workspace = true }
 
 ariel-os-buildinfo = { workspace = true }
 ariel-os-embassy-common = { workspace = true }
