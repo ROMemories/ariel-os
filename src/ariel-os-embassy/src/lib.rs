@@ -215,6 +215,13 @@ mod debug {
             $crate::debug::_print(format_args!($($arg)*));
         }};
     }
+
+    #[macro_export]
+    macro_rules! println {
+        ($($arg:tt)*) => {{
+            $crate::debug::_print(format_args!("{}\n", format_args!($($arg)*)));
+        }};
+    }
 }
 
 #[embassy_executor::task]
@@ -248,7 +255,7 @@ async fn init_task(mut peripherals: hal::OptionalPeripherals) {
 
         loop {
             let test = core::hint::black_box(1);
-            print!("Test: {}", 42 + test);
+            println!("Test: {}", 42 + test);
             api::time::Timer::after_millis(1000).await;
         }
     }
