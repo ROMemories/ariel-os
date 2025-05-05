@@ -39,8 +39,6 @@ use linkme::distributed_slice;
 // All items of this module are re-exported at the root of `ariel_os`.
 pub mod api {
     pub use crate::{EMBASSY_TASKS, asynch, delegate, gpio, hal};
-    // FIXME: remove this
-    pub use crate::{print, println};
 
     pub mod cell {
         //! Shareable containers.
@@ -179,54 +177,6 @@ fn init() {
         .run(|spawner| spawner.must_spawn(init_task(p)));
 }
 
-#[doc(hidden)]
-pub mod debug {
-    pub(crate) static DEBUG_UART: embassy_sync::once_lock::OnceLock<
-        embassy_sync::mutex::Mutex<
-            embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex,
-            embassy_nrf::uarte::Uarte<embassy_nrf::peripherals::UARTE0>,
-        >,
-    > = embassy_sync::once_lock::OnceLock::new();
-
-    struct DebugUart;
-
-    impl core::fmt::Write for DebugUart {
-        fn write_str(&mut self, s: &str) -> core::fmt::Result {
-            use embedded_io_async::Write;
-
-            // FIXME: do not unwrap
-            embassy_futures::block_on(async {
-                let mut uart = DEBUG_UART.get().await.lock().await;
-                uart.write(s.as_bytes()).await.unwrap();
-                // TODO: is flushing needed here?
-                uart.flush().await.unwrap();
-            });
-            Ok(())
-        }
-    }
-
-    #[doc(hidden)]
-    pub fn _print(args: core::fmt::Arguments) {
-        use core::fmt::Write;
-
-        DebugUart.write_fmt(args).unwrap();
-    }
-
-    #[macro_export]
-    macro_rules! print {
-        ($($arg:tt)*) => {{
-            $crate::debug::_print(format_args!($($arg)*));
-        }};
-    }
-
-    #[macro_export]
-    macro_rules! println {
-        ($($arg:tt)*) => {{
-            $crate::debug::_print(format_args!("{}\n", format_args!($($arg)*)));
-        }};
-    }
-}
-
 #[embassy_executor::task]
 #[allow(clippy::too_many_lines)]
 async fn init_task(mut peripherals: hal::OptionalPeripherals) {
@@ -254,7 +204,7 @@ async fn init_task(mut peripherals: hal::OptionalPeripherals) {
             embassy_nrf::uarte::Config::default(),
         );
 
-        let _ = debug::DEBUG_UART.init(embassy_sync::mutex::Mutex::new(uart));
+        let _ = ariel_os_debug::backend::DEBUG_UART.init(embassy_sync::mutex::Mutex::new(uart));
     }
 
     debug!("ariel-os-embassy::init_task()");

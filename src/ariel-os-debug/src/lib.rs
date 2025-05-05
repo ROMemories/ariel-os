@@ -5,18 +5,8 @@
 #![deny(missing_docs)]
 #![deny(clippy::pedantic)]
 
-#[cfg(all(feature = "rtt-target", feature = "esp-println"))]
-compile_error!(
-    r#"feature "rtt-target" and feature "esp-println" cannot be enabled at the same time"#
-);
-
-#[cfg(all(
-    feature = "debug-console",
-    not(any(feature = "rtt-target", feature = "esp-println"))
-))]
-compile_error!(
-    r#"feature "debug-console" enabled but no backend. Select feature "rtt-target" or feature "esp-println"."#
-);
+#[featurecomb::comb]
+mod _featurecomb {}
 
 #[doc(inline)]
 pub use ariel_os_debug_log as log;
@@ -112,6 +102,61 @@ mod backend {
     pub fn init() {
         #[cfg(feature = "log")]
         crate::logger::init();
+    }
+}
+
+#[cfg(all(feature = "debug-console", feature = "uart"))]
+#[doc(hidden)]
+pub mod backend {
+    pub static DEBUG_UART: embassy_sync::once_lock::OnceLock<
+        embassy_sync::mutex::Mutex<
+            embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex,
+            embassy_nrf::uarte::Uarte<embassy_nrf::peripherals::UARTE0>,
+        >,
+    > = embassy_sync::once_lock::OnceLock::new();
+
+    struct DebugUart;
+
+    impl core::fmt::Write for DebugUart {
+        fn write_str(&mut self, s: &str) -> core::fmt::Result {
+            use embedded_io_async::Write;
+
+            // FIXME: do not unwrap
+            embassy_futures::block_on(async {
+                if let Some(uart) = DEBUG_UART.try_get() {
+                    let mut uart = uart.lock().await;
+                    uart.write(s.as_bytes()).await.unwrap();
+                    // TODO: is flushing needed here?
+                    uart.flush().await.unwrap();
+                }
+            });
+            Ok(())
+        }
+    }
+
+    pub fn init() {
+        crate::logger::init();
+    }
+
+    #[doc(hidden)]
+    pub fn _print(args: core::fmt::Arguments) {
+        use core::fmt::Write;
+
+        DebugUart.write_fmt(args).unwrap();
+    }
+
+    #[macro_export]
+    macro_rules! print {
+        ($($arg:tt)*) => {{
+            $crate::backend::_print(format_args!($($arg)*));
+        }};
+    }
+
+    #[macro_export]
+    macro_rules! println {
+        ($($arg:tt)*) => {{
+            $crate::backend::_print(format_args!("{}\n", format_args!($($arg)*)));
+        }};
     }
 }
 
