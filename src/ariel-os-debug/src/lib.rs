@@ -111,7 +111,8 @@ pub mod backend {
     pub static DEBUG_UART: embassy_sync::once_lock::OnceLock<
         embassy_sync::mutex::Mutex<
             embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex,
-            embassy_nrf::uarte::Uarte<embassy_nrf::peripherals::UARTE0>,
+            // embassy_nrf::uarte::Uarte<embassy_nrf::peripherals::UARTE0>,
+            embassy_stm32::usart::Uart<embassy_stm32::mode::Blocking>,
         >,
     > = embassy_sync::once_lock::OnceLock::new();
 
@@ -119,7 +120,8 @@ pub mod backend {
 
     impl core::fmt::Write for DebugUart {
         fn write_str(&mut self, s: &str) -> core::fmt::Result {
-            use embedded_io_async::Write;
+            // use embedded_io_async::Write;
+            use embedded_io::Write;
 
             // FIXME: do not unwrap
             embassy_futures::block_on(async {
@@ -128,9 +130,11 @@ pub mod backend {
                 // on the debug output before the driver is populated.
                 if let Some(uart) = DEBUG_UART.try_get() {
                     let mut uart = uart.lock().await;
-                    uart.write(s.as_bytes()).await.unwrap();
+                    // uart.write(s.as_bytes()).await.unwrap();
+                    uart.write(s.as_bytes()).unwrap();
                     // TODO: is flushing needed here?
-                    uart.flush().await.unwrap();
+                    // uart.flush().await.unwrap();
+                    uart.flush().unwrap();
                 }
             });
             Ok(())

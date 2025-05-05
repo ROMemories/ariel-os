@@ -21,8 +21,10 @@ ariel-os-debug-log = { workspace = true }
 ariel-os-utils = { workspace = true }
 const-str = { workspace = true }
 embassy-futures = { workspace = true, optional = true }
-embassy-nrf = { workspace = true, optional = true }
+# embassy-nrf = { workspace = true, optional = true }
+embassy-stm32 = { workspace = true, optional = true }
 embassy-sync = { workspace = true, optional = true }
+embedded-io= { workspace = true, optional = true }
 embedded-io-async = { workspace = true, optional = true }
 featurecomb = { workspace = true }
 log = { workspace = true, optional = true }
@@ -66,7 +68,9 @@ esp-println = ["dep:esp-println"]
 rtt-target = ["dep:rtt-target"]
 uart = [
   "dep:embassy-futures",
-  "dep:embassy-nrf",
+  # "dep:embassy-nrf",
+  "dep:embassy-stm32",
   "dep:embassy-sync",
+  "dep:embedded-io",
   "dep:embedded-io-async",
 ]

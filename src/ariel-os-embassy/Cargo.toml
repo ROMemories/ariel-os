@@ -54,6 +54,12 @@ embassy-executor = { workspace = true, default-features = false, features = [
   "arch-cortex-m",
 ] }
 
+[target.'cfg(context = "nrf")'.dependencies]
+embassy-nrf = { workspace = true }
+
+[target.'cfg(context = "stm32")'.dependencies]
+embassy-stm32 = { workspace = true }
+
 [features]
 ## Enables GPIO interrupt support.
 external-interrupts = [
