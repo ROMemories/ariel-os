@@ -123,6 +123,9 @@ pub mod backend {
 
             // FIXME: do not unwrap
             embassy_futures::block_on(async {
+                // This effectively drops any debug output until the UART driver is populated.
+                // If we instead waited on it to be set, this would deadlock when trying to print
+                // on the debug output before the driver is populated.
                 if let Some(uart) = DEBUG_UART.try_get() {
                     let mut uart = uart.lock().await;
                     uart.write(s.as_bytes()).await.unwrap();
