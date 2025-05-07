@@ -117,9 +117,11 @@ pub mod backend {
 
     impl core::fmt::Write for DebugUart {
         fn write_str(&mut self, s: &str) -> core::fmt::Result {
+            let bytes = s.as_bytes();
+
             // Relying on the FFI seems like the only way to keep this crate HAL-agnostic.
             unsafe {
-                __ariel_os_debug_uart_write(s.as_bytes());
+                __ariel_os_debug_uart_write(bytes);
             }
 
             Ok(())
