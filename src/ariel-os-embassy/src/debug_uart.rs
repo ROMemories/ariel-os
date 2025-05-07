@@ -24,6 +24,7 @@ pub fn init(peripherals: &mut hal::OptionalPeripherals) {
     // FIXME: should be st-b-l072z-lrwan1
     #[cfg(context = "st-nucleo-h755zi-q")]
     pub type DebugUart<'a> = hal::uart::USART2<'a>;
+    #[cfg(context = "st-nucleo-h755zi-q")]
     let (uart_rx, uart_tx) = {
         let uart_rx = peripherals.PA3.take().unwrap();
         let uart_tx = peripherals.PA2.take().unwrap();
