@@ -109,6 +109,7 @@ mod backend {
 #[doc(hidden)]
 pub mod backend {
     unsafe extern "Rust" {
+        // TODO: define an Error enum
         // TODO: could consider taking a &str instead
         fn __ariel_os_debug_uart_write(buffer: &[u8]);
     }
@@ -120,6 +121,7 @@ pub mod backend {
             let bytes = s.as_bytes();
 
             // Relying on the FFI seems like the only way to keep this crate HAL-agnostic.
+            // SAFETY: FIXME
             unsafe {
                 __ariel_os_debug_uart_write(bytes);
             }
@@ -136,7 +138,8 @@ pub mod backend {
     pub fn _print(args: core::fmt::Arguments) {
         use core::fmt::Write;
 
-        DebugUart.write_fmt(args).unwrap();
+        // Ignore the error if writing to the UART fails.
+        let _ = DebugUart.write_fmt(args);
     }
 
     #[macro_export]
