@@ -145,7 +145,7 @@ define_uart_drivers!(
 );
 #[cfg(context = "nrf52840")]
 define_uart_drivers!(
-   // UARTE0 => UARTE0 + TIMER3 + PPI_CH16 + PPI_CH17 + PPI_GROUP4,
+   UARTE0 => UARTE0 + TIMER3 + PPI_CH16 + PPI_CH17 + PPI_GROUP4,
    UARTE1 => UARTE1 + TIMER4 + PPI_CH18 + PPI_CH19 + PPI_GROUP5,
 );
 #[cfg(context = "nrf5340")]

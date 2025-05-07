@@ -1,50 +1,46 @@
 #![deny(clippy::pedantic)]
 
+use crate::hal;
+
 pub static DEBUG_UART: embassy_sync::once_lock::OnceLock<
     embassy_sync::mutex::Mutex<
         embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex,
-        embassy_nrf::uarte::Uarte<embassy_nrf::peripherals::UARTE0>,
-        // embassy_stm32::usart::Uart<embassy_stm32::mode::Blocking>,
+        hal::uart::Uart,
     >,
 > = embassy_sync::once_lock::OnceLock::new();
 
 #[expect(clippy::missing_panics_doc)]
-pub fn init(peripherals: &mut crate::hal::OptionalPeripherals) {
+pub fn init(peripherals: &mut hal::OptionalPeripherals) {
     #[cfg(context = "nrf52840dk")]
-    let uart = {
+    pub type DebugUart<'a> = hal::uart::UARTE0<'a>;
+    #[cfg(context = "nrf52840dk")]
+    let (uart_rx, uart_tx) = {
         let uart_rx = peripherals.P0_08.take().unwrap();
         let uart_tx = peripherals.P0_06.take().unwrap();
 
-        embassy_nrf::bind_interrupts!(struct Irqs {
-            UARTE0 => embassy_nrf::uarte::InterruptHandler<embassy_nrf::peripherals::UARTE0>;
-        });
-
-        embassy_nrf::uarte::Uarte::new(
-            peripherals.UARTE0.take().unwrap(),
-            Irqs,
-            uart_rx,
-            uart_tx,
-            // &mut rx_buf,
-            // &mut tx_buf,
-            // config,
-            embassy_nrf::uarte::Config::default(),
-        )
+        (uart_rx, uart_tx)
     };
 
     // FIXME: should be st-b-l072z-lrwan1
     #[cfg(context = "st-nucleo-h755zi-q")]
-    let uart = {
+    pub type DebugUart<'a> = hal::uart::USART2<'a>;
+    let (uart_rx, uart_tx) = {
         let uart_rx = peripherals.PA3.take().unwrap();
         let uart_tx = peripherals.PA2.take().unwrap();
 
-        embassy_stm32::usart::Uart::new_blocking(
-            peripherals.USART2.take().unwrap(),
-            uart_rx,
-            uart_tx,
-            embassy_stm32::usart::Config::default(),
-        )
-        .unwrap()
+        (uart_rx, uart_tx)
     };
+
+    let mut config = hal::uart::Config::default();
+    config.baudrate = 115_200;
+
+    // TODO: make the RX buffer much smaller
+    static RX_BUF: static_cell::ConstStaticCell<[u8; 32]> =
+        static_cell::ConstStaticCell::new([0; 32]);
+    static TX_BUF: static_cell::ConstStaticCell<[u8; 32]> =
+        static_cell::ConstStaticCell::new([0; 32]);
+
+    let uart = DebugUart::new(uart_rx, uart_tx, RX_BUF.take(), TX_BUF.take(), config);
 
     let _ = DEBUG_UART.init(embassy_sync::mutex::Mutex::new(uart));
 }
