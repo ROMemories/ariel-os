@@ -30,6 +30,7 @@ embassy-usb = { workspace = true, optional = true }
 
 embedded-hal = { workspace = true }
 embedded-hal-async = { workspace = true }
+embedded-io = { workspace = true }
 embedded-io-async = { workspace = true }
 
 ariel-os-buildinfo = { workspace = true }

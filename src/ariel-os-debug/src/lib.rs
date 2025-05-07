@@ -108,35 +108,20 @@ mod backend {
 #[cfg(all(feature = "debug-console", feature = "uart"))]
 #[doc(hidden)]
 pub mod backend {
-    pub static DEBUG_UART: embassy_sync::once_lock::OnceLock<
-        embassy_sync::mutex::Mutex<
-            embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex,
-            // embassy_nrf::uarte::Uarte<embassy_nrf::peripherals::UARTE0>,
-            embassy_stm32::usart::Uart<embassy_stm32::mode::Blocking>,
-        >,
-    > = embassy_sync::once_lock::OnceLock::new();
+    unsafe extern "Rust" {
+        // TODO: could consider taking a &str instead
+        fn __ariel_os_debug_uart_write(buffer: &[u8]);
+    }
 
     struct DebugUart;
 
     impl core::fmt::Write for DebugUart {
         fn write_str(&mut self, s: &str) -> core::fmt::Result {
-            // use embedded_io_async::Write;
-            use embedded_io::Write;
+            // Relying on the FFI seems like the only way to keep this crate HAL-agnostic.
+            unsafe {
+                __ariel_os_debug_uart_write(s.as_bytes());
+            }
 
-            // FIXME: do not unwrap
-            embassy_futures::block_on(async {
-                // This effectively drops any debug output until the UART driver is populated.
-                // If we instead waited on it to be set, this would deadlock when trying to print
-                // on the debug output before the driver is populated.
-                if let Some(uart) = DEBUG_UART.try_get() {
-                    let mut uart = uart.lock().await;
-                    // uart.write(s.as_bytes()).await.unwrap();
-                    uart.write(s.as_bytes()).unwrap();
-                    // TODO: is flushing needed here?
-                    // uart.flush().await.unwrap();
-                    uart.flush().unwrap();
-                }
-            });
             Ok(())
         }
     }
