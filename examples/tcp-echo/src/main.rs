@@ -9,9 +9,9 @@ use embedded_io_async::Write;
 async fn tcp_echo() {
     let stack = net::network_stack().await.unwrap();
 
-    let mut rx_buffer = [0; 4096];
-    let mut tx_buffer = [0; 4096];
-    let mut buf = [0; 4096];
+    let mut rx_buffer = [0; 128];
+    let mut tx_buffer = [0; 8];
+    let mut buf = [0; 8];
 
     loop {
         let mut socket = TcpSocket::new(stack, &mut rx_buffer, &mut tx_buffer);
