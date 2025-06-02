@@ -23,5 +23,6 @@
 # Developer Guide
 
 - [Adding Support for a Board](./adding-board-support.md)
+- [Running on IoT-LAB](./running-on-iot-lab.md)
 - [Coding Conventions](./coding-conventions.md)
 - [Code of Conduct](./CODE_OF_CONDUCT.md)
