@@ -29,6 +29,8 @@ In this section, we present how to compile an Ariel OS example, run it on a boa
 The first step is to install [`iotlabcli`][pypi-iotlabcli] on your development machine; this package provides multiple commands to work with IoT-LAB.
 Then, authenticate using `iotlab-auth` so that other `iotlab-*` commands know about [your account][iot-lab-login].
 
+> `iotlab-auth` will create an `.iotlabrc` file in your home directory.
+
 ### Registering an Experiment
 
 IoT-LAB is based upon the concept of *experiment*, which is a way of synchronizing multiple boards to run experiments—e.g., networking experiments—only when all the required boards are available.
