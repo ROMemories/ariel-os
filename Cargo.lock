@@ -1059,16 +1059,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "coap-blinky"
-version = "0.0.0"
-dependencies = [
- "ariel-os",
- "ariel-os-boards",
- "coap-handler-implementations",
- "riot-coap-handler-demos",
-]
-
-[[package]]
 name = "coap-handler"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
