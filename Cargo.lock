@@ -4521,29 +4521,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "riot-coap-handler-demos"
-version = "0.2.0"
-source = "git+https://gitlab.com/etonomy/riot-module-examples?rev=09fa2d45e92ca4e46da7f18af3db3d1bcec238d3#09fa2d45e92ca4e46da7f18af3db3d1bcec238d3"
-dependencies = [
- "coap-handler",
- "coap-handler-implementations",
- "coap-message",
- "coap-message-utils",
- "coap-numbers",
- "document-features",
- "embedded-graphics",
- "embedded-hal 1.0.0",
- "embedded-hal-async",
- "heapless 0.7.17",
- "minicbor 0.24.4",
- "serde",
- "serde_bytes",
- "serde_cbor",
- "switch-hal",
- "try-lock",
-]
-
-[[package]]
 name = "riscv"
 version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
