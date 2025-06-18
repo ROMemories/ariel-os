@@ -58,38 +58,38 @@ jobs:
 
       # We use this instead of accessing the PR labels through the trigger event
       # because that would not work for the merge queue.
-      - name: "Get PR build labels through the commit hash of the pull request"
-        id: get-pr-labels
-        uses: actions/github-script@v7
-        with:
-          result-encoding: string
-          script: |
-            const commitId = "${{ steps.get-commit-id.outputs.commit_id }}";
-            console.log(`Commit ID: ${commitId}`);
-            const { data: { items } } = await github.rest.search.issuesAndPullRequests({
-              q: `${commitId} type:pr`,
-            });
-            console.log(`Number of PRs containing commit ${commitId}: ${items.length}`);
-            // Find a PR where that commit is the tip of the PR's branch.
-            // Would be incorrect if multiple PRs are open for exactly the same commit.
-            for (const pr of items) {
-              const prNumber = pr.number;
-              const { data: commits } = await github.rest.pulls.listCommits({ owner: 'ariel-os', repo: 'ariel-os', pull_number: prNumber });
-              const tipCommitId = commits[commits.length - 1].sha;
-              if (tipCommitId != commitId) {
-                console.log(`Wrong PR: tip is ${tipCommitId}`);
-                continue;
-              }
-              const prLabels = pr.labels.map((label) => label.name);
-              console.log(`The labels of PR #${prNumber} are ${prLabels}`);
-              const VALID_LABELS = ['ci-build:skip', 'ci-build:small'];
-              const buildLabels = prLabels.filter((label) => VALID_LABELS.includes(label));
-              if (buildLabels.length > 1) { throw 'Only one build label must be attached.'; }
-              const buildLabel = buildLabels[0];
-              if (!buildLabel) { throw 'A build label must be attached'; }
-              console.log(`The build label is ${buildLabel}`);
-              return buildLabel;
-            }
+      # - name: "Get PR build labels through the commit hash of the pull request"
+      #   id: get-pr-labels
+      #   uses: actions/github-script@v7
+      #   with:
+      #     result-encoding: string
+      #     script: |
+      #       const commitId = "${{ steps.get-commit-id.outputs.commit_id }}";
+      #       console.log(`Commit ID: ${commitId}`);
+      #       const { data: { items } } = await github.rest.search.issuesAndPullRequests({
+      #         q: `${commitId} type:pr`,
+      #       });
+      #       console.log(`Number of PRs containing commit ${commitId}: ${items.length}`);
+      #       // Find a PR where that commit is the tip of the PR's branch.
+      #       // Would be incorrect if multiple PRs are open for exactly the same commit.
+      #       for (const pr of items) {
+      #         const prNumber = pr.number;
+      #         const { data: commits } = await github.rest.pulls.listCommits({ owner: 'ariel-os', repo: 'ariel-os', pull_number: prNumber });
+      #         const tipCommitId = commits[commits.length - 1].sha;
+      #         if (tipCommitId != commitId) {
+      #           console.log(`Wrong PR: tip is ${tipCommitId}`);
+      #           continue;
+      #         }
+      #         const prLabels = pr.labels.map((label) => label.name);
+      #         console.log(`The labels of PR #${prNumber} are ${prLabels}`);
+      #         const VALID_LABELS = ['ci-build:skip', 'ci-build:small'];
+      #         const buildLabels = prLabels.filter((label) => VALID_LABELS.includes(label));
+      #         if (buildLabels.length > 1) { throw 'Only one build label must be attached.'; }
+      #         const buildLabel = buildLabels[0];
+      #         if (!buildLabel) { throw 'A build label must be attached'; }
+      #         console.log(`The build label is ${buildLabel}`);
+      #         return buildLabel;
+      #       }
 
       - name: Get git tree hash
         id: get-tree-hash
