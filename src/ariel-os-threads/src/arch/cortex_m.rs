@@ -7,6 +7,7 @@ compile_error!("no supported ARM variant selected");
 
 // Default EXC_RETURN value used for newly created threads when returning to
 // Thread mode. We know FPU hasn't been used because the thread hasn't run.
+#[cfg(any(armv7m_eabihf, armv8m_eabihf))]
 const EXC_RETURN_THREAD_NO_FPU: usize = 0xFFFFFFFD;
 
 pub struct Cpu;
