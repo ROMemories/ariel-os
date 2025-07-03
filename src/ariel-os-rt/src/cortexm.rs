@@ -209,8 +209,8 @@ pub fn init() {
     };
 
     #[cfg(any(armv7m_eabihf, armv8m_eabihf))]
-    unsafe {
-        let mut p = cortex_m::Peripherals::steal();
+    {
+        let mut p = unsafe { cortex_m::Peripherals::steal() };
         // Enable fpu with full access
         p.SCB
             .set_fpu_access_mode(cortex_m::peripheral::scb::FpuAccessMode::Enabled);
