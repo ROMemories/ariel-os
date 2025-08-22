@@ -30,8 +30,6 @@ embassy-hal-internal = { git = "https://github.com/ariel-os/embassy", rev = "ed7
 embassy-nrf = { git = "https://github.com/ariel-os/embassy", rev = "1d258e63acc0a322ccea28786a4143115ba303b8" }
 # branch = "embassy-net-v0.6.0+ariel-os"
 embassy-net = { git = "https://github.com/ariel-os/embassy", rev = "3d9f77ee05cdb18f1cd676233bcda9b6f7be3369" }
-# branch = "embassy-rp-v0.4.0+ariel-os+trng-panic-fix"
-embassy-rp = { git = "https://github.com/ariel-os/embassy", rev = "1dd58227a73efa8da2aef96aaccf17b8749b9f7b" }
 # branch = "embassy-stm32-v0.2.0+ariel-os"
 embassy-stm32 = { git = "https://github.com/ariel-os/embassy", rev = "90c8da09646d5fd97b7d416720688dcd3da1ecfb" }
 # branch = "embassy-time-v0.4.0+ariel-os"

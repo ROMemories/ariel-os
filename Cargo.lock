@@ -1900,7 +1900,6 @@ dependencies = [
  "embedded-storage-async",
  "fixed",
  "nb 1.1.0",
- "optfield",
  "pio",
  "rand_core",
  "rp-binary-info",
