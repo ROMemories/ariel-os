@@ -6,6 +6,7 @@
 
 pub mod gpio;
 
+mod optional_peripherals;
 mod irqs;
 
 #[doc(hidden)]
