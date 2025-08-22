@@ -62,9 +62,12 @@ ariel_os_embassy_common::executor_swi!(EGU0);
 use embassy_nrf::config::Config;
 
 #[doc(hidden)]
-pub use embassy_nrf::{OptionalPeripherals, interrupt};
+pub use embassy_nrf::interrupt;
 
 pub use embassy_nrf::peripherals;
+
+#[doc(hidden)]
+pub use crate::optional_peripherals::OptionalPeripherals;
 
 #[cfg(feature = "executor-interrupt")]
 #[doc(hidden)]
