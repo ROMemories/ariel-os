@@ -52,9 +52,6 @@ pub mod storage;
 #[doc(hidden)]
 pub mod usb;
 
-#[doc(hidden)]
-pub use embassy_rp::OptionalPeripherals;
-
 pub use embassy_rp::peripherals;
 
 #[cfg(feature = "executor-interrupt")]
@@ -63,6 +60,9 @@ pub use embassy_executor::InterruptExecutor as Executor;
 #[cfg(feature = "executor-interrupt")]
 #[doc(hidden)]
 pub use embassy_rp::interrupt;
+
+#[doc(hidden)]
+pub use crate::optional_peripherals::OptionalPeripherals;
 
 #[cfg(feature = "executor-interrupt")]
 ariel_os_embassy_common::executor_swi!(SWI_IRQ_1);
