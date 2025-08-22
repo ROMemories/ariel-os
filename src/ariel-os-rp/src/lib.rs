@@ -4,6 +4,8 @@
 #![cfg_attr(nightly, feature(doc_auto_cfg))]
 #![deny(missing_docs)]
 
+mod optional_peripherals;
+
 pub mod gpio;
 
 #[doc(hidden)]
