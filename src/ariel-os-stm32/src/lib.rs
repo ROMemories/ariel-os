@@ -41,9 +41,12 @@ pub mod eth;
 use embassy_stm32::Config;
 
 #[doc(hidden)]
-pub use embassy_stm32::{OptionalPeripherals, Peripherals, interrupt};
+pub use embassy_stm32::{Peripherals, interrupt};
 
 pub use embassy_stm32::peripherals;
+
+#[doc(hidden)]
+pub use crate::optional_peripherals::OptionalPeripherals;
 
 #[cfg(feature = "executor-interrupt")]
 pub(crate) use embassy_executor::InterruptExecutor as Executor;
