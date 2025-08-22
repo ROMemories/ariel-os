@@ -1841,7 +1841,8 @@ dependencies = [
 [[package]]
 name = "embassy-nrf"
 version = "0.3.1"
-source = "git+https://github.com/ariel-os/embassy?rev=1d258e63acc0a322ccea28786a4143115ba303b8#1d258e63acc0a322ccea28786a4143115ba303b8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6d7494efe1e0183568327c7e681d4b77ed5241921dcb5976426d9a65b65a0c81"
 dependencies = [
  "bitflags 2.9.1",
  "cfg-if",
@@ -1866,7 +1867,6 @@ dependencies = [
  "embedded-storage-async",
  "fixed",
  "nrf-pac",
- "optfield",
  "rand_core",
 ]
 
