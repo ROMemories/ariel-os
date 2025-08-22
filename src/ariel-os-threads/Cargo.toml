@@ -58,12 +58,7 @@ embassy-rp = { workspace = true, optional = true }
 [features]
 defmt = ["dep:defmt", "ariel-os-runqueue/defmt"]
 single-core = []
-multi-core = [
-  "dep:static_cell",
-  "dep:rp-pac",
-  "dep:embassy-rp",
-  "embassy-rp/fifo-handler",
-]
+multi-core = ["dep:static_cell", "dep:rp-pac", "dep:embassy-rp"]
 infini-core = []
 core-affinity = ["multi-core"]
 

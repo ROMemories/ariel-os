@@ -1873,7 +1873,8 @@ dependencies = [
 [[package]]
 name = "embassy-rp"
 version = "0.4.0"
-source = "git+https://github.com/ariel-os/embassy?rev=1dd58227a73efa8da2aef96aaccf17b8749b9f7b#1dd58227a73efa8da2aef96aaccf17b8749b9f7b"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d1a063d8baccdc5c7752840f4c7931f17bcd7de1ffe1efa2109e68113fe42612"
 dependencies = [
  "atomic-polyfill",
  "cfg-if",
