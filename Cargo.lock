@@ -1913,7 +1913,8 @@ dependencies = [
 [[package]]
 name = "embassy-stm32"
 version = "0.2.0"
-source = "git+https://github.com/ariel-os/embassy?rev=90c8da09646d5fd97b7d416720688dcd3da1ecfb#90c8da09646d5fd97b7d416720688dcd3da1ecfb"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e1e0bb733acdddbc7097765a47ce80bde2385647cf1d8427331931e06cff9a87"
 dependencies = [
  "aligned",
  "bit_field",
@@ -1946,7 +1947,6 @@ dependencies = [
  "embedded-storage-async",
  "futures-util",
  "nb 1.1.0",
- "optfield",
  "proc-macro2",
  "quote",
  "rand_core",
