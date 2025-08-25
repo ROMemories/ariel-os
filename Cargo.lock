@@ -215,6 +215,7 @@ dependencies = [
  "embassy-sync 0.6.2",
  "embassy-time",
  "embedded-hal-async",
+ "hts221-async",
  "portable-atomic",
 ]
 
@@ -3229,6 +3230,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "589533453244b0995c858700322199b2becb13b627df2851f64a2775d024abcf"
 dependencies = [
  "windows-sys 0.59.0",
+]
+
+[[package]]
+name = "hts221-async"
+version = "0.2.0"
+source = "git+https://github.com/drogue-iot/hts221-async?rev=64d98bafc661895fe19eff04768b1c2d0aeb864d#64d98bafc661895fe19eff04768b1c2d0aeb864d"
+dependencies = [
+ "embedded-hal-async",
 ]
 
 [[package]]

@@ -16,3 +16,6 @@ embassy-sync = { workspace = true }
 embassy-time = { workspace = true }
 embedded-hal-async = { workspace = true }
 portable-atomic = { workspace = true }
+
+# Third-party sensor crates
+hts221-async = { git = "https://github.com/drogue-iot/hts221-async", rev = "64d98bafc661895fe19eff04768b1c2d0aeb864d" }
