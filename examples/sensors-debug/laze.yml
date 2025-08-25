@@ -1,4 +1,5 @@
 apps:
   - name: sensors-debug
     context:
+      - nrf52840dk
       - stm32u083c-dk

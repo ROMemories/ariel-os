@@ -19,7 +19,7 @@ use ariel_os::{
     sensors::{REGISTRY, Reading, sensor::Accuracy},
     time::Timer,
 };
-use ariel_os_builtin_sensors::stts22h;
+use ariel_os_builtin_sensors::{hts221, stts22h};
 use embassy_sync::mutex::Mutex;
 
 pub static I2C_BUS: once_cell::sync::OnceCell<
@@ -40,16 +40,27 @@ async fn main(peripherals: pins::Peripherals) {
 
     let spawner = Spawner::for_current_executor().await;
 
-    sensors::STTS22H_I2C
+    // sensors::STTS22H_I2C
+    //     .init(
+    //         spawner,
+    //         stts22h::Peripherals {},
+    //         i2c_device,
+    //         stts22h::Config::default(),
+    //     )
+    //     .await;
+
+    // spawner.spawn(sensors::stts22h_i2c_runner()).unwrap();
+
+    sensors::HTS221_I2C
         .init(
             spawner,
-            stts22h::Peripherals {},
+            hts221::Peripherals {},
             i2c_device,
-            stts22h::Config::default(),
+            hts221::Config::default(),
         )
         .await;
 
-    spawner.spawn(sensors::stts22h_i2c_runner()).unwrap();
+    spawner.spawn(sensors::hts221_i2c_runner()).unwrap();
 
     loop {
         // Trigger measurements of each sensor
