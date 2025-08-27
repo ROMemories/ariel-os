@@ -17,8 +17,8 @@ pub type SensorI2c = i2c::controller::SERIAL0;
     not(any(context = "bbc-microbit-v2", context = "nordic-thingy-91-x-nrf9151"))
 ))]
 ariel_os::hal::define_peripherals!(Peripherals {
-    i2c_sda: P0_00,
-    i2c_scl: P0_01,
+    i2c_sda: P0_26,
+    i2c_scl: P0_27,
 });
 #[cfg(context = "bbc-microbit-v2")]
 ariel_os::hal::define_peripherals!(Peripherals {
