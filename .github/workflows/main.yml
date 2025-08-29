@@ -43,6 +43,11 @@ jobs:
       - name: Run host-side crate tests
         run: laze build -DCARGO_ARGS+='--locked' --builders host --multiple-tasks --global --keep-going=0 test
 
+      - name: Run doc tests
+        run: |
+          cargo test \
+            -p ariel-os-sensors
+
   lint:
     runs-on: ubuntu-latest
 
