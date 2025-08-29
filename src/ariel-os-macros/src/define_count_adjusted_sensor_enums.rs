@@ -108,9 +108,24 @@ pub fn define_count_adjusted_sensor_enums(_item: TokenStream) -> TokenStream {
 
         /// Metadata required to interpret samples returned by [`Sensor::wait_for_reading()`].
         ///
-        /// # Note
+        /// # For implementors
         ///
-        /// This type is automatically generated, the number of variants is automatically adjusted.
+        /// This enum is automatically generated and its number of variants is adjusted based
+        /// on the `max-sample-min-count-*` Cargo features.
+        /// When writing a sensor driver, its crate must enable the `max-sample-min-count-$c`
+        /// feature, where `$c` is the number of channels the sensor driver returns.
+        /// This makes sure [`ReadingChannels`] contains `$v` different variants, with `$v` being
+        /// at least the maximum of `$c`s enabled by the different sensor drivers in the build.
+        /// Each variant is named `V$i` and has an array of `$i` [`ReadingChannel`]s as associated
+        /// data.
+        ///
+        /// ```
+        /// # use ariel_os_sensors::{Label, MeasurementUnit, sensor::{ReadingChannel, ReadingChannels}};
+        /// let reading_channel = ReadingChannel::new(Label::Main, -1, MeasurementUnit::Celsius);
+        /// # let _ =
+        /// ReadingChannels::V1([reading_channel])
+        /// # ;
+        /// ```
         #[derive(Debug, Copy, Clone)]
         pub enum ReadingChannels {
             #(
