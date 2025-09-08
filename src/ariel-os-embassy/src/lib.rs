@@ -48,7 +48,10 @@ pub mod api {
         pub use static_cell::{ConstStaticCell, StaticCell};
     }
 
+    // Ideally the doc alias would be on the relevant individual items, however this is not
+    // possible as they currently are re-exports.
     #[cfg(feature = "time")]
+    #[doc(alias = "sleep")]
     pub mod time {
         //! Provides time-related facilities.
         // NOTE: we may want to re-export more items in the future, but not re-export the whole
