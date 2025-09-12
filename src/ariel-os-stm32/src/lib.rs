@@ -39,7 +39,9 @@ pub mod eth;
 use embassy_stm32::Config;
 
 #[doc(hidden)]
-pub use embassy_stm32::{OptionalPeripherals, Peripherals, interrupt};
+pub use embassy_stm32::{Peripherals, interrupt};
+#[doc(hidden)]
+ariel_os_peripheral_macros::codegen_peripherals!();
 
 pub use embassy_stm32::peripherals;
 

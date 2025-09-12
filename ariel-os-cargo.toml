@@ -25,7 +25,8 @@ embassy-executor = { git = "https://github.com/ariel-os/embassy", rev = "b552a87
 # branch = "embassy-executor-macros-v0.6.2+04.04.25"
 embassy-executor-macros = { git = "https://github.com/ariel-os/embassy", rev = "1b08496e441cfd2b2e9660fe0cc589c3bc5f0824" }
 # branch = "embassy-hal-internal-v0.2.0+ariel-os"
-embassy-hal-internal = { git = "https://github.com/ariel-os/embassy", rev = "ed7d22c1881b64f9bdd2e69a5777b002279033a6" }
+# embassy-hal-internal = { git = "https://github.com/ariel-os/embassy", rev = "ed7d22c1881b64f9bdd2e69a5777b002279033a6" }
+embassy-hal-internal = { path = "../../embassy2/embassy-hal-internal" }
 # branch = "embassy-nrf-v0.3.1+ariel-os"
 embassy-nrf = { git = "https://github.com/ariel-os/embassy", rev = "1d258e63acc0a322ccea28786a4143115ba303b8" }
 # branch = "embassy-net-v0.6.0+ariel-os"
@@ -33,7 +34,8 @@ embassy-net = { git = "https://github.com/ariel-os/embassy", rev = "3d9f77ee05cd
 # branch = "embassy-rp-v0.4.0+ariel-os+trng-panic-fix"
 embassy-rp = { git = "https://github.com/ariel-os/embassy", rev = "1dd58227a73efa8da2aef96aaccf17b8749b9f7b" }
 # branch = "embassy-stm32-v0.2.0+ariel-os"
-embassy-stm32 = { git = "https://github.com/ariel-os/embassy", rev = "90c8da09646d5fd97b7d416720688dcd3da1ecfb" }
+# embassy-stm32 = { git = "https://github.com/ariel-os/embassy", rev = "90c8da09646d5fd97b7d416720688dcd3da1ecfb" }
+embassy-stm32 = { path = "../../embassy/embassy-stm32" }
 # branch = "embassy-time-v0.4.0+ariel-os"
 embassy-time = { git = "https://github.com/ariel-os/embassy", rev = "f9b4c8132b07ef696668005846ee2240a8f57573" }
 

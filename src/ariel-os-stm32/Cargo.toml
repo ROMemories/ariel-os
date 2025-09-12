@@ -10,6 +10,7 @@ repository.workspace = true
 workspace = true
 
 [dependencies]
+ariel-os-peripheral-macros = { workspace = true, features = ["stm32"] }
 ariel-os-stm32-mapping = { path = "../ariel-os-stm32-mapping" }
 cfg-if = { workspace = true }
 defmt = { workspace = true, optional = true }
@@ -19,7 +20,6 @@ embassy-executor = { workspace = true, default-features = false, features = [
 ] }
 embassy-stm32 = { workspace = true, default-features = false, features = [
   "memory-x",
-  "optfield",
   "rt",
   "time-driver-any",
   "unstable-pac",

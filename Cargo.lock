@@ -437,6 +437,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "ariel-os-peripheral-macros"
+version = "0.2.0"
+dependencies = [
+ "embassy-nrf",
+ "embassy-rp",
+ "embassy-stm32",
+ "quote",
+]
+
+[[package]]
 name = "ariel-os-power"
 version = "0.2.0"
 dependencies = [
@@ -521,6 +531,7 @@ name = "ariel-os-stm32"
 version = "0.2.0"
 dependencies = [
  "ariel-os-embassy-common",
+ "ariel-os-peripheral-macros",
  "ariel-os-random",
  "ariel-os-stm32-mapping",
  "ariel-os-utils",
@@ -540,6 +551,7 @@ dependencies = [
 name = "ariel-os-stm32-mapping"
 version = "0.2.0"
 dependencies = [
+ "ariel-os-peripheral-macros",
  "embassy-stm32",
 ]
 
@@ -1799,7 +1811,6 @@ dependencies = [
 [[package]]
 name = "embassy-hal-internal"
 version = "0.2.0"
-source = "git+https://github.com/ariel-os/embassy?rev=ed7d22c1881b64f9bdd2e69a5777b002279033a6#ed7d22c1881b64f9bdd2e69a5777b002279033a6"
 dependencies = [
  "cortex-m",
  "critical-section",
@@ -1919,7 +1930,6 @@ dependencies = [
 [[package]]
 name = "embassy-stm32"
 version = "0.2.0"
-source = "git+https://github.com/ariel-os/embassy?rev=90c8da09646d5fd97b7d416720688dcd3da1ecfb#90c8da09646d5fd97b7d416720688dcd3da1ecfb"
 dependencies = [
  "aligned",
  "bit_field",
@@ -1952,7 +1962,6 @@ dependencies = [
  "embedded-storage-async",
  "futures-util",
  "nb 1.1.0",
- "optfield",
  "proc-macro2",
  "quote",
  "rand_core",

@@ -18,6 +18,7 @@ members = [
   "src/ariel-os-identity",
   "src/ariel-os-macros",
   "src/ariel-os-nrf",
+  "src/ariel-os-peripheral-macros",
   "src/ariel-os-power",
   "src/ariel-os-random",
   "src/ariel-os-rp",
@@ -122,6 +123,7 @@ ariel-os-hal = { path = "src/ariel-os-hal", default-features = false }
 ariel-os-identity = { path = "src/ariel-os-identity" }
 ariel-os-macros = { path = "src/ariel-os-macros" }
 ariel-os-nrf = { path = "src/ariel-os-nrf" }
+ariel-os-peripheral-macros = { path = "src/ariel-os-peripheral-macros" }
 ariel-os-power = { path = "src/ariel-os-power" }
 ariel-os-random = { path = "src/ariel-os-random" }
 ariel-os-rp = { path = "src/ariel-os-rp" }

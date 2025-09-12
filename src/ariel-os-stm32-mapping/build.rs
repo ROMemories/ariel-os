@@ -67,6 +67,7 @@ fn generate_target_table(row: &str) -> String {
     format!(
         r#"
 [target.'cfg(context = {mcu})'.dependencies]
+ariel-os-peripheral-macros = {{ workspace = true, features = [{cargo_feature}] }}
 embassy-stm32 = {{ workspace = true, features = [{cargo_feature}] }}
 "#,
     )
