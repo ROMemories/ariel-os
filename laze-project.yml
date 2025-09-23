@@ -1395,6 +1395,17 @@ modules:
         FEATURES:
           - ariel-os/random
 
+  - name: csprng
+    help: provides a cryptographically secure random number generator (CSPRNG) in the `random` module
+    selects:
+      - random
+    env:
+      global:
+        FEATURES:
+          - ariel-os/csprng
+        RUSTFLAGS:
+          - --cfg getrandom_backend=\"custom\"
+
   - name: sw/benchmark
     help: provided if a target supports `benchmark()`
     selects:
