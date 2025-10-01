@@ -96,7 +96,14 @@ async fn main(peripherals: pins::Peripherals) {
                                 );
                             }
                             Accuracy::Unknown => {
-                                todo!();
+                                info!(
+                                    "{} ({}): {} {} ± unknown ({})",
+                                    sensor.display_name().unwrap_or("unknown"),
+                                    sensor.label().unwrap_or("no label"),
+                                    value,
+                                    reading_channel.unit(),
+                                    reading_channel.label(),
+                                );
                             }
                         }
                     }

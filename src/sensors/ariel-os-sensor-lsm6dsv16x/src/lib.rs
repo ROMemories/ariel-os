@@ -24,6 +24,13 @@ const TARGET_I2C_ADDR: u8 = 0b1101011;
 const WHO_AM_I_REG_ADDR: u8 = 0x0f;
 const DEVICE_ID: u8 = 0x70;
 
+const CTRL1_ADDR: u8 = 0x10;
+const STATUS_REG_ADDR: u8 = 0x1e;
+const OUTX_L_A_ADDR: u8 = 0x28;
+
+// Accelerometer new data available.
+const XLDA_BIT: usize = 0;
+
 #[derive(Debug)]
 #[non_exhaustive]
 pub struct Config {
@@ -86,60 +93,57 @@ impl Lsm6dsv16xI2c {
 
             let mut i2c = self.i2c.get().await.lock().await;
 
-            // // Trigger one-shot measurement
-            // // FIXME
-            //
-            // if let Err(_err) = res {
-            //     self.signaling
-            //         .signal_reading_err(ReadingError::SensorAccess)
-            //         .await;
-            //     continue;
-            // }
-            //
-            // // FIXME
-            // // Wait for the measurement
-            // loop {
-            //     let mut buf = [0u8];
-            //     let res = i2c
-            //         .write_read(TARGET_I2C_ADDR, &[STATUS_REG_ADDR], &mut buf)
-            //         .await;
-            //
-            //     // Not BUSY anymore
-            //     if buf[0] & (1 << BUSY_BIT) == 0 {
-            //         break;
-            //     }
-            //
-            //     // TODO: configuration
-            //     Timer::after_millis(10).await;
-            // }
-            //
-            // // FIXME
-            // // Reads both temperature bytes thanks to IF_ADD_INC.
-            // let mut buf = [0u8; 2];
-            // let res = i2c
-            //     .write_read(TARGET_I2C_ADDR, &[TEMP_L_OUT_REG_ADDR], &mut buf)
-            //     .await;
-            //
-            // // TODO: increases text size a bit; remove this?
-            // drop(i2c);
-            //
-            // if let Err(_err) = res {
-            self.signaling
-                .signal_reading_err(ReadingError::SensorAccess)
+            // Trigger measurement
+            const ACCEL_ODR: u8 = 0x02; // 7.5 Hz
+            let res = i2c.write(TARGET_I2C_ADDR, &[CTRL1_ADDR, ACCEL_ODR]).await;
+
+            if let Err(_err) = res {
+                self.signaling
+                    .signal_reading_err(ReadingError::SensorAccess)
+                    .await;
+                continue;
+            }
+
+            // Wait for the measurement
+            loop {
+                let mut buf = [0u8];
+                let res = i2c
+                    .write_read(TARGET_I2C_ADDR, &[STATUS_REG_ADDR], &mut buf)
+                    .await;
+
+                // New data available.
+                if buf[0] & (1 << XLDA_BIT) == 1 {
+                    break;
+                }
+
+                // TODO: configuration
+                Timer::after_millis(10).await;
+            }
+
+            // Read both acceleration X registers.
+            let mut buf = [0u8; 2];
+            let res = i2c
+                .write_read(TARGET_I2C_ADDR, &[OUTX_L_A_ADDR], &mut buf)
                 .await;
-            continue;
-            // }
-            //
-            // // FIXME
-            // // Smaller text size than using `i32::from_be_bytes()`
-            // let temp = i32::from(buf[1]) << 8 | i32::from(buf[0]);
-            //
-            // let accuracy = accuracy(temp);
-            // let sample = Sample::new(temp, accuracy);
-            //
-            // let mut samples = Samples::from([sample]);
-            // samples.set_driver_ref(self);
-            // self.signaling.signal_reading(samples).await;
+
+            // TODO: increases text size a bit; remove this?
+            drop(i2c);
+
+            if let Err(_err) = res {
+                self.signaling
+                    .signal_reading_err(ReadingError::SensorAccess)
+                    .await;
+                continue;
+            }
+
+            // Smaller text size than using `i16::from_be_bytes()`
+            let accel = i32::from(i16::from(buf[1]) << 8 | i16::from(buf[0])) / 16;
+
+            let accuracy = Accuracy::Unknown; // FIXME
+            let sample = Sample::new(accel, accuracy);
+
+            let mut samples = Samples::from([sample]);
+            self.signaling.signal_reading(samples).await;
         }
     }
 }
@@ -181,7 +185,7 @@ impl Sensor for Lsm6dsv16xI2c {
         &[
             Category::Accelerometer,
             // FIXME
-            // AccelerationGyroscope,
+            // Category::AccelerationGyroscope,
         ]
     }
 
@@ -189,7 +193,7 @@ impl Sensor for Lsm6dsv16xI2c {
         ReadingChannels::from([ReadingChannel::new(
             // Label::AccelerationX, // FIXME
             Label::X,
-            -6, // FIXME
+            -3, // FIXME
             MeasurementUnit::AccelG,
         )])
     }
