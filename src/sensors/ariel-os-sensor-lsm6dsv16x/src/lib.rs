@@ -120,8 +120,8 @@ impl Lsm6dsv16xI2c {
                 Timer::after_millis(10).await;
             }
 
-            // Read both acceleration X registers.
-            let mut buf = [0u8; 2];
+            // Read all acceleration registers.
+            let mut buf = [0u8; 6];
             let res = i2c
                 .write_read(TARGET_I2C_ADDR, &[OUTX_L_A_ADDR], &mut buf)
                 .await;
@@ -136,13 +136,18 @@ impl Lsm6dsv16xI2c {
                 continue;
             }
 
+            // FIXME: remove the scaling magic number
             // Smaller text size than using `i16::from_be_bytes()`
-            let accel = i32::from(i16::from(buf[1]) << 8 | i16::from(buf[0])) / 16;
+            let accel_x = i32::from(i16::from(buf[1]) << 8 | i16::from(buf[0])) / 16;
+            let accel_y = i32::from(i16::from(buf[3]) << 8 | i16::from(buf[2])) / 16;
+            let accel_z = i32::from(i16::from(buf[5]) << 8 | i16::from(buf[4])) / 16;
 
             let accuracy = Accuracy::Unknown; // FIXME
-            let sample = Sample::new(accel, accuracy);
+            let sample_accel_x = Sample::new(accel_x, accuracy);
+            let sample_accel_y = Sample::new(accel_y, accuracy);
+            let sample_accel_z = Sample::new(accel_z, accuracy);
 
-            let mut samples = Samples::from([sample]);
+            let mut samples = Samples::from([sample_accel_x, sample_accel_y, sample_accel_z]);
             self.signaling.signal_reading(samples).await;
         }
     }
@@ -190,12 +195,26 @@ impl Sensor for Lsm6dsv16xI2c {
     }
 
     fn reading_channels(&self) -> ReadingChannels {
-        ReadingChannels::from([ReadingChannel::new(
-            // Label::AccelerationX, // FIXME
-            Label::X,
-            -3, // FIXME
-            MeasurementUnit::AccelG,
-        )])
+        ReadingChannels::from([
+            ReadingChannel::new(
+                // Label::AccelerationX, // FIXME
+                Label::X,
+                -3, // FIXME
+                MeasurementUnit::AccelG,
+            ),
+            ReadingChannel::new(
+                // Label::AccelerationY, // FIXME
+                Label::Y,
+                -3, // FIXME
+                MeasurementUnit::AccelG,
+            ),
+            ReadingChannel::new(
+                // Label::AccelerationZ, // FIXME
+                Label::Z,
+                -3, // FIXME
+                MeasurementUnit::AccelG,
+            ),
+        ])
     }
 
     fn label(&self) -> Option<&'static str> {
