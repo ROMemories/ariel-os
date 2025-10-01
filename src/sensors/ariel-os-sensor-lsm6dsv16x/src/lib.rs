@@ -126,6 +126,8 @@ impl Lsm6dsv16xI2c {
                 .write_read(TARGET_I2C_ADDR, &[OUTX_L_A_ADDR], &mut buf)
                 .await;
 
+            // TODO: power-down the sensor
+
             // TODO: increases text size a bit; remove this?
             drop(i2c);
 
@@ -138,11 +140,16 @@ impl Lsm6dsv16xI2c {
 
             // FIXME: remove the scaling magic number
             // Smaller text size than using `i16::from_be_bytes()`
-            let accel_x = i32::from(i16::from(buf[1]) << 8 | i16::from(buf[0])) / 16;
-            let accel_y = i32::from(i16::from(buf[3]) << 8 | i16::from(buf[2])) / 16;
-            let accel_z = i32::from(i16::from(buf[5]) << 8 | i16::from(buf[4])) / 16;
+            let accel_x = i32::from(i16::from(buf[1]) << u8::BITS | i16::from(buf[0])) / 16;
+            let accel_y = i32::from(i16::from(buf[3]) << u8::BITS | i16::from(buf[2])) / 16;
+            let accel_z = i32::from(i16::from(buf[5]) << u8::BITS | i16::from(buf[4])) / 16;
 
-            let accuracy = Accuracy::Unknown; // FIXME
+            // `LA_TyOff` from Table 3 of the datasheet.
+            let accuracy = Accuracy::SymmetricalError {
+                deviation: 12, // TODO: this could possibly be refined by taking into account `An` as well.
+                bias: 0,
+                scaling: -3,
+            };
             let sample_accel_x = Sample::new(accel_x, accuracy);
             let sample_accel_y = Sample::new(accel_y, accuracy);
             let sample_accel_z = Sample::new(accel_z, accuracy);
@@ -199,19 +206,19 @@ impl Sensor for Lsm6dsv16xI2c {
             ReadingChannel::new(
                 // Label::AccelerationX, // FIXME
                 Label::X,
-                -3, // FIXME
+                -3,
                 MeasurementUnit::AccelG,
             ),
             ReadingChannel::new(
                 // Label::AccelerationY, // FIXME
                 Label::Y,
-                -3, // FIXME
+                -3,
                 MeasurementUnit::AccelG,
             ),
             ReadingChannel::new(
                 // Label::AccelerationZ, // FIXME
                 Label::Z,
-                -3, // FIXME
+                -3,
                 MeasurementUnit::AccelG,
             ),
         ])
