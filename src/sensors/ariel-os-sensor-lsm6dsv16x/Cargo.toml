@@ -12,7 +12,7 @@ license.workspace = true
 ariel-os-debug = { workspace = true }
 ariel-os-embassy = { workspace = true }
 ariel-os-hal = { workspace = true, features = ["i2c"] }
-ariel-os-sensors = { workspace = true }
+ariel-os-sensors = { workspace = true, features = ["max-sample-min-count-6"] }
 ariel-os-sensors-utils = { workspace = true }
 embassy-sync = { workspace = true }
 embassy-time = { workspace = true }
