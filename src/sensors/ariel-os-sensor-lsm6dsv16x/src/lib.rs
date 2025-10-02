@@ -138,11 +138,12 @@ impl Lsm6dsv16xI2c {
                 continue;
             }
 
-            // FIXME: remove the scaling magic number
+            // FIXME: why is this 16 and not 2?
+            let scale = 16;
             // Smaller text size than using `i16::from_be_bytes()`
-            let accel_x = i32::from(i16::from(buf[1]) << u8::BITS | i16::from(buf[0])) / 16;
-            let accel_y = i32::from(i16::from(buf[3]) << u8::BITS | i16::from(buf[2])) / 16;
-            let accel_z = i32::from(i16::from(buf[5]) << u8::BITS | i16::from(buf[4])) / 16;
+            let accel_x = i32::from(i16::from(buf[1]) << u8::BITS | i16::from(buf[0])) / scale;
+            let accel_y = i32::from(i16::from(buf[3]) << u8::BITS | i16::from(buf[2])) / scale;
+            let accel_z = i32::from(i16::from(buf[5]) << u8::BITS | i16::from(buf[4])) / scale;
 
             // `LA_TyOff` from Table 3 of the datasheet.
             let accuracy = Accuracy::SymmetricalError {
