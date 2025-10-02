@@ -128,10 +128,10 @@ impl Lsm6dsv16xI2c {
                 Timer::after_millis(10).await;
             }
 
-            // Read all acceleration registers.
-            let mut buf = [0u8; 6];
+            // Read all angular velocity and acceleration registers.
+            let mut buf = [0u8; 2 * 6];
             let res = i2c
-                .write_read(TARGET_I2C_ADDR, &[OUTX_L_A_ADDR], &mut buf)
+                .write_read(TARGET_I2C_ADDR, &[OUTX_L_G_ADDR], &mut buf)
                 .await;
 
             // TODO: power-down the sensor
@@ -147,23 +147,41 @@ impl Lsm6dsv16xI2c {
             }
 
             // FIXME: why is this 16 and not 2?
-            let scale = 16;
+            let accel_scale = 16;
             // Smaller text size than using `i16::from_be_bytes()`
-            let accel_x = i32::from(i16::from(buf[1]) << u8::BITS | i16::from(buf[0])) / scale;
-            let accel_y = i32::from(i16::from(buf[3]) << u8::BITS | i16::from(buf[2])) / scale;
-            let accel_z = i32::from(i16::from(buf[5]) << u8::BITS | i16::from(buf[4])) / scale;
+            let accel_x =
+                i32::from(i16::from(buf[7]) << u8::BITS | i16::from(buf[6])) / accel_scale;
+            let accel_y =
+                i32::from(i16::from(buf[9]) << u8::BITS | i16::from(buf[8])) / accel_scale;
+            let accel_z =
+                i32::from(i16::from(buf[11]) << u8::BITS | i16::from(buf[10])) / accel_scale;
 
             // `LA_TyOff` from Table 3 of the datasheet.
-            let accuracy = Accuracy::SymmetricalError {
+            let accel_accuracy = Accuracy::SymmetricalError {
                 deviation: 12, // TODO: this could possibly be refined by taking into account `An` as well.
                 bias: 0,
                 scaling: -3,
             };
-            let sample_accel_x = Sample::new(accel_x, accuracy);
-            let sample_accel_y = Sample::new(accel_y, accuracy);
-            let sample_accel_z = Sample::new(accel_z, accuracy);
 
-            let mut samples = Samples::from([sample_accel_x, sample_accel_y, sample_accel_z]);
+            let gyro_scale = 125; // FIXME: check that this is correct
+            let gyro_x = i32::from(i16::from(buf[1]) << u8::BITS | i16::from(buf[0])) / gyro_scale;
+            let gyro_y = i32::from(i16::from(buf[3]) << u8::BITS | i16::from(buf[2])) / gyro_scale;
+            let gyro_z = i32::from(i16::from(buf[5]) << u8::BITS | i16::from(buf[4])) / gyro_scale;
+            // `G_TyOff` from Table 3 of the datasheet.
+            let gyro_accuracy = Accuracy::SymmetricalError {
+                deviation: 1, // TODO: this could possibly be refined by taking into account `Rn` as well.
+                bias: 0,
+                scaling: 0,
+            };
+
+            let mut samples = Samples::from([
+                Sample::new(accel_x, accel_accuracy),
+                Sample::new(accel_y, accel_accuracy),
+                Sample::new(accel_z, accel_accuracy),
+                Sample::new(gyro_x, gyro_accuracy),
+                Sample::new(gyro_y, gyro_accuracy),
+                Sample::new(gyro_z, gyro_accuracy),
+            ]);
             self.signaling.signal_reading(samples).await;
         }
     }
@@ -205,8 +223,8 @@ impl Sensor for Lsm6dsv16xI2c {
     fn categories(&self) -> &'static [Category] {
         &[
             Category::Accelerometer,
-            // FIXME
-            // Category::AccelerationGyroscope,
+            // Category::AccelerometerGyroscope, // FIXME
+            Category::Gyroscope,
         ]
     }
 
@@ -229,6 +247,27 @@ impl Sensor for Lsm6dsv16xI2c {
                 Label::Z,
                 -3,
                 MeasurementUnit::AccelG,
+            ),
+            ReadingChannel::new(
+                // Label::AngularVelocityX, // FIXME
+                Label::X, // FIXME
+                0,        // FIXME
+                // MeasurementUnit::DegreePerSecond,
+                MeasurementUnit::Degree,
+            ),
+            ReadingChannel::new(
+                // Label::AngularVelocityY,
+                Label::Y, // FIXME
+                0,        // FIXME
+                // MeasurementUnit::DegreePerSecond,
+                MeasurementUnit::Degree,
+            ),
+            ReadingChannel::new(
+                // Label::AngularVelocityZ, // FIXME
+                Label::Z, // FIXME
+                0,        // FIXME
+                // MeasurementUnit::DegreePerSecond,
+                MeasurementUnit::Degree,
             ),
         ])
     }
