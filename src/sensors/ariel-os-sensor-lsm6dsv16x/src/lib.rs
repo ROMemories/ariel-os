@@ -25,9 +25,13 @@ const WHO_AM_I_REG_ADDR: u8 = 0x0f;
 const DEVICE_ID: u8 = 0x70;
 
 const CTRL1_ADDR: u8 = 0x10;
+const CTRL2_ADDR: u8 = 0x11;
 const STATUS_REG_ADDR: u8 = 0x1e;
+const OUTX_L_G_ADDR: u8 = 0x22;
 const OUTX_L_A_ADDR: u8 = 0x28;
 
+// Gyroscope new data available.
+const GDA_BIT: usize = 1;
 // Accelerometer new data available.
 const XLDA_BIT: usize = 0;
 
@@ -93,9 +97,12 @@ impl Lsm6dsv16xI2c {
 
             let mut i2c = self.i2c.get().await.lock().await;
 
-            // Trigger measurement
+            // Trigger acceleration measurement.
             const ACCEL_ODR: u8 = 0x02; // 7.5 Hz
             let res = i2c.write(TARGET_I2C_ADDR, &[CTRL1_ADDR, ACCEL_ODR]).await;
+            // Trigger gyroscope measurement.
+            const GYRO_ODR: u8 = 0x02; // 7.5 Hz
+            let res = i2c.write(TARGET_I2C_ADDR, &[CTRL2_ADDR, GYRO_ODR]).await;
 
             if let Err(_err) = res {
                 self.signaling
@@ -112,7 +119,8 @@ impl Lsm6dsv16xI2c {
                     .await;
 
                 // New data available.
-                if buf[0] & (1 << XLDA_BIT) == 1 {
+                let mask = (1 << GDA_BIT) | (1 << XLDA_BIT);
+                if buf[0] & mask == mask {
                     break;
                 }
 
