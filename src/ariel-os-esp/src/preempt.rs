@@ -49,11 +49,21 @@ impl Scheduler for ArielScheduler {
         let prio = ariel_os_embassy_common::executor_thread::PRIORITY;
         let core_affinity = None;
 
+        let task_ptr = task as *const ();
+        // SAFETY:
+        // - This is the recommended way to cast to a function pointer:
+        //   <https://doc.rust-lang.org/stable/std/primitive.fn.html#casting-to-and-from-integers>.
+        // - Data pointers and function pointers are of the same size on all of our supported
+        //   architectures.
+        // - The scheduler will pass the parameter required by the task (`param`) in compliance
+        //   with the ABI required by the architecture.
+        let task_ptr = unsafe { core::mem::transmute::<*const (), fn()>(task_ptr) };
+
         // SAFETY: Upholding `create_raw()` invariants: We know what we are doing.
         let tid = unsafe {
             create_raw(
-                task as usize,
-                param as usize,
+                task_ptr,
+                Some(param as usize),
                 stack_slice,
                 prio,
                 core_affinity,
