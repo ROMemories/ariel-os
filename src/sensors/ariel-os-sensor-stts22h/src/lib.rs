@@ -19,7 +19,7 @@ use embedded_hal_async::i2c::I2c;
 const PART_NUMBER: &str = "STTS22H";
 
 // FIXME: depends on the pin config
-const TARGET_I2C_ADDR: u8 = 0x7e >> 1;
+const TARGET_I2C_ADDR: u8 = 0x70 >> 1;
 
 const WHO_AM_I_REG_ADDR: u8 = 0x01;
 const DEVICE_ID: u8 = 0xa0;
