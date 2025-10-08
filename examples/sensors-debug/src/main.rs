@@ -28,20 +28,62 @@ async fn main(peripherals: pins::Peripherals) {
 
     let _ = I2C_BUS.set(Mutex::new(i2c_bus));
 
-    let i2c_device = I2cDevice::new(I2C_BUS.get().unwrap());
-
     let spawner = Spawner::for_current_executor().await;
+
+    sensors::LIS2DU12_I2C
+        .init(
+            spawner,
+            ariel_os_sensor_lis2du12::Peripherals {},
+            I2cDevice::new(I2C_BUS.get().unwrap()),
+            ariel_os_sensor_lis2du12::Config::default(),
+        )
+        .await;
+
+    spawner.spawn(sensors::lis2du12_i2c_runner()).unwrap();
+
+    sensors::LIS2MDL_I2C
+        .init(
+            spawner,
+            ariel_os_sensor_lis2mdl::Peripherals {},
+            I2cDevice::new(I2C_BUS.get().unwrap()),
+            ariel_os_sensor_lis2mdl::Config::default(),
+        )
+        .await;
+
+    spawner.spawn(sensors::lis2mdl_i2c_runner()).unwrap();
+
+    sensors::LPS22DF_I2C
+        .init(
+            spawner,
+            ariel_os_sensor_lps22df::Peripherals {},
+            I2cDevice::new(I2C_BUS.get().unwrap()),
+            ariel_os_sensor_lps22df::Config::default(),
+        )
+        .await;
+
+    spawner.spawn(sensors::lps22df_i2c_runner()).unwrap();
 
     sensors::LSM6DSV16X_I2C
         .init(
             spawner,
             ariel_os_sensor_lsm6dsv16x::Peripherals {},
-            i2c_device,
+            I2cDevice::new(I2C_BUS.get().unwrap()),
             ariel_os_sensor_lsm6dsv16x::Config::default(),
         )
         .await;
 
     spawner.spawn(sensors::lsm6dsv16x_i2c_runner()).unwrap();
+
+    sensors::STTS22H_I2C
+        .init(
+            spawner,
+            ariel_os_sensor_stts22h::Peripherals {},
+            I2cDevice::new(I2C_BUS.get().unwrap()),
+            ariel_os_sensor_stts22h::Config::default(),
+        )
+        .await;
+
+    spawner.spawn(sensors::stts22h_i2c_runner()).unwrap();
 
     loop {
         // Trigger measurements of each sensor

@@ -1,2 +1,5 @@
 apps:
   - name: sensors-debug
+    context:
+      - st-steval-mkboxpro
+      - stm32u083c-dk
