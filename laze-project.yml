@@ -370,6 +370,9 @@ contexts:
         cmd:
           - picotool load -u -v -x -t elf ${out} $@
 
+  - name: rp2350a
+    parent: rp235xa
+
   - name: esp
     parent: ariel-os
     selects:
@@ -1795,12 +1798,12 @@ builders:
       - has_wifi_cyw43
 
   - name: rpi-pico2
-    parent: rp235xa
+    parent: rp2350a
     provides:
       - has_usb_device_port
 
   - name: rpi-pico2-w
-    parent: rp235xa
+    parent: rp2350a
     provides:
       - has_ble_cyw43
       - has_usb_device_port

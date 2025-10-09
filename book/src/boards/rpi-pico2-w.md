@@ -4,8 +4,8 @@
 
 - **Tier:** 1
 - **Ariel OS Name:** `rpi-pico2-w`
-- **Chip:** RP235xa
-- **Chip Ariel OS Name:** `rp235xa`
+- **Chip:** RP2350a
+- **Chip Ariel OS Name:** `rp2350a`
 
 ### References
 
