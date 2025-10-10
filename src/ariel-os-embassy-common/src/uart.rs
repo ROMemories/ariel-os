@@ -4,7 +4,7 @@
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum Baud {
     /// Custom baud rate.
-    Baud(u32),
+    hal(A),
     /// 2400 bauds.
     _2400,
     /// 4800 bauds.
@@ -24,7 +24,7 @@ pub enum Baud {
 impl From<Baud> for u32 {
     fn from(b: Baud) -> u32 {
         match b {
-            Baud::Baud(b) => b,
+            Baud::Hal(hal) => hal as u32,
             Baud::_2400 => 2400,
             Baud::_4800 => 4800,
             Baud::_9600 => 9600,
@@ -32,21 +32,6 @@ impl From<Baud> for u32 {
             Baud::_38400 => 38400,
             Baud::_57600 => 57600,
             Baud::_115200 => 115_200,
-        }
-    }
-}
-
-impl From<u32> for Baud {
-    fn from(b: u32) -> Self {
-        match b {
-            2400 => Baud::_2400,
-            4800 => Baud::_4800,
-            9600 => Baud::_9600,
-            19200 => Baud::_19200,
-            38400 => Baud::_38400,
-            57600 => Baud::_57600,
-            115_200 => Baud::_115200,
-            b => Baud::Baud(b),
         }
     }
 }
@@ -67,21 +52,21 @@ impl defmt::Format for Baud {
 
 /// Parity bit.
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub enum Parity {
+pub enum Parity<A> {
+    /// HAL-specific parity configuration.
+    Hal(A),
     /// No parity bit.
     None,
     /// Even parity bit.
     Even,
-    /// Odd parity bit.
-    Odd,
 }
 
 impl core::fmt::Display for Parity {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
+            Self::Hal(hal) => hal.fmt(f),
             Self::None => write!(f, "N"),
             Self::Even => write!(f, "E"),
-            Self::Odd => write!(f, "O"),
         }
     }
 }
@@ -91,27 +76,27 @@ impl defmt::Format for Parity {
     fn format(&self, f: defmt::Formatter<'_>) {
         use defmt::write;
         match self {
+            Self::Hal(hal) => hal.format(f),
             Self::None => write!(f, "N"),
             Self::Even => write!(f, "E"),
-            Self::Odd => write!(f, "O"),
         }
     }
 }
 
 /// UART number of stop bits.
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub enum StopBits {
+pub enum StopBits<A> {
+    /// HAL-specific stop bit configuration.
+    Hal(A),
     /// One stop bit.
     Stop1,
-    /// Two stop bits.
-    Stop2,
 }
 
 impl core::fmt::Display for StopBits {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
+            Self::Hal(hal) => hal.fmt(f),
             Self::Stop1 => write!(f, "1"),
-            Self::Stop2 => write!(f, "2"),
         }
     }
 }
@@ -121,7 +106,7 @@ impl defmt::Format for StopBits {
     fn format(&self, f: defmt::Formatter<'_>) {
         use defmt::write;
         match self {
-            Self::Stop1 => write!(f, "1"),
+            Self::Hal(hal) => hal.format(f),
             Self::Stop2 => write!(f, "2"),
         }
     }
