@@ -1,10 +1,53 @@
 //! Provides HAL-agnostic UART-related types.
 
+
+/// Trait for HAL-specific baud rates.
+#[doc(hidden)]
+#[cfg(not(feature = "defmt"))]
+pub trait HalBaudRate: core::fmt::Display + core::convert::Into<u32> + Clone {}
+
+/// Trait for HAL-specific baud rates, with defmt.
+#[cfg(feature = "defmt")]
+#[doc(hidden)]
+pub trait HalBaudRate:
+    defmt::Format + core::fmt::Display + core::convert::Into<u32> + Clone
+{
+}
+
+/// Trait for HAL-specific parity.
+#[cfg(not(feature = "defmt"))]
+#[doc(hidden)]
+pub trait HalParity: core::fmt::Display + From<Parity<Self>> + Clone {}
+
+/// Trait for HAL-specific parity, with defmt.
+#[cfg(feature = "defmt")]
+#[doc(hidden)]
+pub trait HalParity: defmt::Format + core::fmt::Display + From<Parity<Self>> + Clone {}
+
+/// Trait for HAL-specific stop bits.
+#[doc(hidden)]
+#[cfg(not(feature = "defmt"))]
+pub trait HalStopBits: core::fmt::Display + From<StopBits<Self>> + Clone {}
+
+/// Trait for HAL-specific stop bits, with defmt.
+#[doc(hidden)]
+#[cfg(feature = "defmt")]
+pub trait HalStopBits: defmt::Format + core::fmt::Display + From<StopBits<Self>> + Clone {}
+
+/// Trait for HAL-specific data bits.
+#[doc(hidden)]
+#[cfg(not(feature = "defmt"))]
+pub trait HalDataBits: core::fmt::Display + From<DataBits<Self>> + Clone {}
+/// Trait for HAL-specific data bits, with defmt.
+#[cfg(feature = "defmt")]
+#[doc(hidden)]
+pub trait HalDataBits: defmt::Format + core::fmt::Display + From<DataBits<Self>> + Clone {}
+
 /// Common UART baud rates.
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub enum Baud {
-    /// Custom baud rate.
-    hal(A),
+pub enum Baud<A: HalBaudRate> {
+    /// HAL-specific baud rate.
+    Hal(A),
     /// 2400 bauds.
     _2400,
     /// 4800 bauds.
@@ -21,10 +64,10 @@ pub enum Baud {
     _115200,
 }
 
-impl From<Baud> for u32 {
-    fn from(b: Baud) -> u32 {
+impl<A: HalBaudRate> From<Baud<A>> for u32 {
+    fn from(b: Baud<A>) -> u32 {
         match b {
-            Baud::Hal(hal) => hal as u32,
+            Baud::Hal(hal) => hal.into(),
             Baud::_2400 => 2400,
             Baud::_4800 => 4800,
             Baud::_9600 => 9600,
@@ -36,23 +79,23 @@ impl From<Baud> for u32 {
     }
 }
 
-impl core::fmt::Display for Baud {
+impl<A: HalBaudRate> core::fmt::Display for Baud<A> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        write!(f, "{}", Into::<u32>::into(*self))
+        write!(f, "{}", Into::<u32>::into((*self).clone()))
     }
 }
 
 #[cfg(feature = "defmt")]
-impl defmt::Format for Baud {
+impl<A: HalBaudRate> defmt::Format for Baud<A> {
     fn format(&self, f: defmt::Formatter<'_>) {
         use defmt::write;
-        write!(f, "{=u32}", Into::<u32>::into(*self));
+        write!(f, "{=u32}", Into::<u32>::into((*self).clone()));
     }
 }
 
 /// Parity bit.
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub enum Parity<A> {
+pub enum Parity<A: HalParity> {
     /// HAL-specific parity configuration.
     Hal(A),
     /// No parity bit.
@@ -61,83 +104,62 @@ pub enum Parity<A> {
     Even,
 }
 
-impl core::fmt::Display for Parity {
+impl<A: HalParity> core::fmt::Display for Parity<A> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        match self {
-            Self::Hal(hal) => hal.fmt(f),
-            Self::None => write!(f, "N"),
-            Self::Even => write!(f, "E"),
-        }
+        A::from((*self).clone()).fmt(f)
     }
 }
 
 #[cfg(feature = "defmt")]
-impl defmt::Format for Parity {
+impl<A: HalParity> defmt::Format for Parity<A> {
     fn format(&self, f: defmt::Formatter<'_>) {
-        use defmt::write;
-        match self {
-            Self::Hal(hal) => hal.format(f),
-            Self::None => write!(f, "N"),
-            Self::Even => write!(f, "E"),
-        }
+        A::from((*self).clone()).format(f)
     }
 }
 
 /// UART number of stop bits.
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub enum StopBits<A> {
+pub enum StopBits<A: HalStopBits> {
     /// HAL-specific stop bit configuration.
     Hal(A),
     /// One stop bit.
     Stop1,
 }
 
-impl core::fmt::Display for StopBits {
+impl<A: HalStopBits> core::fmt::Display for StopBits<A> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        match self {
-            Self::Hal(hal) => hal.fmt(f),
-            Self::Stop1 => write!(f, "1"),
-        }
+        A::from((*self).clone()).fmt(f)
     }
 }
 
 #[cfg(feature = "defmt")]
-impl defmt::Format for StopBits {
+impl<A: HalStopBits> defmt::Format for StopBits<A> {
     fn format(&self, f: defmt::Formatter<'_>) {
-        use defmt::write;
-        match self {
-            Self::Hal(hal) => hal.format(f),
-            Self::Stop2 => write!(f, "2"),
-        }
+        A::from((*self).clone()).format(f)
     }
 }
 
 /// UART number of data bits.
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub enum DataBits {
+pub enum DataBits<A: HalDataBits> {
+    /// HAL-specific number of data bits per character.
+    Hal(A),
     /// 7 bits per character.
     Data7,
     /// 8 bits per character.
     Data8,
 }
 
-impl core::fmt::Display for DataBits {
+impl<A: HalDataBits> core::fmt::Display for DataBits<A> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        match self {
-            Self::Data7 => write!(f, "7"),
-            Self::Data8 => write!(f, "8"),
-        }
+        A::from((*self).clone()).fmt(f)
     }
 }
 
 #[cfg(feature = "defmt")]
-impl defmt::Format for DataBits {
+impl<A: HalDataBits> defmt::Format for DataBits<A> {
     fn format(&self, f: defmt::Formatter<'_>) {
-        use defmt::write;
-        match self {
-            Self::Data7 => write!(f, "7"),
-            Self::Data8 => write!(f, "8"),
-        }
+        A::from((*self).clone()).format(f)
     }
 }
 
