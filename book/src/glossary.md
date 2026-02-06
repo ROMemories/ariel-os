@@ -18,6 +18,8 @@
 
 - **HAL (Hardware Abstraction Layer):** a software layer that makes specific pieces of hardware (e.g., microcontroller peripherals) easier to use, by hiding some of their details.
 
+- **[JTAG][jtag-wikipedia]:** TODO
+
 - **[MCU][microcontroller-wikipedia]:** a microcontroller.
   Contains a processor, memory, and peripherals to interact with the outside world.
 
@@ -30,8 +32,12 @@
 
 - **RP:** a family of 32-bit microcontrollers designed by Raspberry Pi, which includes the RP2040 and RP2350 microcontrollers.
 
+- **SWD (Serial Wire Debug):** a 2-wire TODO from Arm.
+
 - **[SoC (System on Chip)][system-on-chip-wikipedia]:** often synonymous with microcontroller in practice, at least in the embedded domain.
   Sometimes used to emphasize the presence of a sizable analog component (usually for radio).
+
+- **TAP:**
 
 - **[STM32][stm32-wikipedia]:** a family of 32-bit microcontrollers developed by STMicroelectronics.
 
@@ -55,6 +61,7 @@
 [embassy-time-docsrs]: https://docs.rs/embassy-time/latest/embassy_time/
 [esp32-wikipedia]: https://en.wikipedia.org/wiki/ESP32
 [esp-hal-homepage]: https://docs.espressif.com/projects/rust/esp-hal/latest/
+[jtag-wikipedia]: https://en.wikipedia.org/wiki/JTAG
 [microcontroller-wikipedia]: https://en.wikipedia.org/wiki/Microcontroller
 [raspberry-pi-sbc-wikipedia]: https://en.wikipedia.org/wiki/Raspberry_Pi
 [raspberry-pi-holdings-wikipedia]: https://en.wikipedia.org/wiki/Raspberry_Pi_Holdings
