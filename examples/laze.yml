@@ -19,6 +19,7 @@ subdirs:
   - http-server
   - i2c-scanner
   - log
+  - lp-blinky
   - minimal
   - power
   - random

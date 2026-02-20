@@ -22,3 +22,56 @@ pub fn reboot() -> ! {
         }
     }
 }
+
+/// Enters shutdown mode.
+///
+/// In this mode, almost every clock of the microcontroller is off, and the RAM contents may or
+/// may not be retained, requiring rebooting the application completely when waking-up.
+/// This function never returns to represent that.
+///
+/// # Wake-up conditions
+///
+/// Depending on the microcontroller, waking-up usually requires an RTT/RTC interrupt or an
+/// external interrupt (sometimes on a limited set of pins).
+pub fn enter_shutdown_mode() -> ! {
+    // TODO: split this into HAL-specific modules
+    #![allow(unsafe_code, reason = "only for STM32")]
+
+    cfg_if::cfg_if! {
+        if #[cfg(context = "stm32")] {
+            use embassy_stm32::pac::pwr::vals::Lpms;
+
+            // TODO: maybe use a critical section?
+
+            // FIXME: stm32_metapac does not seem to support shutdown
+            embassy_stm32::pac::PWR.cr1().modify(|w| w.set_lpms(Lpms::STANDBY));
+
+            // TODO: safety comment
+            let mut p = unsafe { cortex_m::Peripherals::steal() };
+            p.SCB.set_sleepdeep();
+
+            // A single iteration of this loop will be executed, but this satisfies the return
+            // type.
+            loop {
+                cortex_m::asm::wfi();
+            }
+        } else {
+            // TODO: use WFI
+            #[expect(clippy::empty_loop, reason = "for platform-independent tooling only")]
+            loop {}
+        }
+    }
+}
+
+/// Enters dormant mode.
+///
+/// In this mode, almost every clock of the microcontroller is off, but the RAM contents are
+/// retained.
+///
+/// # Wake-up conditions
+///
+/// Depending on the microcontroller, waking-up usually requires an RTT/RTC interrupt or an
+/// external interrupt (sometimes on a limited set of pins).
+pub fn enter_dormant_mode() {
+    todo!();
+}

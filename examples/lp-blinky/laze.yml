@@ -1,0 +1,4 @@
+apps:
+  - name: lp-blinky
+    selects:
+      - has_leds
