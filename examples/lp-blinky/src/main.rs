@@ -4,13 +4,23 @@
 use ariel_os_boards::pins;
 
 use ariel_os::{
+    hal::peripherals,
     gpio::{Level, Output},
     time::Timer,
 };
 
+ariel_os::hal::group_peripherals!(Peripherals {
+    leds: pins::LedPeripherals,
+    rtc: RtcPeripherals,
+});
+
+ariel_os::hal::define_peripherals!(RtcPeripherals {
+    rtc: RTC,
+});
+
 #[ariel_os::task(autostart, peripherals)]
-async fn lp_blinky(peripherals: pins::LedPeripherals) {
-    let mut led0 = Output::new(peripherals.led0, Level::Low);
+async fn lp_blinky(peripherals: Peripherals) {
+    let mut led0 = Output::new(peripherals.leds.led0, Level::Low);
 
     led0.set_high();
     Timer::after_millis(200).await;
