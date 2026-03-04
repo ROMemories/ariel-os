@@ -41,6 +41,8 @@ ariel_os::hal::define_peripherals!(RtcPeripherals { rtc: RTC });
 async fn lp_blinky(peripherals: Peripherals) {
     let delay = Duration::from_millis(500);
 
+    embassy_stm32::pac::PWR.cr1().modify(|w| w.set_lpr(true));
+
     let mut led0 = Output::new(peripherals.leds.led0, Level::Low);
     led0.set_high();
     Timer::after(delay).await;
