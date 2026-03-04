@@ -5,10 +5,14 @@ license.workspace = true
 publish = false
 
 [dependencies]
-ariel-os = { path = "../../src/ariel-os", features = ["time"] }
+ariel-os = { path = "../../src/ariel-os", features = [
+  "rcc-config-override",
+  "time",
+] }
 ariel-os-boards = { path = "../../src/ariel-os-boards" }
 critical-section = { workspace = true }
 embassy-stm32 = { workspace = true }
+embassy-time = { workspace = true, features = ["tick-hz-32_768"] }
 
 [lints]
 workspace = true

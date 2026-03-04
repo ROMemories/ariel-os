@@ -9,6 +9,27 @@ use ariel_os::{
     time::{Duration, Timer},
 };
 
+#[ariel_os::config(rcc)]
+const RCC_CONFIG: embassy_stm32::rcc::Config = {
+    use embassy_stm32::rcc::*;
+
+    let mut rcc = embassy_stm32::rcc::Config::new();
+
+    rcc.ls = LsConfig {
+        rtc: RtcClockSource::LSE,
+        lsi: true, // TODO: consider turning it off
+        lse: Some(LseConfig {
+            frequency: embassy_stm32::time::Hertz(32768),
+            mode: LseMode::Oscillator(LseDrive::MediumHigh),
+        }),
+    };
+    rcc.hsi = false;
+    rcc.sys = Sysclk::MSI; // Embassy currently does not support LSE as SYSCLK.
+    rcc.msi = Some(MSIRange::RANGE100K);
+
+    rcc
+};
+
 ariel_os::hal::group_peripherals!(Peripherals {
     leds: pins::LedPeripherals,
     rtc: RtcPeripherals,
