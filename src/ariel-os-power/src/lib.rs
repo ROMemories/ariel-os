@@ -25,8 +25,8 @@ pub fn reboot() -> ! {
 
 /// Enters shutdown mode.
 ///
-/// In this mode, almost every clock of the microcontroller is off, and the RAM contents may or
-/// may not be retained, requiring rebooting the application completely when waking-up.
+/// In this mode, almost every clock of the microcontroller is off, and the RAM content may or may
+/// not be retained, requiring rebooting the application completely when waking-up.
 /// This function never returns to represent that.
 ///
 /// # Wake-up conditions
@@ -45,6 +45,8 @@ pub fn enter_shutdown_mode() -> ! {
 
             // FIXME: stm32_metapac does not seem to support shutdown
             embassy_stm32::pac::PWR.cr1().modify(|w| w.set_lpms(Lpms::STANDBY));
+            // Lose SRAM2 content.
+            embassy_stm32::pac::PWR.cr3().modify(|w| w.set_rrs(false));
 
             // TODO: safety comment
             let mut p = unsafe { cortex_m::Peripherals::steal() };
@@ -65,7 +67,7 @@ pub fn enter_shutdown_mode() -> ! {
 
 /// Enters dormant mode.
 ///
-/// In this mode, almost every clock of the microcontroller is off, but the RAM contents are
+/// In this mode, almost every clock of the microcontroller is off, but the RAM content are
 /// retained.
 ///
 /// # Wake-up conditions

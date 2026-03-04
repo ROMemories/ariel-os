@@ -26,8 +26,9 @@ async fn lp_blinky(peripherals: Peripherals) {
     Timer::after_millis(200).await;
     led0.set_low();
 
-    // FIXME: set up clocks
     // FIXME: set up RTC for an interrupt in 5 s
+    let rtc = embassy_stm32::rtc::Rtc::new(peripherals.rtc.rtc);
+
 
     ariel_os::power::enter_shutdown_mode()
 }
