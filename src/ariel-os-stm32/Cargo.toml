@@ -18,6 +18,7 @@ embassy-executor = { workspace = true, default-features = false, features = [
   "arch-cortex-m",
 ] }
 embassy-stm32 = { workspace = true, default-features = false, features = [
+  "low-power",
   "memory-x",
   "optfield",
   "rt",

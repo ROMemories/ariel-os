@@ -84,6 +84,8 @@ impl<'a, T: PeripheralType> IntoPeripheral<'a, T> for Peri<'a, T> {
 #[must_use]
 pub fn init() -> OptionalPeripherals {
     let mut config = Config::default();
+    config.enable_debug_during_sleep = false;
+
     board_config(&mut config);
 
     #[cfg(not(capability = "hw/stm32-dual-core"))]

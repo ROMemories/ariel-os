@@ -30,7 +30,8 @@ embassy-net = { git = "https://github.com/ariel-os/embassy", rev = "f88320aea64c
 # branch = "embassy-rp-v0.8.0+ariel-os"
 embassy-rp = { git = "https://github.com/ariel-os/embassy", rev = "0314802282e112a47b4ccb303c0e7f09cf33df53" }
 # branch = "embassy-stm32-v0.4.0+ariel-os"
-embassy-stm32 = { git = "https://github.com/ariel-os/embassy", rev = "1b75c3d6e61a99a312e2d12f039fa6e76e9c3a9c" }
+# embassy-stm32 = { git = "https://github.com/ariel-os/embassy", rev = "1b75c3d6e61a99a312e2d12f039fa6e76e9c3a9c" }
+embassy-stm32 = { path = "../../embassy/embassy-stm32" }
 # branch = "embassy-time-v0.5.0+ariel-os"
 embassy-time = { git = "https://github.com/ariel-os/embassy", rev = "32919cd38e4a5ad5fc21dfb339abd45a74bd1dc9" }
 # branch = "embassy-usb-synopsys-otg-v0.3.1+ariel-os
