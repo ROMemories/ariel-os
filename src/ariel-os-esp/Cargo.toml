@@ -111,7 +111,14 @@ spi = ["dep:embassy-embedded-hal", "dep:fugit", "ariel-os-embassy-common/spi"]
 uart = ["dep:embedded-io-async", "ariel-os-embassy-common/uart"]
 
 ## Enables threading support.
-threading = ["dep:ariel-os-threads"]
+threading = [
+  "dep:ariel-os-threads",
+  # See `ariel-os-embassy` for an explanation of what this enables.
+  # This needs to be duplicated here because this HAL depends on
+  # `embassy-time-queue-utils` directly, and `_generic-queue` would otherwise
+  # not be enabled when `time` is enabled from this crate alone.
+  "embassy-time-queue-utils?/_generic-queue",
+]
 
 ## Enables timers
 time = [
@@ -157,13 +164,11 @@ wifi-esp = ["dep:allocator-api2", "_radio-esp", "esp-radio?/wifi", "wifi"]
 
 ## Enables facilities required by the built-in Wi-Fi and/or BLE radio.
 _radio-esp = [
-  # `embassy-time` is used in scheduler-related facilities.
-  "dep:embassy-time",
   "dep:esp-alloc",
   "dep:esp-radio",
   "dep:esp-radio-rtos-driver",
-  "dep:esp-sync",
   "esp-radio?/esp-alloc",
+  "time",
 ]
 
 #! ## Executor type selection for the (autostarted) main executor
