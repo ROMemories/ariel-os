@@ -148,7 +148,12 @@ nrf91-modem = ["ariel-os-hal/nrf91-modem"]
 threading = [
   "dep:ariel-os-threads",
   "ariel-os-hal/threading",
-  # this sets the default timer queue size, which is currently 64. See `generic-queue-*` features.
+  # This enables the timer queue implementation provided by
+  # `embassy-time-queue-utils` that is independent of `embassy-executor` (i.e.,
+  # the generic queue implementation), allowing `embassy_timer::Timer`s to be
+  # used in threads and/or when our custom executor is used.
+  # The default queue size is 64 (see the `generic-queue-*` features of
+  # `embassy-time-queue-utils`).
   "embassy-time-queue-utils?/_generic-queue",
 ]
 
