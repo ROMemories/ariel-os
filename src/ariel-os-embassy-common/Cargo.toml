@@ -14,7 +14,7 @@ defmt = { workspace = true, optional = true }
 embassy-executor = { workspace = true }
 embassy-time = { workspace = true, optional = true }
 embedded-hal = { workspace = true }
-embedded-hal-async = { workspace = true }
+embedded-hal-async = { workspace = true, optional = true }
 fugit = { workspace = true, optional = true }
 static_cell = { workspace = true, optional = true }
 trouble-host = { workspace = true, optional = true }
@@ -24,10 +24,10 @@ trouble-host = { workspace = true, optional = true }
 external-interrupts = []
 
 ## Enables I2C support.
-i2c = ["dep:embassy-time", "dep:fugit"]
+i2c = ["dep:embassy-time", "dep:embedded-hal-async", "dep:fugit"]
 
 ## Enables SPI support.
-spi = ["dep:fugit"]
+spi = ["dep:embedded-hal-async", "dep:fugit"]
 
 ## Enables UART support.
 uart = []
