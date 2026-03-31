@@ -1161,11 +1161,8 @@ modules:
     help: use probe-rs as runner
     selects:
       - ?debug-console
-      - defmt:
-          - defmt-rtt
-      - log:
-          - ?rtt-target
-          - ?debug-logging-over-uart
+      # Only actually required for using probe-rs as a runner (flashing and debug console).
+      - ?probe-rs-output-transport
     provides_unique:
       - embedded-test-runner
 
@@ -1201,6 +1198,25 @@ modules:
         help: Resets the target
         cmd:
           - probe-rs reset --chip ${PROBE_RS_CHIP} $@
+
+  - name: probe-rs-output-transport
+    help: output transport supported by probe-rs
+    # Exactly one transport must be selected when enabled.
+    selects:
+      - ?debug-output-rtt
+      # If probe-rs were to get a serial monitor or handle SWO, they could be selected here.
+      - probe-rs-output-transport
+
+  - name: debug-output-rtt
+    help: use Real Time Transfer (RTT) as debug output transport
+    selects:
+      - defmt:
+          - defmt-rtt
+      - log:
+          - rtt-target
+    provides_unique:
+      - debug-output-transport
+      - probe-rs-output-transport
 
   - name: openocd
     tasks:
@@ -1812,6 +1828,7 @@ modules:
     help: use defmt-rtt in ariel-os-debug
     provides_unique:
       - ariel-os-debug-backend
+      - debug-output-rtt
     env:
       global:
         FEATURES:
@@ -1821,6 +1838,7 @@ modules:
     help: use rtt-target in ariel-os-debug
     provides_unique:
       - ariel-os-debug-backend
+      - debug-output-rtt
     env:
       global:
         FEATURES:
