@@ -121,7 +121,7 @@ multicast = ["embassy-net?/multicast"]
 ## Enable storage support [`ariel-os::storage`].
 storage = ["dep:ariel-os-storage", "ariel-os-hal/storage", "time"]
 
-debug-uart = []
+debug-logging-over-uart = []
 
 # Enables cellular networking configuration.
 cellular-networking = [

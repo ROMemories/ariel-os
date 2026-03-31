@@ -10,8 +10,8 @@ pub use ariel_os_hal::hal;
 #[cfg(feature = "executor-thread")]
 use ariel_os_embassy_common::executor_thread;
 
-#[cfg(feature = "debug-uart")]
-pub mod debug_uart;
+#[cfg(feature = "debug-logging-over-uart")]
+pub mod debug_logging_over_uart;
 
 #[cfg(feature = "spi")]
 pub mod spi;
@@ -195,8 +195,8 @@ async fn init_task(mut peripherals: hal::OptionalPeripherals) {
     let spawner = unsafe { asynch::Spawner::for_current_executor().await };
     asynch::set_spawner(spawner.make_send());
 
-    #[cfg(feature = "debug-uart")]
-    debug_uart::init(&mut peripherals);
+    #[cfg(feature = "debug-logging-over-uart")]
+    debug_logging_over_uart::init(&mut peripherals);
 
     debug!("ariel-os-embassy::init_task()");
 
