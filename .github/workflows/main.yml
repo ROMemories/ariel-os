@@ -129,6 +129,7 @@ jobs:
                 coap,
                 coap-transport-udp,
                 csprng,
+                debug-console,
                 defmt,
                 dns,
                 external-interrupts,

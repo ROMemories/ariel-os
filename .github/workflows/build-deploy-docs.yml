@@ -75,6 +75,7 @@ jobs:
                   coap,
                   core-affinity,
                   csprng,
+                  debug-console,
                   defmt,
                   dns,
                   executor-thread,
