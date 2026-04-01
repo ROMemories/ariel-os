@@ -94,6 +94,7 @@
 - [Getting Started](./getting-started.md)
 - [Build System](./build-system.md)
 - [Building an Application](./application.md)
+- [Flashing & Debugging](./flashing-debugging.md)
 - [Async Executors](./async-support.md)
 - [Debug Console](./debug-console.md)
 - [Networking](./networking.md)
