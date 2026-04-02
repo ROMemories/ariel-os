@@ -1,8 +1,10 @@
 # Debug Console
 
+The debug console is conceptually composed of the debug output and of the ability for the target to close it (when supported).
+The debug console is enabled by default and the corresponding [laze module][laze-modules-book] is `debug-console`.
+
 ## Printing on the Debug Console
 
-The debug console is enabled by default and the corresponding [laze module][laze-modules-book] is `debug-console`.
 The [`ariel_os::debug::println!()`][println-macro-rustdoc] macro is used to print on the debug console.
 
 When the debug console is enabled, panic messages are automatically printed to it.
