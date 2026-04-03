@@ -1,6 +1,6 @@
 # Debug Console
 
-The debug console is conceptually composed of the debug output and of the ability for the target to close it (when supported).
+The debug console is currently conceptually composed of the debug output and of the ability for the target to close it (when supported).
 The debug console is enabled by default and the corresponding [laze module][laze-modules-book] is `debug-console`.
 
 ## Printing on the Debug Console
