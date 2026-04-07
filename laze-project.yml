@@ -1836,6 +1836,9 @@ modules:
 
   - name: defmt-rtt
     help: use defmt-rtt in ariel-os-debug
+    conflicts:
+      # Needed so `defmt-rtt` does not get always enabled through `debug-output-rtt`.
+      - log
     provides_unique:
       - ariel-os-debug-backend
       - debug-output-rtt
