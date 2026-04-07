@@ -59,6 +59,7 @@ esp-println = { workspace = true, optional = true, features = ["esp32s3"] }
 
 [features]
 debug-console = []
+debug-output = []
 
 defmt = [
   "ariel-os-debug-log/defmt",

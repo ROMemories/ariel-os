@@ -36,20 +36,23 @@ pub fn print_panic(info: &core::panic::PanicInfo<'_>) {
     let message = ariel_os_debug_log::defmt::Display2Format(&message);
 
     // Mimics the `Display` implementation of `core::panic::PanicInfo`.
-    println!("panicked at {}:\n{}", location, message);
+    crate::println!("panicked at {}:\n{}", location, message);
 }
 
-#[cfg(all(feature = "debug-console", feature = "defmt-rtt"))]
-mod backend {
-    pub use ariel_os_debug_log::println;
+#[doc(hidden)]
+#[cfg(all(feature = "debug-output", feature = "defmt-rtt"))]
+pub mod output {
     use defmt_rtt as _;
+
+    pub use ariel_os_debug_log::println;
 
     #[doc(hidden)]
     pub fn init() {}
 }
 
-#[cfg(all(feature = "debug-console", feature = "rtt-target"))]
-mod backend {
+#[doc(hidden)]
+#[cfg(all(feature = "debug-output", feature = "rtt-target"))]
+pub mod output {
     #[cfg(not(feature = "defmt"))]
     pub use rtt_target::rprintln as println;
 
@@ -152,8 +155,9 @@ pub mod backend {
     }
 }
 
-#[cfg(all(feature = "debug-console", feature = "std"))]
-mod backend {
+#[doc(hidden)]
+#[cfg(all(feature = "debug-output", feature = "std"))]
+pub mod output {
     pub use std::println;
 
     #[doc(hidden)]
@@ -163,11 +167,14 @@ mod backend {
     }
 }
 
-#[cfg(not(feature = "debug-console"))]
-mod backend {
+#[doc(hidden)]
+#[cfg(not(feature = "debug-output"))]
+pub mod output {
     #[doc(hidden)]
+    #[allow(unused, reason = "conditional compilation")]
     pub fn init() {}
 
+    // NOTE: this macro being `macro_export`ed, it will always be exported at the root of the crate.
     /// Prints to the debug output, with a newline.
     #[macro_export]
     macro_rules! println {
@@ -178,7 +185,8 @@ mod backend {
     }
 }
 
-pub use backend::*;
+#[cfg(feature = "debug-output")]
+pub use output::println;
 
 #[doc(hidden)]
 #[cfg(feature = "log")]
