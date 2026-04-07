@@ -50,7 +50,11 @@ cortex-m = { workspace = true, features = ["critical-section-single-core"] }
 alloc = ["dep:ariel-os-alloc"]
 threading = ["dep:ariel-os-threads"]
 
+# Initializes support for the debug console.
 debug-console = ["ariel-os-debug/debug-console"]
+# Initializes support for the debug output.
+debug-output = ["ariel-os-debug/debug-output"]
+
 embedded-test = ["dep:ariel-os-macros", "dep:embedded-test"]
 executor-interrupt = []
 panic-printing = []

@@ -195,9 +195,10 @@ timer-generic-queue-64 = ["ariel-os-embassy/timer-generic-queue-64"]
 timer-generic-queue-128 = ["ariel-os-embassy/timer-generic-queue-128"]
 
 #! ## Development and debugging
-# Enables the debug console, required to use
-# [`println!`](ariel_os_debug::println).
+# Enables the debug console.
 debug-console = ["ariel-os-rt/debug-console"]
+# Enables the debug output.
+debug-output = ["ariel-os-rt/debug-output"]
 # Enables logging support through `defmt`, see [`debug::log`].
 defmt = [
   "ariel-os-bench?/defmt",

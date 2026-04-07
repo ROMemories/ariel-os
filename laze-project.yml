@@ -975,12 +975,22 @@ modules:
   - name: debug-console
     context: ariel-os
     selects:
-      - ?debug-logging-facade-default
+      # Optional because one may want to only use non-debug output functionality.
+      - ?debug-output
       - ?panic-printing
     env:
       global:
         FEATURES:
           - ariel-os/debug-console
+
+  - name: debug-output
+    help: enable the debug output
+    selects:
+      - ?debug-logging-facade-default
+    env:
+      global:
+        FEATURES:
+          - ariel-os/debug-output
 
   - name: emit-stack-sizes
     conflicts:
@@ -1843,6 +1853,16 @@ modules:
       global:
         FEATURES:
           - ariel-os/rtt-target
+
+  - name: debug-logging-transport
+    selects:
+      - ?debug-logging-over-debug-output
+      - ?debug-logging-over-uart
+      - ?esp-println
+
+  - name: debug-logging-over-debug-output
+    selects:
+      - debug-output-rtt
 
   - name: debug-logging-over-uart
     help: use UART as debug logging transport

@@ -157,8 +157,8 @@ pub static INIT_FUNCS: [fn()] = [..];
 fn startup() -> ! {
     arch::init();
 
-    #[cfg(feature = "debug-console")]
-    ariel_os_debug::init();
+    #[cfg(feature = "debug-output")]
+    ariel_os_debug::output::init();
 
     debug!("ariel_os_rt::startup()");
 
