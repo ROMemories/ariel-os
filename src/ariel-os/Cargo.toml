@@ -217,7 +217,7 @@ panic-printing = ["ariel-os-rt/panic-printing"]
 no-boards = ["ariel-os-boards/no-boards", "executor-none"]
 
 # These are selected by laze
-debug-logging-over-uart = ["ariel-os-debug/uart", "ariel-os-embassy/debug-logging-over-uart"]
+debug-logging-over-uart = ["ariel-os-debug/debug-logging-over-uart", "ariel-os-embassy/debug-logging-over-uart"]
 rtt-target = ["ariel-os-debug/rtt-target"]
 defmt-rtt = ["ariel-os-debug/defmt-rtt"]
 esp-println = ["ariel-os-debug/esp-println"]

@@ -21,7 +21,11 @@ rtt-target = { workspace = true, optional = true }
 semihosting = { workspace = true, optional = true }
 
 [package.metadata.feature-groups]
-debug-backend.xor = { features = ["esp-println", "rtt-target", "uart"] }
+debug-backend.xor = { features = [
+  "esp-println",
+  "rtt-target",
+  "debug-logging-over-uart",
+] }
 
 [package.metadata.features]
 debug-console = { groups = ["debug-backend"] }
@@ -70,7 +74,9 @@ defmt-rtt = ["dep:defmt-rtt"]
 esp-println = ["dep:esp-println"]
 rtt-target = ["dep:rtt-target"]
 std = []
-uart = []
+
+# Debug logging transports.
+debug-logging-over-uart = []
 
 [lints]
 workspace = true

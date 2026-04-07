@@ -1847,9 +1847,12 @@ modules:
   - name: debug-logging-over-uart
     help: use UART as debug logging transport
     selects:
-      - log # We could later support defmt as well
+      # Support for `defmt` could be added later.
+      - log
     provides_unique:
       - ariel-os-debug-backend
+      # Could be made non-unique later.
+      - debug-logging-transport
     env:
       global:
         FEATURES:

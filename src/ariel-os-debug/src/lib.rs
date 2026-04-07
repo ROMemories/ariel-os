@@ -99,7 +99,7 @@ mod backend {
     }
 }
 
-#[cfg(all(feature = "debug-console", feature = "uart"))]
+#[cfg(all(feature = "debug-console", feature = "debug-logging-over-uart"))]
 #[doc(hidden)]
 pub mod backend {
     use embassy_sync::once_lock::OnceLock;
