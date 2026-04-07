@@ -2,7 +2,7 @@
 
 use core::net::{Ipv6Addr, SocketAddr};
 
-use ariel_os_debug::log::info;
+use ariel_os_debug_log::info;
 use ariel_os_embassy::cell::SameExecutorCell;
 
 use embassy_net::udp::{PacketMetadata, UdpSocket};

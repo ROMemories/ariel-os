@@ -5,7 +5,7 @@ use nrf_modem::{ConnectionPreference, MemoryLayout, SystemMode};
 // need to make the symbols available so nrf_modem can link against them
 extern crate tinyrlibc as _;
 
-use ariel_os_debug::log::debug;
+use ariel_os_debug_log::debug;
 
 #[cfg(feature = "executor-interrupt")]
 use cortex_m::interrupt::InterruptNumber as _;

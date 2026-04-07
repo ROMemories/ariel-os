@@ -30,7 +30,7 @@ static STATE: StaticCell<cyw43::State> = StaticCell::new();
 
 #[cfg(feature = "wifi")]
 pub async fn join(mut control: cyw43::Control<'static>) {
-    use ariel_os_debug::log::info;
+    use ariel_os_debug_log::info;
     loop {
         //control.join_open(WIFI_NETWORK).await;
         match control

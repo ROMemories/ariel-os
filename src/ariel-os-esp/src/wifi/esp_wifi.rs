@@ -1,4 +1,4 @@
-use ariel_os_debug::log::{debug, info};
+use ariel_os_debug_log::{debug, info};
 use embassy_executor::Spawner;
 use embassy_time::{Duration, Timer};
 use esp_radio::wifi::{

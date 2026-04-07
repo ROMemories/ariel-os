@@ -11,11 +11,15 @@
 #[featurecomb::comb]
 mod _featurecomb {}
 
+#[doc(hidden)]
+pub mod hidden {
+    // Required so the macros can access it.
+    #[cfg(feature = "defmt")]
+    pub use defmt;
+}
+
 #[cfg(feature = "debug-console")]
 mod exit;
-
-#[doc(inline)]
-pub use ariel_os_debug_log as log;
 
 #[cfg(feature = "debug-console")]
 pub use exit::*;
@@ -33,7 +37,7 @@ pub fn print_panic(info: &core::panic::PanicInfo<'_>) {
     // We *need* to use the `Display` implementation and cannot use `PanicMessage::as_str()` as
     // that would not work for dynamically formatted messages.
     #[cfg(feature = "defmt")]
-    let message = ariel_os_debug_log::defmt::Display2Format(&message);
+    let message = defmt::Display2Format(&message);
 
     // Mimics the `Display` implementation of `core::panic::PanicInfo`.
     crate::println!("panicked at {}:\n{}", location, message);
@@ -44,10 +48,18 @@ pub fn print_panic(info: &core::panic::PanicInfo<'_>) {
 pub mod output {
     use defmt_rtt as _;
 
-    pub use ariel_os_debug_log::println;
-
     #[doc(hidden)]
     pub fn init() {}
+
+    /// Prints to the debug logs, with a newline.
+    #[macro_export]
+    macro_rules! println {
+        ($($arg:tt)*) => {{
+            use $crate::hidden::defmt;
+
+            defmt::println!($($arg)*);
+        }};
+    }
 }
 
 #[doc(hidden)]
@@ -55,9 +67,6 @@ pub mod output {
 pub mod output {
     #[cfg(not(feature = "defmt"))]
     pub use rtt_target::rprintln as println;
-
-    #[cfg(feature = "defmt")]
-    pub use ariel_os_debug_log::println;
 
     #[doc(hidden)]
     pub fn init() {
@@ -88,6 +97,17 @@ pub mod output {
 
             rtt_target::set_defmt_channel(channels.up.0);
         }
+    }
+
+    /// Prints to the debug logs, with a newline.
+    #[cfg(feature = "defmt")]
+    #[macro_export]
+    macro_rules! println {
+        ($($arg:tt)*) => {{
+            use $crate::hidden::defmt;
+
+            defmt::println!($($arg)*);
+        }};
     }
 }
 
@@ -174,8 +194,8 @@ pub mod output {
     #[allow(unused, reason = "conditional compilation")]
     pub fn init() {}
 
+    /// Prints to the debug logs, with a newline, if available, otherwise prints to the debug output.
     // NOTE: this macro being `macro_export`ed, it will always be exported at the root of the crate.
-    /// Prints to the debug output, with a newline.
     #[macro_export]
     macro_rules! println {
         ($($arg:tt)*) => {{
@@ -185,9 +205,10 @@ pub mod output {
     }
 }
 
-#[cfg(feature = "debug-output")]
+#[cfg(all(feature = "debug-output", not(feature = "defmt")))]
 pub use output::println;
 
+#[allow(unused, reason = "conditional compilation")]
 #[doc(hidden)]
 #[cfg(feature = "log")]
 mod logger {
@@ -221,6 +242,11 @@ mod logger {
         }
     };
 
+    /// Initializes the `log` logger.
+    ///
+    /// # Panics
+    ///
+    /// When a logger has already been set.
     pub fn init() {
         #[cfg(target_has_atomic = "ptr")]
         {
@@ -248,7 +274,7 @@ mod logger {
             });
         }
 
-        log::debug!("debug logging enabled at level {}", MAX_LEVEL);
+        log::debug!("debug logging enabled at level {MAX_LEVEL}");
     }
 
     struct DebugLogger;

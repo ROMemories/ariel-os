@@ -31,8 +31,13 @@ pub use ariel_os_buildinfo as buildinfo;
 #[cfg(feature = "coap")]
 #[doc(inline)]
 pub use ariel_os_coap as coap;
-#[doc(inline)]
-pub use ariel_os_debug as debug;
+pub mod debug {
+    //! Provides debug interface facilities.
+
+    pub use ariel_os_debug::*;
+    #[doc(inline)]
+    pub use ariel_os_debug_log as log;
+}
 #[doc(inline)]
 pub use ariel_os_hal::api::*;
 #[doc(inline)]

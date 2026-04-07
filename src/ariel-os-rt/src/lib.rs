@@ -17,7 +17,7 @@ compile_error!(
     "feature \"single-core\" and feature \"multi-core\" cannot be enabled at the same time"
 );
 
-use ariel_os_debug::log::debug;
+use ariel_os_debug_log::debug;
 
 cfg_if::cfg_if! {
     if #[cfg(context = "cortex-m")] {

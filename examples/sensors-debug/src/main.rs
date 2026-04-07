@@ -66,7 +66,10 @@ fn print_sample(sensor: &dyn Sensor, sample: Sample, reading_channel: ReadingCha
     let display_name = sensor.display_name().unwrap_or(DEFAULT_SENSOR_DISPLAY_NAME);
     let label = sensor.label().unwrap_or(DEFAULT_SENSOR_LABEL);
 
-    if reading_channel.label() == Label::Opaque {
+    if matches!(
+        reading_channel.label(),
+        Label::Opaque | Label::OpaqueGnssTime
+    ) {
         // Print only debug information about samples from opaque channels.
         debug!(
             "{} ({}): {:?} ({})",

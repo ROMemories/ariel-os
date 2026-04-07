@@ -10,6 +10,7 @@ license.workspace = true
 logging-facade.xor = { features = ["defmt", "log"] }
 
 [dependencies]
+ariel-os-debug = { workspace = true }
 defmt = { workspace = true, optional = true }
 featurecomb = { workspace = true }
 log = { workspace = true, optional = true }

@@ -69,7 +69,7 @@ impl ThreadList {
     }
 
     fn remove_inner(&mut self, scheduler: &mut Scheduler, thread_id: ThreadId) -> bool {
-        ariel_os_debug::log::trace!("remove_current() {:?}", thread_id);
+        ariel_os_debug_log::trace!("remove_current() {:?}", thread_id);
         if let Some(head) = self.head {
             if head == thread_id {
                 self.head = scheduler.thread_blocklist[usize::from(head)].take();

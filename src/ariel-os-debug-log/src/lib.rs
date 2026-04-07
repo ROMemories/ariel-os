@@ -49,7 +49,7 @@ pub mod log {
     pub use log::{debug, error, info, trace, warn};
 
     /// No-op wrapper that formats the Debug trait (drop-in replacement for the equivalent `defmt`
-    /// type)
+    /// type).
     pub struct Debug2Format<T: Debug>(pub T);
 
     impl<T: Debug> Debug for Debug2Format<T> {
@@ -59,7 +59,7 @@ pub mod log {
     }
 
     /// No-op wrapper that formats the Display trait (drop-in replacement for the equivalent
-    /// `defmt` type)
+    /// `defmt` type).
     pub struct Display2Format<T: Display>(pub T);
 
     impl<T: Display> Display for Display2Format<T> {

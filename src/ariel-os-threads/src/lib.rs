@@ -560,7 +560,7 @@ pub unsafe fn start_threading() {
 
     #[cfg(feature = "multi-core")]
     {
-        ariel_os_debug::log::debug!("ariel-os-threads: SMP mode with {} cores", CORE_COUNT);
+        ariel_os_debug_log::debug!("ariel-os-threads: SMP mode with {} cores", CORE_COUNT);
 
         // ISR stack for the second core
         static ISR_STACK_CORE1: ConstStaticCell<smp::StackType> =
@@ -577,7 +577,7 @@ pub unsafe fn start_threading() {
 
 #[cfg(feature = "idle-threads")]
 fn setup_idle_threads() {
-    ariel_os_debug::log::debug!(
+    ariel_os_debug_log::debug!(
         "ariel-os-threads: setting up {} idle thread(s) with stack size {}",
         CORE_COUNT,
         Cpu::IDLE_THREAD_STACK_SIZE

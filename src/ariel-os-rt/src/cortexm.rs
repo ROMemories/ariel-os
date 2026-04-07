@@ -181,7 +181,7 @@ unsafe fn HardFault(ef: &ExceptionFrame) -> ! {
 #[exception]
 unsafe fn DefaultHandler(_irqn: i16) {
     #[cfg(feature = "panic-printing")]
-    ariel_os_debug::log::debug!("IRQn = {}", _irqn);
+    ariel_os_debug_log::debug!("IRQn = {}", _irqn);
 
     ariel_os_debug::exit(ariel_os_debug::ExitCode::FAILURE);
 

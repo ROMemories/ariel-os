@@ -7,7 +7,7 @@ repository.workspace = true
 license.workspace = true
 
 [dependencies]
-ariel-os-debug = { workspace = true }
+ariel-os-debug-log = { workspace = true }
 ariel-os-embassy = { workspace = true }
 ariel-os-macros = { path = "../ariel-os-macros" }
 ariel-os-random = { workspace = true, features = ["csprng"], optional = true }

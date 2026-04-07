@@ -8,7 +8,7 @@ use esp_hal::{
 };
 use esp_sync::NonReentrantMutex;
 
-use ariel_os_debug::log::trace;
+use ariel_os_debug_log::trace;
 
 use crate::TIMER_QUEUE;
 

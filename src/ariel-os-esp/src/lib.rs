@@ -95,7 +95,7 @@ pub fn init() -> OptionalPeripherals {
 
     #[cfg(feature = "hwrng")]
     {
-        ariel_os_debug::log::debug!("initializing hwrng");
+        ariel_os_debug_log::debug!("initializing hwrng");
         let mut rng = esp_hal::rng::Rng::new();
         ariel_os_random::construct_rng(&mut ariel_os_random::RngAdapter(&mut rng));
     }

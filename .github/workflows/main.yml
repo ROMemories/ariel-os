@@ -173,6 +173,20 @@ jobs:
             --
             --deny warnings
 
+      - name: lint with Clippy when using the `log` logging facade
+        uses: clechasseur/rs-clippy-check@286fd9545eb133adad54b4af34bcb642e266ddd1 # v5
+        with:
+          args: |
+            --locked
+            --features "
+              log,
+              no-boards,
+            "
+            -p ariel-os
+            -p ariel-os-debug
+            --
+            --deny warnings
+
       - run: echo 'RUSTFLAGS=--cfg context="esp32c6" --cfg getrandom_backend="custom"' >> $GITHUB_ENV
       - name: clippy for ESP32
         uses: clechasseur/rs-clippy-check@286fd9545eb133adad54b4af34bcb642e266ddd1 # v5
@@ -298,6 +312,19 @@ jobs:
             -p ariel-os-sensor-lis2du12
             -p ariel-os-sensor-lps22df
             -p ariel-os-sensor-stts22h
+            --
+            --deny warnings
+
+      - name: Clippy on nrf91 sensor drivers
+        uses: clechasseur/rs-clippy-check@286fd9545eb133adad54b4af34bcb642e266ddd1 # v5
+        with:
+          args: |
+            --locked
+            -p ariel-os-sensor-nrf91-gnss
+            --features "
+              ariel-os-debug-log/log,
+              nrf-modem/nrf9160
+              "
             --
             --deny warnings
 
@@ -504,7 +531,7 @@ jobs:
           persist-credentials: false
 
       - name: typos
-        uses: crate-ci/typos@631208b7aac2daa8b707f55e7331f9112b0e062d # v1.44.0
+        uses: crate-ci/typos@02ea592e44b3a53c302f697cddca7641cd051c3d # v1.45.0
 
       - name: Check that the book summary has an up-to-date board list
         run: ./doc/gen_book.rs summary doc/support_matrix.yml book/src/SUMMARY.md --template-path book/templates/SUMMARY.md.tmpl --check

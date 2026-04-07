@@ -11,7 +11,7 @@ use nrf_sdc::{
 use static_cell::StaticCell;
 use trouble_host::{Stack, prelude::DefaultPacketPool};
 
-use ariel_os_debug::log::debug;
+use ariel_os_debug_log::debug;
 use ariel_os_embassy_common::{ble::MTU, cell::SameExecutorCell};
 
 use crate::{irqs::Irqs, peripheral::Peri};

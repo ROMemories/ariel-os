@@ -9,10 +9,10 @@ license.workspace = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-ariel-os-debug-log = { workspace = true }
 ariel-os-utils = { workspace = true }
 const-str = { workspace = true }
 critical-section = { workspace = true, optional = true }
+defmt = { workspace = true, optional = true }
 defmt-rtt = { workspace = true, optional = true }
 embassy-sync = { workspace = true }
 featurecomb = { workspace = true }
@@ -62,16 +62,16 @@ debug-console = []
 debug-output = []
 
 defmt = [
-  "ariel-os-debug-log/defmt",
+  "dep:defmt",
   "esp-println?/defmt-espflash",
   "rtt-target?/defmt",
 ]
-log = ["dep:critical-section", "dep:log", "ariel-os-debug-log/log"]
+log = ["dep:critical-section", "dep:log"]
 
 semihosting = ["dep:semihosting"]
 
 # Debug output backends
-defmt-rtt = ["dep:defmt-rtt"]
+defmt-rtt = ["dep:defmt", "dep:defmt-rtt"]
 esp-println = ["dep:esp-println"]
 rtt-target = ["dep:rtt-target"]
 std = []

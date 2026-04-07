@@ -20,6 +20,7 @@ apps:
       - stm32u083c-dk
     selects:
       - ?defmt-app
+      - ?nrf91-modem-sensor
 
 modules:
   - name: defmt-app
@@ -29,3 +30,11 @@ modules:
       global:
         FEATURES:
           - defmt
+
+  - name: nrf91-modem-sensor
+    selects:
+      - nrf91-modem
+    env:
+      global:
+        FEATURES:
+          - nrf-modem

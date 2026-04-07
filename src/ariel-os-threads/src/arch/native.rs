@@ -69,7 +69,7 @@ impl Arch for Cpu {
             });
 
             if res.is_err() {
-                ariel_os_debug::log::error!("thread {:?} panicked, aborting.", thread_id);
+                ariel_os_debug_log::error!("thread {:?} panicked, aborting.", thread_id);
                 std::process::abort();
             }
 

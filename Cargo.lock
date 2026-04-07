@@ -146,6 +146,7 @@ dependencies = [
  "ariel-os-buildinfo",
  "ariel-os-coap",
  "ariel-os-debug",
+ "ariel-os-debug-log",
  "ariel-os-embassy",
  "ariel-os-hal",
  "ariel-os-identity",
@@ -170,7 +171,7 @@ version = "0.4.0"
 dependencies = [
  "ariel-os",
  "ariel-os-boards",
- "ariel-os-debug",
+ "ariel-os-debug-log",
  "ariel-os-utils",
  "embedded-alloc",
  "embedded-test",
@@ -209,7 +210,7 @@ dependencies = [
 name = "ariel-os-coap"
 version = "0.4.0"
 dependencies = [
- "ariel-os-debug",
+ "ariel-os-debug-log",
  "ariel-os-embassy",
  "ariel-os-macros",
  "ariel-os-random",
@@ -243,10 +244,10 @@ dependencies = [
 name = "ariel-os-debug"
 version = "0.4.0"
 dependencies = [
- "ariel-os-debug-log",
  "ariel-os-utils",
  "const-str",
  "critical-section",
+ "defmt 1.0.1",
  "defmt-rtt",
  "embassy-sync 0.7.2",
  "esp-println",
@@ -260,6 +261,7 @@ dependencies = [
 name = "ariel-os-debug-log"
 version = "0.4.0"
 dependencies = [
+ "ariel-os-debug",
  "defmt 1.0.1",
  "featurecomb",
  "log",
@@ -272,6 +274,7 @@ dependencies = [
  "ariel-os-boards",
  "ariel-os-buildinfo",
  "ariel-os-debug",
+ "ariel-os-debug-log",
  "ariel-os-embassy-common",
  "ariel-os-hal",
  "ariel-os-identity",
@@ -329,7 +332,7 @@ dependencies = [
 name = "ariel-os-esp"
 version = "0.4.0"
 dependencies = [
- "ariel-os-debug",
+ "ariel-os-debug-log",
  "ariel-os-embassy-common",
  "ariel-os-random",
  "ariel-os-rt",
@@ -434,7 +437,7 @@ dependencies = [
 name = "ariel-os-nrf"
 version = "0.4.0"
 dependencies = [
- "ariel-os-debug",
+ "ariel-os-debug-log",
  "ariel-os-embassy-common",
  "ariel-os-random",
  "ariel-os-rt",
@@ -485,7 +488,7 @@ dependencies = [
 name = "ariel-os-rp"
 version = "0.4.0"
 dependencies = [
- "ariel-os-debug",
+ "ariel-os-debug-log",
  "ariel-os-embassy-common",
  "ariel-os-random",
  "ariel-os-utils",
@@ -513,6 +516,7 @@ version = "0.4.0"
 dependencies = [
  "ariel-os-alloc",
  "ariel-os-debug",
+ "ariel-os-debug-log",
  "ariel-os-macros",
  "ariel-os-threads",
  "ariel-os-utils",
@@ -560,6 +564,24 @@ dependencies = [
  "embassy-time",
  "embedded-hal-async",
  "portable-atomic",
+]
+
+[[package]]
+name = "ariel-os-sensor-nrf91-gnss"
+version = "0.1.0"
+dependencies = [
+ "ariel-os-debug-log",
+ "ariel-os-sensors",
+ "ariel-os-sensors-gnss-time-ext",
+ "ariel-os-sensors-utils",
+ "defmt 1.0.1",
+ "embassy-futures",
+ "embassy-sync 0.7.2",
+ "futures-util",
+ "libm",
+ "nrf-modem",
+ "portable-atomic",
+ "time",
 ]
 
 [[package]]
@@ -649,7 +671,7 @@ dependencies = [
 name = "ariel-os-storage"
 version = "0.4.0"
 dependencies = [
- "ariel-os-debug",
+ "ariel-os-debug-log",
  "ariel-os-hal",
  "arrayvec",
  "cfg-if",
@@ -665,7 +687,7 @@ dependencies = [
 name = "ariel-os-threads"
 version = "0.4.0"
 dependencies = [
- "ariel-os-debug",
+ "ariel-os-debug-log",
  "ariel-os-runqueue",
  "ariel-os-utils",
  "atomic-wait",
@@ -3386,9 +3408,9 @@ dependencies = [
 
 [[package]]
 name = "futures-core"
-version = "0.3.31"
+version = "0.3.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "05f29059c0c2090612e8d742178b0580d2dc940c837851ad723096f87af6663e"
+checksum = "7e3450815272ef58cec6d564423f6e755e25379b217b0bc688e295ba24df6b1d"
 
 [[package]]
 name = "futures-intrusive"
@@ -3423,9 +3445,9 @@ dependencies = [
 
 [[package]]
 name = "futures-macro"
-version = "0.3.31"
+version = "0.3.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "162ee34ebcb7c64a8abebc059ce0fee27c2262618d7b60ed8faf72fef13c3650"
+checksum = "e835b70203e41293343137df5c0664546da5745f82ec9b84d40be8336958447b"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -3434,28 +3456,27 @@ dependencies = [
 
 [[package]]
 name = "futures-sink"
-version = "0.3.31"
+version = "0.3.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e575fab7d1e0dcb8d0c7bcf9a63ee213816ab51902e6d244a95819acacf1d4f7"
+checksum = "c39754e157331b013978ec91992bde1ac089843443c49cbc7f46150b0fad0893"
 
 [[package]]
 name = "futures-task"
-version = "0.3.31"
+version = "0.3.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f90f7dce0722e95104fcb095585910c0977252f286e354b5e3bd38902cd99988"
+checksum = "037711b3d59c33004d3856fbdc83b99d4ff37a24768fa1be9ce3538a1cde4393"
 
 [[package]]
 name = "futures-util"
-version = "0.3.31"
+version = "0.3.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9fa08315bb612088cc391249efdc3bc77536f16c91f6cf495e6fbe85b20a4a81"
+checksum = "389ca41296e6190b48053de0321d02a77f32f8a5d2461dd38762c0593805c6d6"
 dependencies = [
  "futures-core",
  "futures-macro",
  "futures-sink",
  "futures-task",
  "pin-project-lite",
- "pin-utils",
 ]
 
 [[package]]
@@ -4223,6 +4244,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "libm"
+version = "0.2.16"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b6d2cec3eae94f9f509c767b45932f1ada8350c4bdb85af2fcab4a3c14807981"
+
+[[package]]
 name = "liboscore"
 version = "0.2.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4571,9 +4598,9 @@ dependencies = [
 
 [[package]]
 name = "num-conv"
-version = "0.1.0"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "51d515d32fb182ee37cda2ccdcb92950d6a3c2893aa280e540671c2cd0f3b1d9"
+checksum = "c6673768db2d862beb9b39a78fdcb1a69439615d5794a1be50caa9bc92c81967"
 
 [[package]]
 name = "num-derive"
@@ -4896,12 +4923,6 @@ name = "pin-project-lite"
 version = "0.2.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3b3cff922bd51709b605d9ead9aa71031d81447142d828eb4a6eba76fe619f9b"
-
-[[package]]
-name = "pin-utils"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8b870d8c151b6f2fb93e84a13146138f05d02ed11c7e7c54f8826aaaf7c9f184"
 
 [[package]]
 name = "pio"
@@ -5618,6 +5639,7 @@ dependencies = [
  "ariel-os-boards",
  "ariel-os-sensor-lis2du12",
  "ariel-os-sensor-lps22df",
+ "ariel-os-sensor-nrf91-gnss",
  "ariel-os-sensor-stts22h",
  "ariel-os-sensors",
  "ariel-os-sensors-gnss-time-ext",
@@ -6273,9 +6295,9 @@ dependencies = [
 
 [[package]]
 name = "time"
-version = "0.3.45"
+version = "0.3.47"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f9e442fc33d7fdb45aa9bfeb312c095964abdf596f7567261062b2a7107aaabd"
+checksum = "743bd48c283afc0388f9b8827b976905fb217ad9e647fae3a379a9283c4def2c"
 dependencies = [
  "deranged",
  "num-conv",
@@ -6285,9 +6307,9 @@ dependencies = [
 
 [[package]]
 name = "time-core"
-version = "0.1.7"
+version = "0.1.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8b36ee98fd31ec7426d599183e8fe26932a8dc1fb76ddb6214d05493377d34ca"
+checksum = "7694e1cfe791f8d31026952abf09c69ca6f6fa4e1a1229e18988f06a04a12dca"
 
 [[package]]
 name = "tinyrlibc"

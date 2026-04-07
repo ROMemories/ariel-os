@@ -2,6 +2,10 @@
 
 This chapter covers how to setup supported code editors to get features in-editor linting, go to definition, documentation on hover, inlay hints.
 
+> [!NOTE]
+> The `editor-config` laze task generates a configuration according to the [laze builder used][laze-builders-book] and the [modules selected][laze-modules-book] (in the cli and in `laze-project.yml`). 
+> If you add/remove a module or want to target another builder, you will need to re-generate the configuration.
+
 ## VSCode
 
 [Visual Studio Code](https://code.visualstudio.com/) is a popular code editor that can easily be configured to work with Ariel OS.
@@ -61,3 +65,4 @@ laze build -b <builder> editor-config rust-analyzer
 At the time of writing (2026-03-30) some features don't work compared to using the Helix or VSCode configuration.
 
 [laze-builders-book]: ./build-system.md#laze-builders
+[laze-modules-book]: ./build-system.md#laze-modules

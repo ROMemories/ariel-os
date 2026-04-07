@@ -10,7 +10,7 @@ license.workspace = true
 harness = false
 
 [dependencies]
-ariel-os-debug = { workspace = true }
+ariel-os-debug-log = { workspace = true }
 ariel-os-utils = { workspace = true }
 
 [target.'cfg(context = "cortex-m")'.dependencies]

@@ -1,6 +1,6 @@
 //! Credential and key configuration backed by ariel-os storage
 
-use ariel_os_debug::log::{Cbor, debug, info};
+use ariel_os_debug_log::{Cbor, debug, info};
 use cbor_macro::cbo;
 use coapcore::seccfg::ServerSecurityConfig;
 

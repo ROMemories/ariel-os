@@ -1,4 +1,4 @@
-use ariel_os_debug::log::debug;
+use ariel_os_debug_log::debug;
 use embassy_nrf::{
     Peri, pac, peripherals,
     usb::{Driver, vbus_detect::HardwareVbusDetect},
