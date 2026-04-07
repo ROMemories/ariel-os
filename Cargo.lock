@@ -170,7 +170,7 @@ version = "0.4.0"
 dependencies = [
  "ariel-os",
  "ariel-os-boards",
- "ariel-os-debug",
+ "ariel-os-debug-log",
  "ariel-os-utils",
  "embedded-alloc",
  "embedded-test",
@@ -209,7 +209,7 @@ dependencies = [
 name = "ariel-os-coap"
 version = "0.4.0"
 dependencies = [
- "ariel-os-debug",
+ "ariel-os-debug-log",
  "ariel-os-embassy",
  "ariel-os-macros",
  "ariel-os-random",
@@ -272,6 +272,7 @@ dependencies = [
  "ariel-os-boards",
  "ariel-os-buildinfo",
  "ariel-os-debug",
+ "ariel-os-debug-log",
  "ariel-os-embassy-common",
  "ariel-os-hal",
  "ariel-os-identity",
@@ -329,7 +330,7 @@ dependencies = [
 name = "ariel-os-esp"
 version = "0.4.0"
 dependencies = [
- "ariel-os-debug",
+ "ariel-os-debug-log",
  "ariel-os-embassy-common",
  "ariel-os-random",
  "ariel-os-rt",
@@ -434,7 +435,7 @@ dependencies = [
 name = "ariel-os-nrf"
 version = "0.4.0"
 dependencies = [
- "ariel-os-debug",
+ "ariel-os-debug-log",
  "ariel-os-embassy-common",
  "ariel-os-random",
  "ariel-os-rt",
@@ -485,7 +486,7 @@ dependencies = [
 name = "ariel-os-rp"
 version = "0.4.0"
 dependencies = [
- "ariel-os-debug",
+ "ariel-os-debug-log",
  "ariel-os-embassy-common",
  "ariel-os-random",
  "ariel-os-utils",
@@ -513,6 +514,7 @@ version = "0.4.0"
 dependencies = [
  "ariel-os-alloc",
  "ariel-os-debug",
+ "ariel-os-debug-log",
  "ariel-os-macros",
  "ariel-os-threads",
  "ariel-os-utils",
@@ -667,7 +669,7 @@ dependencies = [
 name = "ariel-os-storage"
 version = "0.4.0"
 dependencies = [
- "ariel-os-debug",
+ "ariel-os-debug-log",
  "ariel-os-hal",
  "arrayvec",
  "cfg-if",
@@ -683,7 +685,7 @@ dependencies = [
 name = "ariel-os-threads"
 version = "0.4.0"
 dependencies = [
- "ariel-os-debug",
+ "ariel-os-debug-log",
  "ariel-os-runqueue",
  "ariel-os-utils",
  "atomic-wait",

@@ -15,7 +15,7 @@
 use alloc::boxed::Box;
 use core::ptr::NonNull;
 
-use ariel_os_debug::log::trace;
+use ariel_os_debug_log::trace;
 use ariel_os_threads::sync::WaitQueue;
 use esp_radio_rtos_driver::{
     ThreadPtr, current_task, now,

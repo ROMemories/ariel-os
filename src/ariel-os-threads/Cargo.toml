@@ -9,7 +9,7 @@ license.workspace = true
 include = ["src/**/*", "README.md"]
 
 [dependencies]
-ariel-os-debug = { workspace = true }
+ariel-os-debug-log = { workspace = true }
 ariel-os-runqueue = { workspace = true }
 ariel-os-utils = { workspace = true }
 cfg-if = { workspace = true }

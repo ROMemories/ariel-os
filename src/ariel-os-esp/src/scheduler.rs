@@ -10,7 +10,7 @@ use core::{
     sync::atomic::{AtomicPtr, Ordering},
 };
 
-use ariel_os_debug::log::{debug, trace};
+use ariel_os_debug_log::{debug, trace};
 use ariel_os_threads::{
     CoreAffinity, CoreId, RunqueueId, THREAD_COUNT, ThreadId, create_raw, current_tid,
     get_priority, set_priority, yield_same,
@@ -124,7 +124,7 @@ impl SchedulerImplementation for ArielScheduler {
             )
         };
 
-        ariel_os_debug::log::debug!(
+        ariel_os_debug_log::debug!(
             "task_create() name={} thread_id={:?} priority={} stack size={}",
             _name,
             thread_id,

@@ -34,7 +34,7 @@ mod ethernet;
 #[cfg(feature = "cellular-networking")]
 mod cellular_networking;
 
-use ariel_os_debug::log::debug;
+use ariel_os_debug_log::debug;
 
 use linkme::distributed_slice;
 

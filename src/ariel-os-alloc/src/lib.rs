@@ -44,7 +44,7 @@ mod alloc {
     /// Call only once!
     #[cfg(context = "cortex-m")]
     unsafe fn init_embedded_alloc() {
-        use ariel_os_debug::log::debug;
+        use ariel_os_debug_log::debug;
 
         use embedded_alloc::TlsfHeap as Heap;
 
@@ -78,7 +78,7 @@ mod alloc {
     /// Call only once!
     #[cfg(context = "esp")]
     unsafe fn init_esp_alloc() {
-        use ariel_os_debug::log::debug;
+        use ariel_os_debug_log::debug;
 
         const RECLAIMED_SIZE: usize = const {
             let range = esp_metadata_generated::memory_range!("DRAM2_UNINIT");

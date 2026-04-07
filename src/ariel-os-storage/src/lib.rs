@@ -65,7 +65,7 @@ fn flash_range_from_linker() -> Range<u32> {
 }
 
 fn init_(p: &mut OptionalPeripherals) {
-    use ariel_os_debug::log::info;
+    use ariel_os_debug_log::info;
     let flash_range = flash_range_from_linker();
     info!("storage: using flash range {:?}", &flash_range);
 
@@ -93,7 +93,7 @@ pub async fn init(p: &mut OptionalPeripherals) {
 
     // Use a marker to ensure that this storage is initialized.
     if Ok(Some(MARKER_VALUE)) != get::<u8>(MARKER_KEY).await {
-        ariel_os_debug::log::info!("storage: initializing");
+        ariel_os_debug_log::info!("storage: initializing");
         erase_all().await.unwrap();
     }
 }

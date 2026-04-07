@@ -5,7 +5,7 @@ use embassy_time::Duration;
 
 use crate::{SCHEDULER, ThreadId, ThreadState, thread_flags::ThreadFlags};
 
-use ariel_os_debug::log::trace;
+use ariel_os_debug_log::trace;
 
 const THREAD_FLAG_TIMEOUT: ThreadFlags = 2; // TODO: find more appropriate value
 

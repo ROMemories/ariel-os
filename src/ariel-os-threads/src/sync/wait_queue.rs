@@ -47,7 +47,7 @@ impl WaitQueue {
     ///
     /// Panics if this is called outside of a thread context.
     pub fn wait_until(&self, deadline: embassy_time::Instant) -> bool {
-        ariel_os_debug::log::trace!("WaitQueue::wait_until()");
+        ariel_os_debug_log::trace!("WaitQueue::wait_until()");
         // Safety:
         // `on_timeout` takes care of removing the thread from the threadlist.
         unsafe {
@@ -57,7 +57,7 @@ impl WaitQueue {
                     self.wait_cs(cs);
                 },
                 |cs| {
-                    ariel_os_debug::log::trace!("WaitQueue::wait_until() timeout");
+                    ariel_os_debug_log::trace!("WaitQueue::wait_until() timeout");
                     #[expect(unused_unsafe)]
                     let waiters = unsafe { &mut *self.waiters.get() };
                     !waiters.remove_current(cs)
@@ -82,7 +82,7 @@ impl WaitQueue {
         deadline: embassy_time::Instant,
         check: impl Fn(CriticalSection<'_>) -> bool,
     ) -> bool {
-        ariel_os_debug::log::trace!("WaitQueue::wait_until_with_check()");
+        ariel_os_debug_log::trace!("WaitQueue::wait_until_with_check()");
         // Safety:
         // `on_timeout` takes care of removing the thread from the threadlist.
         unsafe {
@@ -93,7 +93,7 @@ impl WaitQueue {
                     self.wait_cs(cs);
                 },
                 |cs| {
-                    ariel_os_debug::log::trace!("WaitQueue::wait_until_with_check() timeout");
+                    ariel_os_debug_log::trace!("WaitQueue::wait_until_with_check() timeout");
                     // Safety: the critical section is used to uphold aliasing rules.
                     #[expect(unused_unsafe)]
                     let waiters = unsafe { &mut *self.waiters.get() };
@@ -116,7 +116,7 @@ impl WaitQueue {
             let waiters = unsafe { &mut *self.waiters.get() };
             #[allow(unused_variables, reason = "log macro sometimes doesn't use this")]
             let res = waiters.pop(cs);
-            ariel_os_debug::log::trace!("WaitQueue::notify_one() notifying {:?}", res);
+            ariel_os_debug_log::trace!("WaitQueue::notify_one() notifying {:?}", res);
         });
     }
 }
