@@ -69,7 +69,6 @@ async fn main() {
         .await
         .unwrap()
     {
-        // no `defmt::Format` for arrayvec, so just print length
         info!(
             "Attempting to retrieve string value as ArrayString: {}",
             Hex(string.as_bytes())
