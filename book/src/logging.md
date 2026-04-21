@@ -1,9 +1,9 @@
-## Logging
+# Logging
 
 Ariel OS supports logging on all platforms and it is enabled by default with the `logging-facade` [laze module][laze-modules-book].
 Logging offers a set of macros that print on the debug console with helpful logging formatting.
 
-### Logging
+## Logging
 
 Within Rust code, import `ariel_os::log` items, then use Ariel OS logging macros:
 
@@ -16,7 +16,7 @@ async fn main() {
 }
 ```
 
-### Filtering Logs
+## Filtering Logs
 
 In Ariel OS, the log level defaults to `info`. It can be configured using the
 laze variable `LOG`.
@@ -28,7 +28,7 @@ Example:
 $ laze build -C examples/log --builders nrf52840dk -DLOG=info run
 ```
 
-### Logging Facades and Loggers
+## Logging Facades and Loggers
 
 Ariel OS supports multiple logging facades and loggers.
 Only one of them may be enabled at a time;
@@ -54,7 +54,7 @@ which (while defeating some of `defmt`'s optimizations) come in handy when debug
 [`Debug2Format`]: https://ariel-os.github.io/ariel-os/dev/docs/api/ariel_os/log/struct.Debug2Format.html
 [`Display2Format`]: https://ariel-os.github.io/ariel-os/dev/docs/api/ariel_os/log/struct.Display2Format.html
 
-#### [defmt]
+### [defmt]
 
 See the [defmt documentation] for general info on the defmt's facade and logger.
 
@@ -67,7 +67,7 @@ $ laze build -C examples/log --builders nrf52840dk -DLOG=info,ariel_os_rt=trace 
 Note: On Cortex-M devices, the order of `ariel_os::log::println!()` output and
       `defmt` log output is not deterministic.
 
-#### [log]
+### [log]
 
 Ariel OS's logger for `log` supports configuring the log level globally, but does not currently support per-crate filtering.
 
