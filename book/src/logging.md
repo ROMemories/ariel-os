@@ -5,7 +5,7 @@ Logging offers a set of macros that print on the debug console with helpful logg
 
 ## Printing Panics
 
-Panics are printed on the logging output.
+Panics are automatically printed on the logging output.
 If this is unwanted, the `panic-printing` [laze module][laze-modules-book] can be disabled.
 
 ## Logging
