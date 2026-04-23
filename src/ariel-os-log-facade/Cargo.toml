@@ -1,0 +1,26 @@
+[package]
+name = "ariel-os-log-facade"
+version = "0.4.0"
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+license.workspace = true
+
+[package.metadata.feature-groups]
+logging-facade.xor = { features = ["defmt", "log"] }
+
+[dependencies]
+defmt = { workspace = true, optional = true }
+featurecomb = { workspace = true }
+log = { workspace = true, optional = true }
+
+[features]
+## Enables `defmt` as logging facade.
+defmt = ["dep:defmt"]
+## Enables `log` as logging facade.
+log = ["dep:log"]
+
+_test = []
+
+[lints]
+workspace = true

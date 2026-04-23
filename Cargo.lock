@@ -388,12 +388,21 @@ name = "ariel-os-log"
 version = "0.4.0"
 dependencies = [
  "ariel-os-debug",
+ "ariel-os-log-facade",
  "ariel-os-utils",
  "const-str",
  "critical-section",
- "defmt 1.0.1",
  "embassy-sync 0.7.2",
  "esp-println",
+ "featurecomb",
+ "log",
+]
+
+[[package]]
+name = "ariel-os-log-facade"
+version = "0.4.0"
+dependencies = [
+ "defmt 1.0.1",
  "featurecomb",
  "log",
 ]

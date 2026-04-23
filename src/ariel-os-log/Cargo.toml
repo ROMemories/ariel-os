@@ -12,10 +12,10 @@ logging-tranport.xor = { features = ["defmt-rtt", "esp-println", "uart"] }
 
 [dependencies]
 ariel-os-debug = { workspace = true }
+ariel-os-log-facade = { workspace = true }
 ariel-os-utils = { workspace = true, optional = true }
 const-str = { workspace = true, optional = true }
 critical-section = { workspace = true, optional = true }
-defmt = { workspace = true, optional = true }
 embassy-sync = { workspace = true, optional = true }
 featurecomb = { workspace = true }
 log = { workspace = true, optional = true }
@@ -44,9 +44,18 @@ esp-println = { workspace = true, optional = true, features = ["esp32s3"] }
 
 [features]
 ## Enables `defmt` as logging facade.
-defmt = ["dep:defmt", "esp-println?/defmt-espflash"]
+defmt = [
+  "ariel-os-log-facade/defmt",
+  "esp-println?/defmt-espflash",
+]
 ## Enables `log` as logging facade.
-log = ["dep:ariel-os-utils", "dep:const-str", "dep:critical-section", "dep:log"]
+log = [
+  "dep:ariel-os-utils",
+  "dep:const-str",
+  "dep:critical-section",
+  "dep:log",
+  "ariel-os-log-facade/log",
+]
 
 # Logging transports.
 # `defmt-rtt` forces the logging transport to be the debug output, so it has to
