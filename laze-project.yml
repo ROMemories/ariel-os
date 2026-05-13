@@ -1106,6 +1106,11 @@ modules:
       global:
         CARGO_RUNNER: '"espflash flash --monitor ${ESPFLASH_LOG_FORMAT}"'
     tasks:
+      flash:
+        help: flash the target using `espflash`
+        cmd:
+          - espflash flash --after hard-reset ${out} $@
+
       attach:
         help: attach `espflash` to a running target
         build: false
