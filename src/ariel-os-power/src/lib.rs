@@ -9,6 +9,28 @@ use ariel_os_hal::hal::power::WakeupInterrupts;
 
 pub use reset::*;
 
+/// Enters stop mode.
+///
+/// In this mode, almost every clock of the microcontroller is off, but the RAM contents are
+/// retained.
+/// Unlike [`enter_standby_mode()`], waking up does not involve rebooting, and execution resumes
+/// normally after calling this function.
+///
+/// # Important note
+///
+/// This is currently implemented on a best-effort basis.
+/// Some microcontrollers may not support these low-power settings, they may not be implemented
+/// yet, or they may be lacking testing.
+/// Do measure the power consumption of your hardware when relevant for your application.
+///
+/// # Wake-up conditions
+///
+/// Depending on the microcontroller, waking up from this mode usually requires an RTC interrupt or
+/// an external interrupt (sometimes on a limited set of pins).
+pub fn enter_stop_mode() {
+    todo!();
+}
+
 /// Enters standby mode.
 ///
 /// In this mode, almost every clock of the microcontroller is off, and the RAM is powered off when
