@@ -14,6 +14,9 @@ cortex-m = { workspace = true }
 [target.'cfg(context = "esp")'.dependencies]
 esp-hal = { workspace = true }
 
+[target.'cfg(context = "nrf")'.dependencies]
+embassy-nrf = { workspace = true }
+
 [target.'cfg(context = "stm32")'.dependencies]
 critical-section = { workspace = true }
 embassy-stm32 = { workspace = true }
