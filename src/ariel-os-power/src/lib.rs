@@ -41,18 +41,12 @@ pub fn enter_standby_mode() -> ! {
 
 #[cfg(context = "nrf")]
 fn enter_standby_mode_nrf() -> ! {
-    // NOTE: we don't use the System OFF mode, because it cannot be exited from an RTC event and
-    // consumption reduction is relatively marginal anyway once the RAM is powered off (see
-    // section 5.2.1.1 of the nRF52840 datasheet v1.8).
-
-    // TODO: look into the constant latency vs the low-power sub-power modes.
-
     cfg_select! {
         context = "nrf51822-xxaa" => {
-            embassy_nrf::pac::POWER.ramon().modify(|w| w.set_onram0(embassy_nrf::pac::power::vals::Onram0::RAM0OFF));
-            embassy_nrf::pac::POWER.ramon().modify(|w| w.set_onram1(embassy_nrf::pac::power::vals::Onram1::RAM1OFF));
-            embassy_nrf::pac::POWER.ramonb().modify(|w| w.set_onram2(embassy_nrf::pac::power::vals::Onram2::RAM2OFF));
-            embassy_nrf::pac::POWER.ramonb().modify(|w| w.set_onram3(embassy_nrf::pac::power::vals::Onram3::RAM3OFF));
+            embassy_nrf::pac::POWER.ramon().modify(|w| w.set_offram0(embassy_nrf::pac::power::vals::Offram0::RAM0OFF));
+            embassy_nrf::pac::POWER.ramon().modify(|w| w.set_offram1(embassy_nrf::pac::power::vals::Offram1::RAM1OFF));
+            embassy_nrf::pac::POWER.ramonb().modify(|w| w.set_offram2(embassy_nrf::pac::power::vals::Offram2::RAM2OFF));
+            embassy_nrf::pac::POWER.ramonb().modify(|w| w.set_offram3(embassy_nrf::pac::power::vals::Offram3::RAM3OFF));
         }
         _ => {
             const RAM_BLOCK_COUNT: usize = cfg_select! {
@@ -66,23 +60,22 @@ fn enter_standby_mode_nrf() -> ! {
 
             let (peripheral, value) = cfg_select! {
                 any(context = "nrf53", context = "nrf91") => {
-                    (embassy_nrf::pac::VMC, embassy_nrf::pac::vmc::regs::Power(u32::MAX))
+                    (embassy_nrf::pac::VMC, embassy_nrf::pac::vmc::regs::Power(0xffff_0000))
                 }
-                _ => (embassy_nrf::pac::POWER, embassy_nrf::pac::power::regs::Power(u32::MAX)),
+                _ => (embassy_nrf::pac::POWER, embassy_nrf::pac::power::regs::Power(0xffff_0000)),
             };
 
-            // Disable the POWER and RETENTION of every RAM so the RAM is entirely powered off in
-            // System ON mode.
+            // Make sure the retention of every RAM section is disabled in *System OFF* mode.
             // See Table 17 of the nRF52840 datasheet v1.8.
             for i in 0..RAM_BLOCK_COUNT {
-                // Clear the entire POWER register to clear both the POWER and the RETENTION bits.
                 peripheral.ram(i).powerclr().write_value(value);
             }
         }
     }
 
-    // A single iteration of this loop will be executed, but this satisfies the return
-    // type.
+    embassy_nrf::pac::POWER.systemoff().write(|w| w.set_systemoff(true));
+
+    // This loop will not be executed, this is only to satisfy the return type.
     loop {
         cortex_m::asm::wfi();
     }
