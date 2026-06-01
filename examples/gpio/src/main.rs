@@ -22,16 +22,18 @@ async fn blinky(peripherals: Peripherals) {
     #[cfg(context = "st-nucleo-h755zi-q")]
     let pull = Pull::None;
 
-    let mut btn0 = Input::builder(peripherals.buttons.button0, pull)
-        .build_with_interrupt()
-        .unwrap();
+    let _btn0 = Input::new(peripherals.buttons.button0, pull);
 
-    loop {
-        // Wait for the button being pressed or 300 ms, whichever comes first.
-        let _ =
-            embassy_futures::select::select(btn0.wait_for_low(), Timer::after_millis(300)).await;
+    Timer::after_millis(100).await;
 
-        led0.toggle();
-        Timer::after_millis(100).await;
-    }
+    led0.toggle();
+    Timer::after_millis(100).await;
+    led0.toggle();
+    Timer::after_millis(100).await;
+    led0.toggle();
+    Timer::after_millis(100).await;
+
+    embassy_nrf::pac::P0.pin_cnf(11).modify(|w| w.set_sense(embassy_nrf::pac::gpio::vals::Sense::LOW));
+
+    ariel_os::power::enter_standby_mode()
 }
