@@ -7,6 +7,16 @@ mod reset;
 
 pub use reset::*;
 
+/// Interrupts to configure to trigger a wake-up from [standby mode](enter_standby_mode()).
+#[derive(Debug, Default)]
+pub struct WakeupInterrupts {
+    /// Wake up on external interrupts (these may be limited to a specific set of pins).
+    pub gpio: bool,
+    /// Wake up on an RTC event.
+    #[cfg(context = "stm32")]
+    pub rtc: bool,
+}
+
 /// Enters standby mode.
 ///
 /// In this mode, almost every clock of the microcontroller is off, and the RAM is powered off when
@@ -24,7 +34,7 @@ pub use reset::*;
 ///
 /// Depending on the microcontroller, waking up from this mode usually requires an RTC interrupt or
 /// an external interrupt (sometimes on a limited set of pins).
-pub fn enter_standby_mode() -> ! {
+pub fn enter_standby_mode(interrupts: WakeupInterrupts) -> ! {
     cfg_select! {
         context = "nrf" => {
             enter_standby_mode_nrf()
