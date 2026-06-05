@@ -11,7 +11,8 @@ ariel-os = { path = "../../src/ariel-os", features = [
 ] }
 ariel-os-boards = { path = "../../src/ariel-os-boards" }
 embassy-futures = { workspace = true }
-embassy-nrf = { workspace = true }
+# embassy-nrf = { workspace = true }
+embassy-stm32 = { workspace = true }
 
 [lints]
 workspace = true

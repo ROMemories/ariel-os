@@ -67,7 +67,7 @@ fn disable_sense_nrf(_cs: critical_section::CriticalSection<'_>) {
         context = "nrf5340-app" => todo!(),
         context = "nrf5340-net" => todo!(),
         any(context = "nrf9151", context = "nrf9160") => todo!(),
-        _ => panic!("unsupported MCU"),
+        _ => const { panic!("unsupported MCU") },
     };
 
     for (port, pin_count) in ports {

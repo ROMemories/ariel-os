@@ -462,8 +462,6 @@ version = "0.4.0"
 dependencies = [
  "ariel-os-hal",
  "cortex-m",
- "critical-section",
- "embassy-stm32",
  "esp-hal",
 ]
 
@@ -640,6 +638,8 @@ dependencies = [
  "ariel-os-random",
  "ariel-os-stm32-mapping",
  "ariel-os-utils",
+ "cortex-m",
+ "critical-section",
  "defmt 1.0.1",
  "embassy-embedded-hal",
  "embassy-executor",
@@ -3551,7 +3551,7 @@ dependencies = [
  "ariel-os",
  "ariel-os-boards",
  "embassy-futures",
- "embassy-nrf",
+ "embassy-stm32",
 ]
 
 [[package]]
