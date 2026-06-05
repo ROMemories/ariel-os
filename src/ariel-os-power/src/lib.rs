@@ -10,9 +10,9 @@ pub use reset::*;
 /// Interrupts to configure to trigger a wake-up from [standby mode](enter_standby_mode()).
 #[derive(Debug, Default)]
 pub struct WakeupInterrupts {
-    /// Wake up on external interrupts (these may be limited to a specific set of pins).
+    /// Allow waking up on external interrupts (these may be limited to a specific set of pins).
     pub gpio: bool,
-    /// Wake up on an RTC event.
+    /// Allow waking up on an RTC event.
     #[cfg(context = "stm32")]
     pub rtc: bool,
 }
@@ -37,12 +37,14 @@ pub struct WakeupInterrupts {
 pub fn enter_standby_mode(interrupts: WakeupInterrupts) -> ! {
     cfg_select! {
         context = "nrf" => {
-            enter_standby_mode_nrf()
+            enter_standby_mode_nrf(interrupts)
         }
         context = "stm32" => {
             enter_standby_mode_stm32()
         }
         _ => {
+            let _ = interrupts;
+
             #[expect(clippy::empty_loop, reason = "for platform-independent tooling only")]
             loop {}
         }
@@ -50,7 +52,7 @@ pub fn enter_standby_mode(interrupts: WakeupInterrupts) -> ! {
 }
 
 #[cfg(context = "nrf")]
-fn enter_standby_mode_nrf() -> ! {
+fn enter_standby_mode_nrf(interrupts: WakeupInterrupts) -> ! {
     cfg_select! {
         context = "nrf51822-xxaa" => {
             embassy_nrf::pac::POWER.ramon().modify(|w| w.set_offram0(embassy_nrf::pac::power::vals::Offram0::RAM0OFF));
@@ -83,12 +85,45 @@ fn enter_standby_mode_nrf() -> ! {
         }
     }
 
-    embassy_nrf::pac::POWER.systemoff().write(|w| w.set_systemoff(true));
+    critical_section::with(|cs| {
+        // If external interrupts should not trigger a wake-up.
+        if !interrupts.gpio {
+            disable_sense_nrf(cs);
+        }
+
+        embassy_nrf::pac::POWER.systemoff().write(|w| w.set_systemoff(true));
+    });
 
     // This loop will not be executed, this is only to satisfy the return type.
     loop {
         cortex_m::asm::wfi();
     }
+}
+
+// Requires a critical section to guarantee atomicity of the sequence of operations.
+#[cfg(context = "nrf")]
+fn disable_sense_nrf(_cs: critical_section::CriticalSection) {
+    use embassy_nrf::pac;
+
+    let ports: &[(_, usize)] = cfg_select! {
+        context = "nrf51822-xxaa" => todo!(),
+        context = "nrf52832" => todo!(),
+        context = "nrf52833" => todo!(),
+        context = "nrf52840" => &[(pac::P0, 32), (pac::P1, 16)],
+        context = "nrf5340-app" => todo!(),
+        context = "nrf5340-net" => todo!(),
+        any(context = "nrf9151", context = "nrf9160") => todo!(),
+        _ => panic!("unsupported MCU"),
+    };
+
+    for (port, pin_count) in ports {
+        for pin in 0..*pin_count {
+            port.pin_cnf(pin).modify(|w| w.set_sense(embassy_nrf::pac::gpio::vals::Sense::DISABLED));
+        }
+    }
+
+    // Clear `EVENTS_PORTS` (see section 6.10.2 of the nRF52840 datasheet v1.8).
+    pac::GPIOTE.events_port().write_value(0);
 }
 
 #[cfg(context = "stm32")]

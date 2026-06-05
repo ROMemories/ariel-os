@@ -8,6 +8,7 @@ license.workspace = true
 
 [dependencies]
 ariel-os-hal = { workspace = true }
+critical-section = { workspace = true }
 
 [target.'cfg(context = "cortex-m")'.dependencies]
 cortex-m = { workspace = true }
