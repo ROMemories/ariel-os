@@ -435,6 +435,7 @@ dependencies = [
  "ariel-os-random",
  "ariel-os-rt",
  "cortex-m",
+ "critical-section",
  "defmt 1.0.1",
  "embassy-embedded-hal",
  "embassy-executor",
@@ -462,7 +463,6 @@ dependencies = [
  "ariel-os-hal",
  "cortex-m",
  "critical-section",
- "embassy-nrf",
  "embassy-stm32",
  "esp-hal",
 ]
