@@ -14,6 +14,7 @@ pub struct WakeupInterrupts {
 
 #[doc(hidden)]
 pub fn enter_standby_mode(interrupts: WakeupInterrupts) {
+    // FIXME: set up the wake-up interrupts: external interrupts, RTC.
 
     // NOTE: a critical section is used for atomicity.
     critical_section::with(|_| {
