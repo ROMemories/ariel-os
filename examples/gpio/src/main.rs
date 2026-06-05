@@ -33,10 +33,12 @@ async fn blinky(peripherals: Peripherals) {
     led0.toggle();
     Timer::after_millis(100).await;
 
-    embassy_nrf::pac::P0.pin_cnf(11).modify(|w| w.set_sense(embassy_nrf::pac::gpio::vals::Sense::LOW));
+    embassy_nrf::pac::P0
+        .pin_cnf(11)
+        .modify(|w| w.set_sense(embassy_nrf::pac::gpio::vals::Sense::LOW));
 
-    let mut interrupts = ariel_os::power::WakeupInterrupts {
-        gpio: true,
+    let mut interrupts = ariel_os::hal::power::WakeupInterrupts {
+        gpio: false,
         ..Default::default()
     };
     ariel_os::power::enter_standby_mode(interrupts)
