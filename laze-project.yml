@@ -1105,7 +1105,7 @@ modules:
       - flashing-tool
     env:
       global:
-        CARGO_RUNNER: '"espflash flash --monitor ${ESPFLASH_LOG_FORMAT}"'
+        CARGO_RUNNER: '"espflash flash --monitor"'
     tasks:
       flash:
         help: flash the target using `espflash`
@@ -1116,7 +1116,7 @@ modules:
         help: attach `espflash` to a running target
         build: false
         cmd:
-          - espflash monitor ${ESPFLASH_LOG_FORMAT} --elf ${out} $@
+          - espflash monitor --elf ${out} $@
 
       reset:
         help: reset the target
@@ -1977,7 +1977,6 @@ modules:
           - ariel-os/defmt
         RUSTFLAGS:
           - -Clink-arg=-Tdefmt.x
-        ESPFLASH_LOG_FORMAT: "--log-format defmt"
         CARGO_ENV:
           - DEFMT_LOG=info,${LOG}
 
