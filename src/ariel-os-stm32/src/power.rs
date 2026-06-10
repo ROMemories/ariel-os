@@ -34,7 +34,7 @@ pub fn enter_standby_mode(interrupts: WakeupInterrupts) {
 
                 embassy_stm32::pac::PWR.cr().modify(|w| w.set_pdds(Pdds::STANDBY_MODE));
             }
-            // STM32F303: Table 20 of RM0316 Rev 10.
+            // STM32F303: Table 21 of RM0316 Rev 10.
             any(context = "stm32f303cb", context = "stm32f303re") => {
                 use embassy_stm32::pac::pwr::vals::Pdds;
 
