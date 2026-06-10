@@ -10,6 +10,7 @@ ariel-os = { path = "../../src/ariel-os", features = [
   "time",
 ] }
 ariel-os-boards = { path = "../../src/ariel-os-boards" }
+critical-section = { workspace = true }
 embassy-futures = { workspace = true }
 # embassy-nrf = { workspace = true }
 embassy-stm32 = { workspace = true }
