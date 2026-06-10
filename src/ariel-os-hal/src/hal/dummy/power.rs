@@ -6,6 +6,10 @@ pub struct WakeupInterrupts {
     _private: (),
 }
 
+pub fn enter_stop_mode() {
+    unimplemented!();
+}
+
 pub fn enter_standby_mode(interrupts: WakeupInterrupts) {
     unimplemented!();
 }

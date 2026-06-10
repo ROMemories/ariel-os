@@ -28,7 +28,7 @@ pub use reset::*;
 /// Depending on the microcontroller, waking up from this mode usually requires an RTC interrupt or
 /// an external interrupt (sometimes on a limited set of pins).
 pub fn enter_stop_mode() {
-    todo!();
+    ariel_os_hal::hal::power::enter_stop_mode();
 }
 
 /// Enters standby mode.
