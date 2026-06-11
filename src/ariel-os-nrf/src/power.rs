@@ -9,6 +9,11 @@ pub struct WakeupInterrupts {
 }
 
 #[doc(hidden)]
+pub fn enter_stop_mode() {
+    // Nothing to do: the PMU should automatically feature gate peripherals as appropriate.
+}
+
+#[doc(hidden)]
 pub fn enter_standby_mode(interrupts: WakeupInterrupts) {
     cfg_select! {
         context = "nrf51822-xxaa" => {
@@ -53,6 +58,8 @@ pub fn enter_standby_mode(interrupts: WakeupInterrupts) {
             .systemoff()
             .write(|w| w.set_systemoff(true));
     });
+
+    cortex_m::asm::wfi();
 }
 
 // Requires a critical section to guarantee atomicity of the sequence of operations.
