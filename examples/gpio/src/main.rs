@@ -22,7 +22,9 @@ async fn blinky(peripherals: Peripherals) {
     #[cfg(context = "st-nucleo-h755zi-q")]
     let pull = Pull::None;
 
-    let mut btn0 = Input::builder(peripherals.buttons.button0, pull).build_with_interrupt().unwrap();
+    let mut btn0 = Input::builder(peripherals.buttons.button0, pull)
+        .build_with_interrupt()
+        .unwrap();
 
     Timer::after_millis(100).await;
 
