@@ -5,7 +5,7 @@ license.workspace = true
 publish = false
 
 [dependencies]
-ariel-os = { path = "../../src/ariel-os" }
+ariel-os = { path = "../../src/ariel-os", features = ["time"] }
 ariel-os-boards = { path = "../../src/ariel-os-boards" }
 
 [lints]

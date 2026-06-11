@@ -10,5 +10,8 @@ use ariel_os::{
 async fn main() {
     info!("Hello World!");
 
+    ariel_os::time::Timer::after_secs(2).await;
+    ariel_os::power::enter_stop_mode();
+
     exit(ExitCode::SUCCESS);
 }
