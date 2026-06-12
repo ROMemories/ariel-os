@@ -1,0 +1,2 @@
+//! Provides power management functionality.
+
