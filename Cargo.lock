@@ -3883,6 +3883,7 @@ version = "0.0.0"
 dependencies = [
  "ariel-os",
  "ariel-os-boards",
+ "esp-hal",
 ]
 
 [[package]]

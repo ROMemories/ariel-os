@@ -9,8 +9,7 @@ pub struct WakeupInterrupts {
 }
 
 #[doc(hidden)]
-pub fn enter_stop_mode() {
-}
+pub fn enter_stop_mode() {}
 
 #[doc(hidden)]
 pub fn enter_standby_mode(interrupts: WakeupInterrupts) {
