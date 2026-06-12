@@ -8,8 +8,8 @@ use ariel_os::{
 };
 
 ariel_os::hal::define_peripherals!(Peripherals {
-    pin: GPIO_0,
-    led: GPIO_1,
+    pin: GPIO0,
+    led: GPIO1,
 });
 
 #[ariel_os::task(autostart, peripherals)]
