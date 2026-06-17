@@ -88,6 +88,12 @@ impl<'a> Input<'a> {
         }
     }
 
+    #[doc(hidden)]
+    #[must_use]
+    pub fn into_hal_input(self) -> HalInput<'a> {
+        self.input
+    }
+
     inner_impl_input_methods!(input);
 }
 
