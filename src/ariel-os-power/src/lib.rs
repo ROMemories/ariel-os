@@ -11,10 +11,12 @@ pub use reset::*;
 use ariel_os_hal::hal::power::WakeupInterrupts;
 
 /// Interrupts allowed to trigger a wake-up from stop mode.
+#[derive(Default)]
+#[non_exhaustive]
 pub struct StopWakeupInterrupts<'i> {
     /// Whether to allow waking up on external interrupts (these may be limited to a specific set
     /// of pins).
-    pub gpio: (ariel_os_hal::gpio::Input<'i>, GpioWakeupTrigger),
+    pub gpio: Option<(ariel_os_hal::gpio::Input<'i>, GpioWakeupTrigger)>,
 }
 
 /// Enters stop mode.
@@ -36,7 +38,12 @@ pub struct StopWakeupInterrupts<'i> {
 /// Depending on the microcontroller, waking up from this mode usually requires an RTC interrupt or
 /// an external interrupt (sometimes on a limited set of pins).
 pub fn enter_stop_mode(wakeup: StopWakeupInterrupts<'_>) {
-    ariel_os_hal::hal::power::enter_stop_mode(wakeup.gpio.0.into_hal_input(), wakeup.gpio.1);
+    match wakeup {
+        StopWakeupInterrupts { gpio: Some(gpio) } => {
+            ariel_os_hal::hal::power::enter_stop_mode(Some((gpio.0.into_hal_input(), gpio.1)))
+        }
+        StopWakeupInterrupts { gpio: None } => ariel_os_hal::hal::power::enter_stop_mode(None),
+    }
 }
 
 /// Enters standby mode.
