@@ -73,6 +73,8 @@ embassy-stm32 = { workspace = true }
 embedded-io = { workspace = true }
 
 [features]
+## Enables support for the low-power modes.
+lp-modes = ["external-interrupts"]
 ## Enables GPIO interrupt support.
 external-interrupts = [
   "ariel-os-embassy-common/external-interrupts",

@@ -8,7 +8,7 @@ license.workspace = true
 
 [dependencies]
 ariel-os-embassy-common = { workspace = true }
-ariel-os-hal = { workspace = true }
+ariel-os-hal = { workspace = true, features = ["external-interrupts"] }
 defmt = { workspace = true, optional = true }
 
 [target.'cfg(context = "cortex-m")'.dependencies]
@@ -19,6 +19,8 @@ esp-hal = { workspace = true }
 
 [features]
 defmt = ["dep:defmt"]
+## Enables support for the low-power modes.
+lp-modes = []
 
 [lints]
 workspace = true

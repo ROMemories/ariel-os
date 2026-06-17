@@ -7,10 +7,16 @@ use ariel_os::{
     log::*,
 };
 
+#[cfg(context = "esp")]
 ariel_os::hal::define_peripherals!(Peripherals {
     pin: GPIO0,
     led: GPIO1,
-    rtc: LPWR,
+});
+
+#[cfg(context = "stm32u083c-dk")]
+ariel_os::hal::define_peripherals!(Peripherals {
+    pin: PA0,
+    led: PC13,
 });
 
 #[ariel_os::task(autostart, peripherals)]
@@ -27,7 +33,9 @@ async fn main(mut p: Peripherals) {
         led.toggle();
         ariel_os::time::Timer::after_millis(200).await;
 
-        let input = ariel_os::gpio::Input::new(p.pin.reborrow(), ariel_os::gpio::Pull::Up);
+        let input = ariel_os::gpio::Input::builder(p.pin.reborrow(), ariel_os::gpio::Pull::Up)
+            .build_with_interrupt()
+            .unwrap();
 
         let mut wakeup = ariel_os::power::StopWakeupInterrupts::default();
         wakeup.gpio = Some((input, ariel_os::power::GpioWakeupTrigger::Low));

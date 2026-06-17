@@ -111,8 +111,14 @@ pub struct IntEnabledInput<'a> {
 }
 
 #[cfg(feature = "external-interrupts")]
-impl IntEnabledInput<'_> {
+impl<'a> IntEnabledInput<'a> {
     inner_impl_input_methods!(input);
+
+    #[doc(hidden)]
+    #[must_use]
+    pub fn into_hal_input(self) -> HalIntEnabledInput<'a> {
+        self.input
+    }
 
     /// Asynchronously waits until the input level is high.
     /// Returns immediately if it is already high.

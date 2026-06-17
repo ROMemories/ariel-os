@@ -2,6 +2,8 @@
 
 #![expect(unsafe_code)]
 
+use ariel_os_embassy_common::power::GpioWakeupTrigger;
+
 /// Interrupts allowed to trigger a wake-up from standby mode.
 #[derive(Debug, Default)]
 pub struct WakeupInterrupts {
@@ -13,7 +15,9 @@ pub struct WakeupInterrupts {
 }
 
 #[doc(hidden)]
-pub fn enter_stop_mode() {
+pub fn enter_stop_mode(
+    gpio_wakeup: Option<(embassy_stm32::exti::ExtiInput<'_>, GpioWakeupTrigger)>,
+) {
     // NOTE: a critical section is used for atomicity.
     critical_section::with(|_| {
         // TODO: use the Shutdown mode when `stm32-metapac` supports it.
