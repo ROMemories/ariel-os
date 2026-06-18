@@ -40,7 +40,7 @@ pub struct StopWakeupInterrupts<'i> {
 #[cfg(feature = "lp-modes")]
 pub fn enter_stop_mode(wakeup: StopWakeupInterrupts<'_>) {
     match wakeup {
-        StopWakeupInterrupts { gpio: Some(gpio) } => {
+        StopWakeupInterrupts { gpio: Some(mut gpio) } => {
             ariel_os_hal::hal::power::enter_stop_mode(Some((gpio.0.into_hal_input(), gpio.1)))
         }
         StopWakeupInterrupts { gpio: None } => ariel_os_hal::hal::power::enter_stop_mode(None),

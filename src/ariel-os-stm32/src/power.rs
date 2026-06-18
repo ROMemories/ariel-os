@@ -16,7 +16,7 @@ pub struct WakeupInterrupts {
 
 #[doc(hidden)]
 pub fn enter_stop_mode(
-    gpio_wakeup: Option<(embassy_stm32::exti::ExtiInput<'_>, GpioWakeupTrigger)>,
+    gpio_wakeup: Option<(&mut embassy_stm32::exti::ExtiInput<'_>, GpioWakeupTrigger)>,
 ) {
     // NOTE: a critical section is used for atomicity.
     critical_section::with(|_| {
@@ -118,11 +118,11 @@ pub fn enter_stop_mode(
         }
 
         // SAFETY: the peripherals are obtained and used inside a single critical section.
-        let mut p = unsafe { cortex_m::Peripherals::steal() };
-        p.SCB.set_sleepdeep();
+        // let mut p = unsafe { cortex_m::Peripherals::steal() };
+        // p.SCB.set_sleepdeep();
     });
 
-    cortex_m::asm::wfi();
+    // cortex_m::asm::wfi();
 }
 
 #[doc(hidden)]

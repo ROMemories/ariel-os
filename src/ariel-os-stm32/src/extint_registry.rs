@@ -108,4 +108,10 @@ impl ExtIntRegistry {
 
         Ok(ch)
     }
+
+    pub unsafe fn release_interrupt_channel(&self, ch_number: u8) {
+        self
+            .used_interrupt_channels
+            .bit_clear(ch_number, Ordering::Relaxed);
+    }
 }
