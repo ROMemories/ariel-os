@@ -82,7 +82,7 @@ pub fn enter_stop_mode(
             any(context = "stm32u073kc", context = "stm32u083mc") => {
                 use embassy_stm32::pac::pwr::vals::Lpms;
 
-                embassy_stm32::pac::PWR.cr1().modify(|w| w.set_lpms(Lpms::STOP2));
+                embassy_stm32::pac::PWR.cr1().modify(|w| w.set_lpms(Lpms::STOP0));
             }
             // STM32U5: Table 104 of RM0503 Rev 6.
             context = "stm32u585ai" => {
@@ -147,6 +147,7 @@ pub fn enter_stop_mode(
         EXTI.rtsr(0).modify(|w| w.set_line(pin, rising));
         EXTI.ftsr(0).modify(|w| w.set_line(pin, falling));
 
+        // Clear pending events.
         {
             EXTI.rpr(0).write(|w| w.set_line(pin, true));
             EXTI.fpr(0).write(|w| w.set_line(pin, true));
@@ -155,8 +156,19 @@ pub fn enter_stop_mode(
         cpu_regs().imr(0).modify(|w| w.set_line(pin, true));
     });
 
+    embassy_stm32::pac::RCC.cfgr().modify(|w| w.set_stopwuck(true));
+
+    critical_section::with(|_| {
+        let mut p = unsafe { cortex_m::Peripherals::steal() };
+        p.SYST.disable_interrupt();
+    });
+
     cortex_m::asm::wfi();
 
+    critical_section::with(|_| {
+        let mut p = unsafe { cortex_m::Peripherals::steal() };
+        p.SCB.clear_sleepdeep();
+    });
     // FIXME: reconfigure clocks.
 
     // if let Some(fut) = fut {

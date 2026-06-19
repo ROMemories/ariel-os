@@ -311,7 +311,7 @@ fn rcc_config() -> embassy_stm32::rcc::Config {
         rcc.mux.spi123sel = mux::Saisel::PLL1_Q; // Reset value
     }
 
-    #[cfg(any(context = "stm32u073kc", context = "stm32u083mc"))]
+    #[cfg(context = "stm32u073kc")]
     {
         use embassy_stm32::rcc::*;
 
@@ -320,6 +320,36 @@ fn rcc_config() -> embassy_stm32::rcc::Config {
         }); // needed for USB
         // No HSE fitted on the stm32u083c-dk board
         rcc.hsi = true;
+        rcc.sys = Sysclk::PLL1_R;
+        rcc.pll = Some(Pll {
+            source: PllSource::HSI,
+            prediv: PllPreDiv::DIV1,
+            mul: PllMul::MUL7,
+            divp: None,
+            divq: None,
+            divr: Some(PllRDiv::DIV2), // sysclk 56Mhz
+        });
+        rcc.mux.clk48sel = mux::Clk48sel::HSI48;
+    }
+
+    #[cfg(context = "stm32u083c-dk")]
+    {
+        use embassy_stm32::rcc::*;
+
+        rcc.hsi48 = Some(Hsi48Config {
+            sync_from_usb: true,
+        }); // needed for USB
+        // rcc.msi = Some(MSIRange::RANGE1M);
+        // No HSE fitted on the stm32u083c-dk board
+        rcc.hsi = true;
+        rcc.ls = LsConfig {
+            rtc: RtcClockSource::LSI,
+            lsi: true,
+            lse: Some(LseConfig {
+                frequency: embassy_stm32::time::Hertz(32_768),
+                mode: LseMode::Oscillator(LseDrive::MediumHigh),
+            }),
+        };
         rcc.sys = Sysclk::PLL1_R;
         rcc.pll = Some(Pll {
             source: PllSource::HSI,
