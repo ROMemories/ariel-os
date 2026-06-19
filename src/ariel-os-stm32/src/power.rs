@@ -18,6 +18,8 @@ pub struct WakeupInterrupts {
 pub fn enter_stop_mode(
     gpio_wakeup: Option<(&mut embassy_stm32::exti::ExtiInput<'_>, GpioWakeupTrigger)>,
 ) {
+    // let fut = gpio_wakeup.map(|w| w.0.wait_for_falling_edge());
+
     // NOTE: a critical section is used for atomicity.
     critical_section::with(|_| {
         // TODO: use the Shutdown mode when `stm32-metapac` supports it.
@@ -118,11 +120,48 @@ pub fn enter_stop_mode(
         }
 
         // SAFETY: the peripherals are obtained and used inside a single critical section.
-        // let mut p = unsafe { cortex_m::Peripherals::steal() };
-        // p.SCB.set_sleepdeep();
+        let mut p = unsafe { cortex_m::Peripherals::steal() };
+        p.SCB.set_sleepdeep();
     });
 
-    // cortex_m::asm::wfi();
+    // PC2
+    let port = 2;
+    let pin = 2;
+
+    let rising = false;
+    let falling = true;
+
+    use embassy_stm32::pac::EXTI;
+
+    fn cpu_regs() -> embassy_stm32::pac::exti::Exti {
+        EXTI
+    }
+
+    fn exticr_regs() -> embassy_stm32::pac::exti::Exti {
+        EXTI
+    }
+
+    critical_section::with(|_| {
+        let pin = pin as usize;
+        exticr_regs().exticr(pin / 4).modify(|w| w.set_exti(pin % 4, port));
+        EXTI.rtsr(0).modify(|w| w.set_line(pin, rising));
+        EXTI.ftsr(0).modify(|w| w.set_line(pin, falling));
+
+        {
+            EXTI.rpr(0).write(|w| w.set_line(pin, true));
+            EXTI.fpr(0).write(|w| w.set_line(pin, true));
+        }
+
+        cpu_regs().imr(0).modify(|w| w.set_line(pin, true));
+    });
+
+    cortex_m::asm::wfi();
+
+    // FIXME: reconfigure clocks.
+
+    // if let Some(fut) = fut {
+    //     embassy_futures::block_on(fut);
+    // }
 }
 
 #[doc(hidden)]

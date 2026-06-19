@@ -15,7 +15,7 @@ ariel_os::hal::define_peripherals!(Peripherals {
 
 #[cfg(context = "stm32u083c-dk")]
 ariel_os::hal::define_peripherals!(Peripherals {
-    pin: PA0,
+    pin: PC2,
     led: PC13,
 });
 
@@ -23,9 +23,13 @@ ariel_os::hal::define_peripherals!(Peripherals {
 async fn main(mut p: Peripherals) {
     let mut led = ariel_os::gpio::Output::new(p.led, ariel_os::gpio::Level::High);
 
+    let mut input = ariel_os::gpio::Input::builder(p.pin.reborrow(), ariel_os::gpio::Pull::Up)
+        .build_with_interrupt()
+        .unwrap();
+
     ariel_os::time::Timer::after_secs(2).await;
 
-    loop {
+    // loop {
         info!("Hello World!");
 
         led.toggle();
@@ -33,13 +37,17 @@ async fn main(mut p: Peripherals) {
         led.toggle();
         ariel_os::time::Timer::after_millis(200).await;
 
-        let input = ariel_os::gpio::Input::builder(p.pin.reborrow(), ariel_os::gpio::Pull::Up)
-            .build_with_interrupt()
-            .unwrap();
-
         let mut wakeup = ariel_os::power::StopWakeupInterrupts::default();
         wakeup.gpio = Some((input, ariel_os::power::GpioWakeupTrigger::Low));
         ariel_os::power::enter_stop_mode(wakeup);
+    // }
+
+        info!("Woke up");
+    for _ in 0..2 {
+        led.toggle();
+        ariel_os::time::Timer::after_millis(200).await;
+        led.toggle();
+        ariel_os::time::Timer::after_millis(200).await;
     }
 
     exit(ExitCode::SUCCESS);

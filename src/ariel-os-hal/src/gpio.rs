@@ -108,7 +108,6 @@ impl<'a> embedded_hal::digital::ErrorType for Input<'a> {
 #[cfg(feature = "external-interrupts")]
 pub struct IntEnabledInput<'a> {
     input: HalIntEnabledInput<'a>,
-    pin_number: u8,
 }
 
 #[cfg(feature = "external-interrupts")]
@@ -146,12 +145,6 @@ impl<'a> IntEnabledInput<'a> {
     /// Asynchronously waits for the input level to transition from one level to the other.
     pub async fn wait_for_any_edge(&mut self) {
         self.input.wait_for_any_edge().await;
-    }
-}
-
-impl Drop for IntEnabledInput<'_> {
-    fn drop(&mut self) {
-        unsafe { hal::gpio::input::int_enabled_input_dropped(&mut self.input); }
     }
 }
 
@@ -328,7 +321,7 @@ pub mod input {
             let pin = self.pin.into_hal_peripheral();
             let input = hal::gpio::input::new_int_enabled(pin, self.pull, self.schmitt_trigger)?;
 
-            Ok(IntEnabledInput { input, pin_number })
+            Ok(IntEnabledInput { input })
         }
     }
 }

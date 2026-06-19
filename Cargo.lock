@@ -461,7 +461,7 @@ dependencies = [
  "ariel-os-embassy-common",
  "ariel-os-hal",
  "cortex-m",
- "defmt 1.0.1",
+ "defmt 1.1.0",
  "esp-hal",
 ]
 
@@ -662,6 +662,7 @@ dependencies = [
  "defmt 1.1.0",
  "embassy-embedded-hal 0.6.0",
  "embassy-executor",
+ "embassy-futures",
  "embassy-stm32 0.6.0",
  "embedded-hal-async",
  "embedded-io-async 0.7.0",

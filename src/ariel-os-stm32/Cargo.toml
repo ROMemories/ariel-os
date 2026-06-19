@@ -18,6 +18,7 @@ embassy-embedded-hal = { workspace = true, optional = true }
 embassy-executor = { workspace = true, default-features = false, features = [
   "platform-cortex-m",
 ] }
+embassy-futures = { workspace = true }
 embassy-stm32 = { workspace = true, default-features = false, features = [
   "memory-x",
   "optfield",

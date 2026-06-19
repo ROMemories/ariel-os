@@ -43,11 +43,6 @@ pub mod input {
 
     ariel_os_embassy_common::define_from_pull!();
     ariel_os_embassy_common::define_into_level!();
-
-    #[doc(hidden)]
-    pub unsafe fn int_enabled_input_dropped(input: &mut IntEnabledInput<'_>) {
-        unsafe { crate::extint_registry::EXTINT_REGISTRY.release_interrupt_channel(input.ch_number); }
-    }
 }
 
 pub mod output {
