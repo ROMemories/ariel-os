@@ -153,6 +153,7 @@ pub fn enter_stop_mode(
             EXTI.fpr(0).write(|w| w.set_line(pin, true));
         }
 
+        cpu_regs().emr(0).modify(|w| w.set_line(pin, true));
         cpu_regs().imr(0).modify(|w| w.set_line(pin, true));
     });
 
@@ -163,7 +164,9 @@ pub fn enter_stop_mode(
         p.SYST.disable_interrupt();
     });
 
-    cortex_m::asm::wfi();
+    cortex_m::asm::sev();
+    cortex_m::asm::wfe();
+    cortex_m::asm::wfe();
 
     critical_section::with(|_| {
         let mut p = unsafe { cortex_m::Peripherals::steal() };
