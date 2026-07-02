@@ -82,7 +82,7 @@ pub fn enter_stop_mode(
             any(context = "stm32u073kc", context = "stm32u083mc") => {
                 use embassy_stm32::pac::pwr::vals::Lpms;
 
-                embassy_stm32::pac::PWR.cr1().modify(|w| w.set_lpms(Lpms::STOP0));
+                embassy_stm32::pac::PWR.cr1().modify(|w| w.set_lpms(Lpms::STOP2));
             }
             // STM32U5: Table 104 of RM0503 Rev 6.
             context = "stm32u585ai" => {
