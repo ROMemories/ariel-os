@@ -154,15 +154,17 @@ pub fn enter_stop_mode(
         }
 
         cpu_regs().emr(0).modify(|w| w.set_line(pin, true));
-        cpu_regs().imr(0).modify(|w| w.set_line(pin, true));
     });
 
     embassy_stm32::pac::RCC.cfgr().modify(|w| w.set_stopwuck(true));
 
+    // TODO: is this needed?
     critical_section::with(|_| {
         let mut p = unsafe { cortex_m::Peripherals::steal() };
         p.SYST.disable_interrupt();
     });
+
+    // FIXME: loop and check the event.
 
     cortex_m::asm::sev();
     cortex_m::asm::wfe();
