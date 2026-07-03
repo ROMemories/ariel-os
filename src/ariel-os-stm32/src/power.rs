@@ -141,6 +141,13 @@ pub fn enter_stop_mode(
         EXTI
     }
 
+    {
+        use embassy_stm32::interrupt::typelevel::Interrupt as _;
+        embassy_stm32::interrupt::typelevel::EXTI0_1::disable();
+        embassy_stm32::interrupt::typelevel::EXTI2_3::disable();
+        embassy_stm32::interrupt::typelevel::EXTI4_15::disable();
+    }
+
     critical_section::with(|_| {
         let pin = pin as usize;
         exticr_regs().exticr(pin / 4).modify(|w| w.set_exti(pin % 4, port));
@@ -154,6 +161,7 @@ pub fn enter_stop_mode(
         }
 
         cpu_regs().emr(0).modify(|w| w.set_line(pin, true));
+        cpu_regs().imr(0).modify(|w| w.set_line(pin, false));
     });
 
     embassy_stm32::pac::RCC.cfgr().modify(|w| w.set_stopwuck(true));
@@ -166,15 +174,25 @@ pub fn enter_stop_mode(
 
     // FIXME: loop and check the event.
 
-    cortex_m::asm::sev();
-    cortex_m::asm::wfe();
-    cortex_m::asm::wfe();
+    loop {
+        // https://github.com/STMicroelectronics/stm32u0xx-hal-driver/blob/b2df6792633348d41cc549609a8611098c0e3798/Src/stm32u0xx_hal_pwr_ex.c#L431-L433
+        cortex_m::asm::sev();
+        cortex_m::asm::wfe();
+        cortex_m::asm::wfe();
+
+        // if lines.line(pin) {
+            break;
+        // }
+    }
 
     critical_section::with(|_| {
         let mut p = unsafe { cortex_m::Peripherals::steal() };
         p.SCB.clear_sleepdeep();
     });
     // FIXME: reconfigure clocks.
+
+        let lines = EXTI.fpr(0).read();
+        ariel_os_log::info!("Lines: {:?}", lines);
 
     // if let Some(fut) = fut {
     //     embassy_futures::block_on(fut);
