@@ -128,9 +128,6 @@ pub fn enter_stop_mode(
     let port = 2;
     let pin = 2;
 
-    let rising = false;
-    let falling = true;
-
     use embassy_stm32::pac::EXTI;
 
     fn cpu_regs() -> embassy_stm32::pac::exti::Exti {
@@ -148,21 +145,29 @@ pub fn enter_stop_mode(
         embassy_stm32::interrupt::typelevel::EXTI4_15::disable();
     }
 
-    critical_section::with(|_| {
-        let pin = pin as usize;
-        exticr_regs().exticr(pin / 4).modify(|w| w.set_exti(pin % 4, port));
-        EXTI.rtsr(0).modify(|w| w.set_line(pin, rising));
-        EXTI.ftsr(0).modify(|w| w.set_line(pin, falling));
+    if let Some(gpio_wakeup) = gpio_wakeup {
+        // FIXME: these should be on edges, not states.
+        let (rising, falling) = match gpio_wakeup.1 {
+            GpioWakeupTrigger::Low => (false, true),
+            GpioWakeupTrigger::High => (true, false),
+        };
 
-        // Clear pending events.
-        {
-            EXTI.rpr(0).write(|w| w.set_line(pin, true));
-            EXTI.fpr(0).write(|w| w.set_line(pin, true));
-        }
+        critical_section::with(|_| {
+            let pin = pin as usize;
+            exticr_regs().exticr(pin / 4).modify(|w| w.set_exti(pin % 4, port));
+            EXTI.rtsr(0).modify(|w| w.set_line(pin, rising));
+            EXTI.ftsr(0).modify(|w| w.set_line(pin, falling));
 
-        cpu_regs().emr(0).modify(|w| w.set_line(pin, true));
-        cpu_regs().imr(0).modify(|w| w.set_line(pin, false));
-    });
+            // Clear pending events.
+            {
+                EXTI.rpr(0).write(|w| w.set_line(pin, true));
+                EXTI.fpr(0).write(|w| w.set_line(pin, true));
+            }
+
+            cpu_regs().emr(0).modify(|w| w.set_line(pin, true));
+            cpu_regs().imr(0).modify(|w| w.set_line(pin, false));
+        });
+    }
 
     embassy_stm32::pac::RCC.cfgr().modify(|w| w.set_stopwuck(true));
 
