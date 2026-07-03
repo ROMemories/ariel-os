@@ -18,8 +18,6 @@ pub struct WakeupInterrupts {
 pub fn enter_stop_mode(
     gpio_wakeup: Option<(&mut embassy_stm32::exti::ExtiInput<'_>, GpioWakeupTrigger)>,
 ) {
-    // let fut = gpio_wakeup.map(|w| w.0.wait_for_falling_edge());
-
     // NOTE: a critical section is used for atomicity.
     critical_section::with(|_| {
         // TODO: use the Shutdown mode when `stm32-metapac` supports it.
