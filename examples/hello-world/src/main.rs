@@ -23,9 +23,9 @@ ariel_os::hal::define_peripherals!(Peripherals {
 async fn main(mut p: Peripherals) {
     let mut led = ariel_os::gpio::Output::new(p.led, ariel_os::gpio::Level::High);
 
-    let mut input = ariel_os::gpio::Input::builder(p.pin.reborrow(), ariel_os::gpio::Pull::Up)
-        .build_with_interrupt()
-        .unwrap();
+    let mut input = ariel_os::gpio::Input::new(p.pin.reborrow(), ariel_os::gpio::Pull::Up);
+        // .build_with_interrupt()
+    //     .unwrap();
 
     ariel_os::time::Timer::after_secs(2).await;
 

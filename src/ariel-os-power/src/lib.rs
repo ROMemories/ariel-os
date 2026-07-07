@@ -16,7 +16,7 @@ use ariel_os_hal::hal::power::WakeupInterrupts;
 pub struct StopWakeupInterrupts<'i> {
     /// Whether to allow waking up on external interrupts (these may be limited to a specific set
     /// of pins).
-    pub gpio: Option<(ariel_os_hal::gpio::IntEnabledInput<'i>, GpioWakeupTrigger)>,
+    pub gpio: Option<(ariel_os_hal::gpio::Input<'i>, GpioWakeupTrigger)>,
 }
 
 /// Enters stop mode.
@@ -41,7 +41,7 @@ pub struct StopWakeupInterrupts<'i> {
 pub fn enter_stop_mode(wakeup: StopWakeupInterrupts<'_>) {
     match wakeup {
         StopWakeupInterrupts { gpio: Some(mut gpio) } => {
-            ariel_os_hal::hal::power::enter_stop_mode(Some((gpio.0.into_hal_input(), gpio.1)))
+            ariel_os_hal::hal::power::enter_stop_mode(Some((&mut gpio.0.into_hal_input(), gpio.1)))
         }
         StopWakeupInterrupts { gpio: None } => ariel_os_hal::hal::power::enter_stop_mode(None),
     }
