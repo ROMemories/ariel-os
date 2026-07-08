@@ -21,7 +21,7 @@ pub struct WakeupInterrupts {
 
 #[doc(hidden)]
 pub fn enter_stop_mode<'a, T: crate::IntoPeripheral<'a, P>, P: embassy_stm32::gpio::Pin>(
-    gpio_wakeup: Option<(T, GpioWakeupTrigger)>,
+    gpio_wakeup: Option<(T, ariel_os_embassy_common::gpio::Pull, GpioWakeupTrigger)>,
 ) {
     // NOTE: a critical section is used for atomicity.
     critical_section::with(|_| {
@@ -127,7 +127,7 @@ pub fn enter_stop_mode<'a, T: crate::IntoPeripheral<'a, P>, P: embassy_stm32::gp
         p.SCB.set_sleepdeep();
     });
 
-    let gpio_wakeup_trigger = gpio_wakeup.as_ref().map(|w| w.1);
+    let gpio_wakeup_trigger = gpio_wakeup.as_ref().map(|w| w.2);
 
     // FIXME: set the proper pull value.
     let input = gpio_wakeup.map(|w| {
@@ -135,11 +135,7 @@ pub fn enter_stop_mode<'a, T: crate::IntoPeripheral<'a, P>, P: embassy_stm32::gp
         let port = p.port();
         let pin = p.pin();
 
-        (
-            crate::gpio::input::new(p, ariel_os_embassy_common::gpio::Pull::None, false),
-            port,
-            pin,
-        )
+        (crate::gpio::input::new(p, w.1, false), port, pin)
     });
 
     use embassy_stm32::pac::EXTI;

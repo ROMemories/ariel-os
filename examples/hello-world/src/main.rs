@@ -1,7 +1,7 @@
 #![no_main]
 #![no_std]
 
-use ariel_os::{hal::peripherals, log::*};
+use ariel_os::{gpio::Pull, hal::peripherals, log::*};
 
 #[cfg(context = "esp")]
 ariel_os::hal::define_peripherals!(Peripherals {
@@ -33,8 +33,7 @@ async fn main(mut p: Peripherals) {
 
         let mut wakeup = ariel_os::power::StopWakeupInterrupts::new();
         let pin = p.pin.reborrow();
-        // FIXME: needs pull resistor.
-        wakeup.gpio = Some((pin, ariel_os::power::GpioWakeupTrigger::Low));
+        wakeup.gpio = Some((pin, Pull::Up, ariel_os::power::GpioWakeupTrigger::Low));
         ariel_os::power::enter_stop_mode(wakeup);
     }
 }

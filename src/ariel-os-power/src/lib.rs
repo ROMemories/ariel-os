@@ -19,7 +19,7 @@ pub struct StopWakeupInterrupts<
 > {
     /// Whether to allow waking up on external interrupts (these may be limited to a specific set
     /// of pins).
-    pub gpio: Option<(T, GpioWakeupTrigger)>,
+    pub gpio: Option<(T, ariel_os_hal::gpio::Pull, GpioWakeupTrigger)>,
     pub(crate) _phantom: core::marker::PhantomData<&'a P>,
 }
 
@@ -63,12 +63,7 @@ pub fn enter_stop_mode<
     wakeup: StopWakeupInterrupts<'a, T, P>,
 ) {
     match wakeup {
-        StopWakeupInterrupts {
-            gpio: Some(gpio), ..
-        } => ariel_os_hal::hal::power::enter_stop_mode(Some((gpio.0, gpio.1))),
-        StopWakeupInterrupts { gpio: None, .. } => {
-            ariel_os_hal::hal::power::enter_stop_mode::<'_, T, _>(None)
-        }
+        StopWakeupInterrupts { gpio, .. } => ariel_os_hal::hal::power::enter_stop_mode(gpio),
     }
 }
 
