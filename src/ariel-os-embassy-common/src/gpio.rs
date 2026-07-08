@@ -71,7 +71,7 @@ pub enum Pull {
 macro_rules! define_from_pull {
     () => {
         // The returned `Pull` is the HAL-specific type.
-        fn from_pull(pull: $crate::gpio::Pull) -> Pull {
+        pub(crate) fn from_pull(pull: $crate::gpio::Pull) -> Pull {
             match pull {
                 $crate::gpio::Pull::None => Pull::None,
                 $crate::gpio::Pull::Up => Pull::Up,

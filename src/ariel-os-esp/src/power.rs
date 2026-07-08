@@ -4,6 +4,8 @@
 
 use ariel_os_embassy_common::power::GpioWakeupTrigger;
 
+pub use esp_hal::gpio::InputPin as Pin;
+
 /// Interrupts allowed to trigger a wake-up from standby mode.
 #[derive(Debug, Default)]
 pub struct WakeupInterrupts {
@@ -13,15 +15,22 @@ pub struct WakeupInterrupts {
 }
 
 #[doc(hidden)]
-pub fn enter_stop_mode(gpio_wakeup: Option<(esp_hal::gpio::Input<'_>, GpioWakeupTrigger)>) {
-    if let Some(mut gpio_wakeup) = gpio_wakeup {
-        let event = match gpio_wakeup.1 {
+pub fn enter_stop_mode<'a, T: crate::IntoPeripheral<'a, P>, P: esp_hal::gpio::InputPin>(
+    gpio_wakeup: Option<(T, ariel_os_embassy_common::gpio::Pull, GpioWakeupTrigger)>,
+) {
+    let input = gpio_wakeup.map(|w| {
+        let event = match w.2 {
             GpioWakeupTrigger::Low => esp_hal::gpio::WakeEvent::LowLevel,
             GpioWakeupTrigger::High => esp_hal::gpio::WakeEvent::HighLevel,
         };
 
-        gpio_wakeup.0.wakeup_enable(true, event).unwrap();
-    }
+        let config =
+            esp_hal::gpio::InputConfig::default().with_pull(crate::gpio::input::from_pull(w.1));
+        let mut input = esp_hal::gpio::Input::new(w.0.into_hal_peripheral(), config);
+        input.wakeup_enable(true, event).unwrap();
+
+        input
+    });
 
     let wakeup_source = esp_hal::rtc_cntl::sleep::GpioWakeupSource::new();
 
@@ -31,6 +40,8 @@ pub fn enter_stop_mode(gpio_wakeup: Option<(esp_hal::gpio::Input<'_>, GpioWakeup
         let mut rtc = esp_hal::rtc_cntl::Rtc::new(lpwr);
         rtc.sleep_light(&[&wakeup_source]);
     });
+
+    drop(input);
 }
 
 #[doc(hidden)]
