@@ -164,7 +164,10 @@ pub fn enter_stop_mode(
                 EXTI.fpr(0).write(|w| w.set_line(pin, true));
             }
 
+            // Enabling *event* generation is necessary to wake-up from WFE.
             cpu_regs().emr(0).modify(|w| w.set_line(pin, true));
+            // Enabling *interrupt* generation is necessary so that the interrupt flags are set, so
+            // we can check which event woke us up after WFE completes.
             cpu_regs().imr(0).modify(|w| w.set_line(pin, true));
         });
     }
@@ -213,11 +216,8 @@ pub fn enter_stop_mode(
         let mut p = unsafe { cortex_m::Peripherals::steal() };
         p.SCB.clear_sleepdeep();
     });
-    // FIXME: reconfigure clocks.
 
-    // if let Some(fut) = fut {
-    //     embassy_futures::block_on(fut);
-    // }
+    // FIXME: reconfigure clocks.
 }
 
 #[doc(hidden)]
