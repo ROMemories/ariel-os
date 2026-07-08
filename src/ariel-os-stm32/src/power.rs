@@ -143,7 +143,7 @@ pub fn enter_stop_mode(
         embassy_stm32::interrupt::typelevel::EXTI4_15::disable();
     }
 
-    if let Some(gpio_wakeup) = gpio_wakeup {
+    if let Some(gpio_wakeup) = &gpio_wakeup {
         // FIXME: these should be on edges, not states.
         let (rising, falling) = match gpio_wakeup.1 {
             GpioWakeupTrigger::Low => (false, true),
@@ -163,7 +163,7 @@ pub fn enter_stop_mode(
             }
 
             cpu_regs().emr(0).modify(|w| w.set_line(pin, true));
-            cpu_regs().imr(0).modify(|w| w.set_line(pin, false));
+            cpu_regs().imr(0).modify(|w| w.set_line(pin, true));
         });
     }
 
@@ -175,7 +175,7 @@ pub fn enter_stop_mode(
         p.SYST.disable_interrupt();
     });
 
-    // FIXME: loop and check the event.
+    let mut lines;
 
     loop {
         // https://github.com/STMicroelectronics/stm32u0xx-hal-driver/blob/b2df6792633348d41cc549609a8611098c0e3798/Src/stm32u0xx_hal_pwr_ex.c#L431-L433
@@ -183,9 +183,24 @@ pub fn enter_stop_mode(
         cortex_m::asm::wfe();
         cortex_m::asm::wfe();
 
-        // if lines.line(pin) {
-            break;
-        // }
+        if let Some(gpio_wakeup) = &gpio_wakeup {
+            // FIXME: these should be on edges, not states.
+            lines = match gpio_wakeup.1 {
+                GpioWakeupTrigger::Low => EXTI.fpr(0).read(),
+                GpioWakeupTrigger::High => EXTI.rpr(0).read(),
+            };
+
+            if lines.line(pin) {
+                break;
+            }
+        }
+    }
+
+    // Clear the interrupt flags of GPIO lines.
+    {
+        let bits = lines.0 & 0x0000_ffff;
+        EXTI.rpr(0).write_value(embassy_stm32::pac::exti::regs::Lines(bits));
+        EXTI.fpr(0).write_value(embassy_stm32::pac::exti::regs::Lines(bits));
     }
 
     critical_section::with(|_| {
@@ -193,9 +208,6 @@ pub fn enter_stop_mode(
         p.SCB.clear_sleepdeep();
     });
     // FIXME: reconfigure clocks.
-
-        let lines = EXTI.fpr(0).read();
-        ariel_os_log::info!("Lines: {:?}", lines);
 
     // if let Some(fut) = fut {
     //     embassy_futures::block_on(fut);
