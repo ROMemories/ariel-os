@@ -24,25 +24,25 @@ async fn main(mut p: Peripherals) {
     let mut led = ariel_os::gpio::Output::new(p.led, ariel_os::gpio::Level::High);
 
     let mut input = ariel_os::gpio::Input::new(p.pin.reborrow(), ariel_os::gpio::Pull::Up);
-        // .build_with_interrupt()
+    // .build_with_interrupt()
     //     .unwrap();
 
     ariel_os::time::Timer::after_secs(2).await;
 
     // loop {
-        info!("Hello World!");
+    info!("Hello World!");
 
-        led.toggle();
-        ariel_os::time::Timer::after_millis(200).await;
-        led.toggle();
-        ariel_os::time::Timer::after_millis(200).await;
+    led.toggle();
+    ariel_os::time::Timer::after_millis(200).await;
+    led.toggle();
+    ariel_os::time::Timer::after_millis(200).await;
 
-        let mut wakeup = ariel_os::power::StopWakeupInterrupts::default();
-        wakeup.gpio = Some((input, ariel_os::power::GpioWakeupTrigger::Low));
-        ariel_os::power::enter_stop_mode(wakeup);
+    let mut wakeup = ariel_os::power::StopWakeupInterrupts::default();
+    wakeup.gpio = Some((input, ariel_os::power::GpioWakeupTrigger::Low));
+    ariel_os::power::enter_stop_mode(wakeup);
     // }
 
-        info!("Woke up");
+    info!("Woke up");
     for _ in 0..2 {
         led.toggle();
         ariel_os::time::Timer::after_millis(200).await;

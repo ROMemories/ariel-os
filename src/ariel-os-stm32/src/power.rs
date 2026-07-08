@@ -152,7 +152,9 @@ pub fn enter_stop_mode(
 
         critical_section::with(|_| {
             let pin = pin as usize;
-            exticr_regs().exticr(pin / 4).modify(|w| w.set_exti(pin % 4, port));
+            exticr_regs()
+                .exticr(pin / 4)
+                .modify(|w| w.set_exti(pin % 4, port));
             EXTI.rtsr(0).modify(|w| w.set_line(pin, rising));
             EXTI.ftsr(0).modify(|w| w.set_line(pin, falling));
 
@@ -167,7 +169,9 @@ pub fn enter_stop_mode(
         });
     }
 
-    embassy_stm32::pac::RCC.cfgr().modify(|w| w.set_stopwuck(true));
+    embassy_stm32::pac::RCC
+        .cfgr()
+        .modify(|w| w.set_stopwuck(true));
 
     // TODO: is this needed?
     critical_section::with(|_| {
@@ -199,8 +203,10 @@ pub fn enter_stop_mode(
     // Clear the interrupt flags of GPIO lines.
     {
         let bits = lines.0 & 0x0000_ffff;
-        EXTI.rpr(0).write_value(embassy_stm32::pac::exti::regs::Lines(bits));
-        EXTI.fpr(0).write_value(embassy_stm32::pac::exti::regs::Lines(bits));
+        EXTI.rpr(0)
+            .write_value(embassy_stm32::pac::exti::regs::Lines(bits));
+        EXTI.fpr(0)
+            .write_value(embassy_stm32::pac::exti::regs::Lines(bits));
     }
 
     critical_section::with(|_| {
