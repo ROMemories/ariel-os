@@ -1,11 +1,7 @@
 #![no_main]
 #![no_std]
 
-use ariel_os::{
-    debug::{ExitCode, exit},
-    hal::peripherals,
-    log::*,
-};
+use ariel_os::{hal::peripherals, log::*};
 
 #[cfg(context = "esp")]
 ariel_os::hal::define_peripherals!(Peripherals {
@@ -22,9 +18,6 @@ ariel_os::hal::define_peripherals!(Peripherals {
 #[ariel_os::task(autostart, peripherals)]
 async fn main(mut p: Peripherals) {
     let mut led = ariel_os::gpio::Output::new(p.led, ariel_os::gpio::Level::High);
-
-    // .build_with_interrupt()
-    //     .unwrap();
 
     ariel_os::time::Timer::after_secs(2).await;
 
@@ -44,6 +37,4 @@ async fn main(mut p: Peripherals) {
         wakeup.gpio = Some((pin, ariel_os::power::GpioWakeupTrigger::Low));
         ariel_os::power::enter_stop_mode(wakeup);
     }
-
-    exit(ExitCode::SUCCESS);
 }

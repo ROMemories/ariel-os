@@ -64,8 +64,7 @@ pub fn enter_stop_mode<
 ) {
     match wakeup {
         StopWakeupInterrupts {
-            gpio: Some(mut gpio),
-            ..
+            gpio: Some(gpio), ..
         } => ariel_os_hal::hal::power::enter_stop_mode(Some((gpio.0, gpio.1))),
         StopWakeupInterrupts { gpio: None, .. } => {
             ariel_os_hal::hal::power::enter_stop_mode::<'_, T, _>(None)
