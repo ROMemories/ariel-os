@@ -136,13 +136,6 @@ pub fn enter_stop_mode(
         EXTI
     }
 
-    {
-        use embassy_stm32::interrupt::typelevel::Interrupt as _;
-        embassy_stm32::interrupt::typelevel::EXTI0_1::disable();
-        embassy_stm32::interrupt::typelevel::EXTI2_3::disable();
-        embassy_stm32::interrupt::typelevel::EXTI4_15::disable();
-    }
-
     if let Some(gpio_wakeup) = &gpio_wakeup {
         // FIXME: these should be on edges, not states.
         let (rising, falling) = match gpio_wakeup.1 {
@@ -182,28 +175,34 @@ pub fn enter_stop_mode(
         p.SYST.disable_interrupt();
     });
 
-    let mut lines;
+    let mut lines = embassy_stm32::pac::exti::regs::Lines(0);
 
-    loop {
-        // https://github.com/STMicroelectronics/stm32u0xx-hal-driver/blob/b2df6792633348d41cc549609a8611098c0e3798/Src/stm32u0xx_hal_pwr_ex.c#L431-L433
-        cortex_m::asm::sev();
-        cortex_m::asm::wfe();
-        cortex_m::asm::wfe();
+    critical_section::with(|_| {
+        loop {
+            // https://github.com/STMicroelectronics/stm32u0xx-hal-driver/blob/b2df6792633348d41cc549609a8611098c0e3798/Src/stm32u0xx_hal_pwr_ex.c#L431-L433
+            cortex_m::asm::sev();
+            cortex_m::asm::wfe();
+            cortex_m::asm::wfe();
 
-        if let Some(gpio_wakeup) = &gpio_wakeup {
-            // FIXME: these should be on edges, not states.
-            lines = match gpio_wakeup.1 {
-                GpioWakeupTrigger::Low => EXTI.fpr(0).read(),
-                GpioWakeupTrigger::High => EXTI.rpr(0).read(),
-            };
+            // This is done inside the critical section to be sure no ISRs can reset the interrupt
+            // flags before we read them.
+            if let Some(gpio_wakeup) = &gpio_wakeup {
+                // FIXME: these should be on edges, not states.
+                lines = match gpio_wakeup.1 {
+                    GpioWakeupTrigger::Low => EXTI.fpr(0).read(),
+                    GpioWakeupTrigger::High => EXTI.rpr(0).read(),
+                };
 
-            if lines.line(pin) {
-                break;
+                if lines.line(pin) {
+                    break;
+                }
             }
         }
-    }
+    });
 
     // Clear the interrupt flags of GPIO lines.
+    // This is done *after* the critical section so that ISRs potentially registered still have
+    // access to the flags.
     {
         let bits = lines.0 & 0x0000_ffff;
         EXTI.rpr(0)
