@@ -127,6 +127,17 @@ pub fn enter_stop_mode<'a, T: crate::IntoPeripheral<'a, P>, P: embassy_stm32::gp
         p.SCB.set_sleepdeep();
     });
 
+    let gpio_wakeup_trigger = gpio_wakeup.as_ref().map(|w| w.1);
+
+    // FIXME: set the proper pull value.
+    let input = gpio_wakeup.map(|w| {
+        crate::gpio::input::new(
+            w.0.into_hal_peripheral(),
+            ariel_os_embassy_common::gpio::Pull::None,
+            false,
+        )
+    });
+
     // PC2
     let port = 2;
     let pin = 2;
@@ -141,9 +152,9 @@ pub fn enter_stop_mode<'a, T: crate::IntoPeripheral<'a, P>, P: embassy_stm32::gp
         EXTI
     }
 
-    if let Some(gpio_wakeup) = &gpio_wakeup {
+    if let Some(gpio_wakeup_trigger) = gpio_wakeup_trigger {
         // FIXME: these should be on edges, not states.
-        let (rising, falling) = match gpio_wakeup.1 {
+        let (rising, falling) = match gpio_wakeup_trigger {
             GpioWakeupTrigger::Low => (false, true),
             GpioWakeupTrigger::High => (true, false),
         };
@@ -191,9 +202,9 @@ pub fn enter_stop_mode<'a, T: crate::IntoPeripheral<'a, P>, P: embassy_stm32::gp
 
             // This is done inside the critical section to be sure no ISRs can reset the interrupt
             // flags before we read them.
-            if let Some(gpio_wakeup) = &gpio_wakeup {
+            if let Some(gpio_wakeup_trigger) = gpio_wakeup_trigger {
                 // FIXME: these should be on edges, not states.
-                lines = match gpio_wakeup.1 {
+                lines = match gpio_wakeup_trigger {
                     GpioWakeupTrigger::Low => EXTI.fpr(0).read(),
                     GpioWakeupTrigger::High => EXTI.rpr(0).read(),
                 };
