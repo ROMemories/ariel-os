@@ -4,6 +4,11 @@
 
 use ariel_os_embassy_common::power::GpioWakeupTrigger;
 
+// TODO: might want to use `ExtiPin` instead, but requires the `exti` Cargo feature
+// pub type StopWakeupPin = embassy_stm32::gpio::Pin;
+
+pub use embassy_stm32::gpio::Pin;
+
 /// Interrupts allowed to trigger a wake-up from standby mode.
 #[derive(Debug, Default)]
 pub struct WakeupInterrupts {
@@ -15,8 +20,8 @@ pub struct WakeupInterrupts {
 }
 
 #[doc(hidden)]
-pub fn enter_stop_mode(
-    gpio_wakeup: Option<(&mut embassy_stm32::gpio::Input<'_>, GpioWakeupTrigger)>,
+pub fn enter_stop_mode<'a, T: crate::IntoPeripheral<'a, P>, P: embassy_stm32::gpio::Pin>(
+    gpio_wakeup: Option<(T, GpioWakeupTrigger)>,
 ) {
     // NOTE: a critical section is used for atomicity.
     critical_section::with(|_| {

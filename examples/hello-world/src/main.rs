@@ -38,9 +38,10 @@ async fn main(mut p: Peripherals) {
             ariel_os::time::Timer::after_millis(200).await;
         }
 
-        let mut wakeup = ariel_os::power::StopWakeupInterrupts::default();
-        let mut input = ariel_os::gpio::Input::new(p.pin.reborrow(), ariel_os::gpio::Pull::Up);
-        wakeup.gpio = Some((input, ariel_os::power::GpioWakeupTrigger::Low));
+        let mut wakeup = ariel_os::power::StopWakeupInterrupts::new();
+        // let mut input = ariel_os::gpio::Input::new(p.pin.reborrow(), ariel_os::gpio::Pull::Up);
+        // FIXME: needs pull resistor.
+        wakeup.gpio = Some((p.pin.reborrow(), ariel_os::power::GpioWakeupTrigger::Low));
         ariel_os::power::enter_stop_mode(wakeup);
     }
 

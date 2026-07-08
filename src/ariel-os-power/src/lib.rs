@@ -11,12 +11,29 @@ pub use reset::*;
 use ariel_os_hal::hal::power::WakeupInterrupts;
 
 /// Interrupts allowed to trigger a wake-up from stop mode.
-#[derive(Default)]
 #[non_exhaustive]
-pub struct StopWakeupInterrupts<'i> {
+pub struct StopWakeupInterrupts<
+    'a,
+    T: ariel_os_hal::hal::IntoPeripheral<'a, P>,
+    P: ariel_os_hal::hal::power::Pin,
+> {
     /// Whether to allow waking up on external interrupts (these may be limited to a specific set
     /// of pins).
-    pub gpio: Option<(ariel_os_hal::gpio::Input<'i>, GpioWakeupTrigger)>,
+    pub gpio: Option<(T, GpioWakeupTrigger)>,
+    pub(crate) _phantom: core::marker::PhantomData<&'a P>,
+}
+
+impl<'a, T: ariel_os_hal::hal::IntoPeripheral<'a, P>, P: ariel_os_hal::hal::power::Pin>
+    StopWakeupInterrupts<'a, T, P>
+{
+    /// FIXME
+    #[must_use]
+    pub fn new() -> Self {
+        Self {
+            gpio: None,
+            _phantom: core::marker::PhantomData,
+        }
+    }
 }
 
 /// Enters stop mode.
@@ -38,14 +55,21 @@ pub struct StopWakeupInterrupts<'i> {
 /// Depending on the microcontroller, waking up from this mode usually requires an RTC interrupt or
 /// an external interrupt (sometimes on a limited set of pins).
 #[cfg(feature = "lp-modes")]
-pub fn enter_stop_mode(wakeup: StopWakeupInterrupts<'_>) {
+pub fn enter_stop_mode<
+    'a,
+    T: ariel_os_hal::hal::IntoPeripheral<'a, P>,
+    P: ariel_os_hal::hal::power::Pin,
+>(
+    wakeup: StopWakeupInterrupts<'a, T, P>,
+) {
     match wakeup {
         StopWakeupInterrupts {
             gpio: Some(mut gpio),
-        } => {
-            ariel_os_hal::hal::power::enter_stop_mode(Some((&mut gpio.0.into_hal_input(), gpio.1)))
+            ..
+        } => ariel_os_hal::hal::power::enter_stop_mode(Some((gpio.0, gpio.1))),
+        StopWakeupInterrupts { gpio: None, .. } => {
+            ariel_os_hal::hal::power::enter_stop_mode::<'_, T, _>(None)
         }
-        StopWakeupInterrupts { gpio: None } => ariel_os_hal::hal::power::enter_stop_mode(None),
     }
 }
 
