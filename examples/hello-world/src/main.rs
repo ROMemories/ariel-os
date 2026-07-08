@@ -15,6 +15,12 @@ ariel_os::hal::define_peripherals!(Peripherals {
     led: PC13,
 });
 
+#[cfg(context = "rpi-pico-w")]
+ariel_os::hal::define_peripherals!(Peripherals {
+    pin: PIN_0,
+    led: PIN_1,
+});
+
 #[ariel_os::task(autostart, peripherals)]
 async fn main(mut p: Peripherals) {
     let mut led = ariel_os::gpio::Output::new(p.led, ariel_os::gpio::Level::High);
