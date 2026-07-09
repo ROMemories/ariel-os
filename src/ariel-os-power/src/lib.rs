@@ -23,12 +23,10 @@ pub struct StopWakeupInterrupts<
     pub(crate) _phantom: core::marker::PhantomData<&'a P>,
 }
 
-impl<'a, T: ariel_os_hal::hal::IntoPeripheral<'a, P>, P: ariel_os_hal::hal::power::Pin>
-    StopWakeupInterrupts<'a, T, P>
+impl<'a, T: ariel_os_hal::hal::IntoPeripheral<'a, P>, P: ariel_os_hal::hal::power::Pin> Default
+    for StopWakeupInterrupts<'a, T, P>
 {
-    /// FIXME
-    #[must_use]
-    pub fn new() -> Self {
+    fn default() -> Self {
         Self {
             gpio: None,
             _phantom: core::marker::PhantomData,
