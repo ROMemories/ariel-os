@@ -5,10 +5,41 @@
 
 mod reset;
 
+use ariel_os_hal::{gpio::Pull, hal::power::WakeupInterrupts};
+
 pub use ariel_os_embassy_common::power::GpioWakeupTriggerEvent;
 pub use reset::*;
 
-use ariel_os_hal::hal::power::WakeupInterrupts;
+/// FIXME
+pub struct GpioStopWakeupTrigger<
+    'a,
+    T: ariel_os_hal::hal::IntoPeripheral<'a, P>,
+    P: ariel_os_hal::hal::power::Pin,
+> {
+    /// FIXME
+    pub gpio: T,
+    /// FIXME
+    pub pull: ariel_os_hal::gpio::Pull,
+    /// FIXME
+    pub event: GpioWakeupTriggerEvent,
+    _phantom: core::marker::PhantomData<&'a P>,
+}
+
+impl<'a, T: ariel_os_hal::hal::IntoPeripheral<'a, P>, P: ariel_os_hal::hal::power::Pin>
+    GpioStopWakeupTrigger<'a, T, P>
+{
+    /// Creates a  to define on which event to wake up from
+    /// [stop mode](enter_stop_mode).
+    #[must_use]
+    pub fn new(gpio: T, pull: Pull, event: GpioWakeupTriggerEvent) -> Self {
+        Self {
+            gpio,
+            pull,
+            event,
+            _phantom: core::marker::PhantomData,
+        }
+    }
+}
 
 /// Interrupts allowed to trigger a wake-up from stop mode.
 #[non_exhaustive]
@@ -19,7 +50,7 @@ pub struct StopWakeupInterrupts<
 > {
     /// Whether to allow waking up on external interrupts (these may be limited to a specific set
     /// of pins).
-    pub gpio: Option<(T, ariel_os_hal::gpio::Pull, GpioWakeupTriggerEvent)>,
+    pub gpio: Option<GpioStopWakeupTrigger<'a, T, P>>,
     pub(crate) _phantom: core::marker::PhantomData<&'a P>,
 }
 
@@ -61,7 +92,12 @@ pub fn enter_stop_mode<
     wakeup: StopWakeupInterrupts<'a, T, P>,
 ) {
     match wakeup {
-        StopWakeupInterrupts { gpio, .. } => ariel_os_hal::hal::power::enter_stop_mode(gpio),
+        StopWakeupInterrupts {
+            gpio: Some(gpio), ..
+        } => ariel_os_hal::hal::power::enter_stop_mode(Some((gpio.gpio, gpio.pull, gpio.event))),
+        StopWakeupInterrupts { gpio: None, .. } => {
+            ariel_os_hal::hal::power::enter_stop_mode::<T, _>(None)
+        }
     }
 }
 
