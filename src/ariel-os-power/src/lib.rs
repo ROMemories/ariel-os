@@ -86,7 +86,6 @@ impl<'a, T: ariel_os_hal::hal::IntoPeripheral<'a, P>, P: ariel_os_hal::hal::powe
 ///
 /// Depending on the microcontroller, waking up from this mode usually requires an RTC interrupt or
 /// an external interrupt (sometimes on a limited set of pins).
-#[cfg(feature = "lp-modes")]
 pub fn enter_stop_mode<
     'a,
     T: ariel_os_hal::hal::IntoPeripheral<'a, P>,
@@ -128,7 +127,6 @@ pub fn enter_stop_mode<
 /// If the hardware does not support triggering a reset on wake-up, or if all the wake-up
 /// conditions are disabled through `WakeupInterrupts`, this function functionally powers down the
 /// microcontroller, with no ability to automatically wake up (except from a hardware reset).
-#[cfg(feature = "lp-modes")]
 pub fn enter_standby_mode(interrupts: WakeupInterrupts) -> ! {
     ariel_os_hal::hal::power::enter_standby_mode(interrupts);
 

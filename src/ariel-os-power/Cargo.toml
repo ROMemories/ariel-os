@@ -19,8 +19,6 @@ esp-hal = { workspace = true }
 
 [features]
 defmt = ["dep:defmt"]
-## Enables support for the low-power modes.
-lp-modes = []
 
 [lints]
 workspace = true
