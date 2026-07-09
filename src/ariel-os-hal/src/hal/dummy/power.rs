@@ -1,5 +1,7 @@
 //! Provides power management functionality.
 
+pub trait Pin {}
+
 /// Interrupts to configure to trigger a wake-up from standby mode.
 #[derive(Debug, Default)]
 pub struct WakeupInterrupts {
