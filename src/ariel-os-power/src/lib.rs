@@ -16,7 +16,7 @@ pub struct GpioStopWakeupTrigger<
     T: ariel_os_hal::hal::IntoPeripheral<'a, P>,
     P: ariel_os_hal::hal::power::StopWakeupPin,
 > {
-    /// GPIO pin on which the event is expected.
+    /// GPIO pin on which to expect the event.
     /// On certain MCUs, it is possible that not all GPIOs be usable as a wake-up trigger, even
     /// though this is not typically the case for waking up from stop mode.
     pub gpio: T,
@@ -45,15 +45,18 @@ impl<'a, T: ariel_os_hal::hal::IntoPeripheral<'a, P>, P: ariel_os_hal::hal::powe
 }
 
 /// Interrupts and events allowed to trigger a wake-up from stop mode.
+///
+/// If no triggers are set, the application's execution will not resume after calling
+/// [`enter_stop_mode()`].
 #[non_exhaustive]
 pub struct StopWakeupTriggers<
     'a,
     T: ariel_os_hal::hal::IntoPeripheral<'a, P>,
     P: ariel_os_hal::hal::power::StopWakeupPin,
 > {
-    /// Whether to allow waking up on external interrupts (these may be limited to a specific set
-    /// of pins).
+    /// External interrupts that may trigger a wake-up.
     pub gpio: Option<GpioStopWakeupTrigger<'a, T, P>>,
+    // TODO: an extra fields should later be added to allow waking up from an RTC event.
     pub(crate) _phantom: core::marker::PhantomData<&'a P>,
 }
 
