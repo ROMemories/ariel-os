@@ -9,7 +9,6 @@ pub mod stop_mode;
 
 use ariel_os_hal::hal::power::WakeupInterrupts;
 
-pub use ariel_os_embassy_common::power::GpioWakeupTriggerEvent;
 pub use reset::*;
 
 /// Enters standby mode.

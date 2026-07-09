@@ -1,7 +1,8 @@
 //! Stop mode.
 
-use ariel_os_embassy_common::power::GpioWakeupTriggerEvent;
 use ariel_os_hal::gpio::Pull;
+
+pub use ariel_os_embassy_common::power::GpioWakeupTriggerEvent;
 
 /// Defines a GPIO event to trigger a wake-up from [stop mode](enter).
 pub struct GpioWakeupTrigger<
