@@ -34,22 +34,17 @@ pub fn enter_stop_mode<'a, T: crate::IntoPeripheral<'a, P>, P: StopWakeupPin>(
         p.SCB.set_sleepdeep();
     });
 
-    let gpio_wakeup_trigger_event = gpio_wakeup.as_ref().map(|w| w.2);
-
-    let input = gpio_wakeup.map(|w| {
+    let trigger_input = gpio_wakeup.map(|w| {
         let p = w.0.into_hal_peripheral();
         let port = p.port();
         let pin = p.pin();
 
-        (crate::gpio::input::new(p, w.1, false), port, pin)
+        (crate::gpio::input::new(p, w.1, false), (port, pin, w.2))
     });
 
-    // TODO: refactor to avoid unwrapping.
-    configure_exti(
-        input.as_ref().unwrap().1,
-        input.as_ref().unwrap().2,
-        gpio_wakeup_trigger_event,
-    );
+    let trigger = trigger_input.as_ref().map(|t| t.1);
+
+    configure_exti(trigger);
 
     embassy_stm32::pac::RCC
         .cfgr()
@@ -61,8 +56,7 @@ pub fn enter_stop_mode<'a, T: crate::IntoPeripheral<'a, P>, P: StopWakeupPin>(
         p.SYST.disable_interrupt();
     });
 
-    let pin_number = input.as_ref().unwrap().2;
-    let lines = wait_for_wakeup(pin_number, gpio_wakeup_trigger_event);
+    let lines = wait_for_wakeup(trigger);
 
     // This is done *after* the critical section so that ISRs potentially registered still have
     // access to the flags.
@@ -175,9 +169,11 @@ fn set_stop_mode(_cs: critical_section::CriticalSection<'_>) {
 }
 
 fn configure_exti(
-    port_number: embassy_stm32::gpio::PinNumber, // Embassy uses `PinNumber` as port number.
-    pin_number: embassy_stm32::gpio::PinNumber,
-    gpio_wakeup_trigger_event: Option<GpioWakeupTriggerEvent>,
+    trigger: Option<(
+        embassy_stm32::gpio::PinNumber, // Embassy uses `PinNumber` as port number.
+        embassy_stm32::gpio::PinNumber,
+        GpioWakeupTriggerEvent,
+    )>,
 ) {
     use embassy_stm32::pac::EXTI;
 
@@ -189,9 +185,9 @@ fn configure_exti(
         EXTI
     }
 
-    if let Some(gpio_wakeup_trigger_event) = gpio_wakeup_trigger_event {
+    if let Some((port_number, pin_number, event)) = trigger {
         // FIXME: these should be on edges, not states.
-        let (rising, falling) = match gpio_wakeup_trigger_event {
+        let (rising, falling) = match event {
             GpioWakeupTriggerEvent::Low => (false, true),
             GpioWakeupTriggerEvent::High => (true, false),
         };
@@ -220,8 +216,11 @@ fn configure_exti(
 }
 
 fn wait_for_wakeup(
-    pin_number: embassy_stm32::gpio::PinNumber,
-    gpio_wakeup_trigger_event: Option<GpioWakeupTriggerEvent>,
+    trigger: Option<(
+        embassy_stm32::gpio::PinNumber,
+        embassy_stm32::gpio::PinNumber,
+        GpioWakeupTriggerEvent,
+    )>,
 ) -> embassy_stm32::pac::exti::regs::Lines {
     use embassy_stm32::pac::EXTI;
 
@@ -236,9 +235,9 @@ fn wait_for_wakeup(
 
             // This is done inside the critical section to be sure no ISRs can reset the interrupt
             // flags before we read them.
-            if let Some(gpio_wakeup_trigger_event) = gpio_wakeup_trigger_event {
+            if let Some((_port_number, pin_number, event)) = trigger {
                 // FIXME: these should be on edges, not states.
-                lines = match gpio_wakeup_trigger_event {
+                lines = match event {
                     GpioWakeupTriggerEvent::Low => EXTI.fpr(0).read(),
                     GpioWakeupTriggerEvent::High => EXTI.rpr(0).read(),
                 };
