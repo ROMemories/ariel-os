@@ -26,103 +26,8 @@ pub fn enter_stop_mode<'a, T: crate::IntoPeripheral<'a, P>, P: StopWakeupPin>(
     )>,
 ) {
     // NOTE: a critical section is used for atomicity.
-    critical_section::with(|_| {
-        // TODO: use the Shutdown mode when `stm32-metapac` supports it.
-
-        // NOTE: each Reference Manual gets its own branch.
-        cfg_select! {
-            // STM32C0: Table 28 of RM0490 Rev 5.
-            context = "stm32c031c6" => {
-                use embassy_stm32::pac::pwr::vals::Lpms;
-
-                embassy_stm32::pac::PWR.cr1().modify(|w| w.set_lpms(Lpms::STOP));
-            }
-            // STM32F0x2: Table 16 of TM0091 Rev 10.
-            context = "stm32f042k6" => {
-                use embassy_stm32::pac::pwr::vals::Pdds;
-
-                embassy_stm32::pac::PWR.cr().modify(|w| w.set_pdds(Pdds::STOP_MODE));
-            }
-            // STM32F303: Table 20 of RM0316 Rev 10.
-            any(context = "stm32f303cb", context = "stm32f303re") => {
-                use embassy_stm32::pac::pwr::vals::Pdds;
-
-                embassy_stm32::pac::PWR.cr().modify(|w| w.set_pdds(Pdds::STOP_MODE));
-            }
-            // STM32F401: Table 19 of RM0368 Rev 5.
-            context = "stm32f401re" => {
-                use embassy_stm32::pac::pwr::vals::Pdds;
-
-                // The RM calls this register `PWR_CR`.
-                embassy_stm32::pac::PWR.cr1().modify(|w| w.set_pdds(Pdds::STOP_MODE));
-            }
-            // STM32F411: Table 18 of RM0383 Rev 3.
-            context = "stm32f411re" => {
-                use embassy_stm32::pac::pwr::vals::Pdds;
-
-                // The RM calls this register `PWR_CR`.
-                embassy_stm32::pac::PWR.cr1().modify(|w| w.set_pdds(Pdds::STOP_MODE));
-            }
-            // STM32F76: Table 20 of RM0410 Rev 5.
-            context = "stm32f767zi" => {
-                use embassy_stm32::pac::pwr::vals::Pdds;
-
-                embassy_stm32::pac::PWR.cr1().modify(|w| w.set_pdds(Pdds::STOP_MODE));
-            }
-            // STM32H753: Table 39 and Table 46 of RM0433.
-            context = "stm32h753zi" => {
-                // FIXME.
-            }
-            // STM32H755: Table 40 and Table 47 of RM0399 Rev 4.
-            context = "stm32h755zi" => {
-                // FIXME.
-            }
-            // STM32L47: Table 30 of RM0351 Rev 10.
-            context = "stm32l475vg" => {
-                use embassy_stm32::pac::pwr::vals::Lpms;
-
-                embassy_stm32::pac::PWR.cr1().modify(|w| w.set_lpms(Lpms::STANDBY));
-            }
-            // STM32U0: Table 28 of RM0503 Rev 4.
-            any(context = "stm32u073kc", context = "stm32u083mc") => {
-                use embassy_stm32::pac::pwr::vals::Lpms;
-
-                embassy_stm32::pac::PWR.cr1().modify(|w| w.set_lpms(Lpms::STOP2));
-            }
-            // STM32U5: Table 104 of RM0503 Rev 6.
-            context = "stm32u585ai" => {
-                use embassy_stm32::pac::pwr::vals::Lpms;
-
-                // STOP3 only allow waking up from WKUP pins, so we use STOP2.
-                embassy_stm32::pac::PWR.cr1().modify(|w| w.set_lpms(Lpms::STOP2));
-            }
-            // STM32WB: Table 32 of RM0434 Rev 14.
-            context = "stm32wb55rg" => {
-                use embassy_stm32::pac::pwr::vals::Lpms;
-
-                embassy_stm32::pac::PWR.cr1().modify(|w| w.set_lpms(Lpms::STOP2));
-            }
-            // STM32WBA5: Table 92 of RM0493 Rev 7.
-            context = "stm32wba55cg" => {
-                use embassy_stm32::pac::pwr::vals::Lpms;
-
-                embassy_stm32::pac::PWR.cr1().modify(|w| w.set_lpms(Lpms::STOP1));
-            }
-            // STM32WBA6: Table 93 of RM0515 Rev 4.
-            context = "stm32wba65ri" => {
-                use embassy_stm32::pac::pwr::vals::Lpms;
-
-                // FIXME: use the STOP2 mode when `stm32-metapac` supports it.
-                embassy_stm32::pac::PWR.cr1().modify(|w| w.set_lpms(Lpms::STOP1));
-            }
-            // STM32WLE: Table 45 for RM0461 Rev 10.
-            context = "stm32wle5jc" => {
-                use embassy_stm32::pac::pwr::vals::Lpms;
-
-                embassy_stm32::pac::PWR.cr1().modify(|w| w.set_lpms(Lpms::STOP2));
-            }
-            _ => const { panic!("unsupported MCU") },
-        }
+    critical_section::with(|cs| {
+        set_stop_mode(cs);
 
         // SAFETY: the peripherals are obtained and used inside a single critical section.
         let mut p = unsafe { cortex_m::Peripherals::steal() };
@@ -236,6 +141,103 @@ pub fn enter_stop_mode<'a, T: crate::IntoPeripheral<'a, P>, P: StopWakeupPin>(
     });
 
     // FIXME: reconfigure clocks.
+}
+
+fn set_stop_mode(_cs: critical_section::CriticalSection<'_>) {
+    // NOTE: each Reference Manual gets its own branch.
+    cfg_select! {
+        // STM32C0: Table 28 of RM0490 Rev 5.
+        context = "stm32c031c6" => {
+            use embassy_stm32::pac::pwr::vals::Lpms;
+
+            embassy_stm32::pac::PWR.cr1().modify(|w| w.set_lpms(Lpms::STOP));
+        }
+        // STM32F0x2: Table 16 of TM0091 Rev 10.
+        context = "stm32f042k6" => {
+            use embassy_stm32::pac::pwr::vals::Pdds;
+
+            embassy_stm32::pac::PWR.cr().modify(|w| w.set_pdds(Pdds::STOP_MODE));
+        }
+        // STM32F303: Table 20 of RM0316 Rev 10.
+        any(context = "stm32f303cb", context = "stm32f303re") => {
+            use embassy_stm32::pac::pwr::vals::Pdds;
+
+            embassy_stm32::pac::PWR.cr().modify(|w| w.set_pdds(Pdds::STOP_MODE));
+        }
+        // STM32F401: Table 19 of RM0368 Rev 5.
+        context = "stm32f401re" => {
+            use embassy_stm32::pac::pwr::vals::Pdds;
+
+            // The RM calls this register `PWR_CR`.
+            embassy_stm32::pac::PWR.cr1().modify(|w| w.set_pdds(Pdds::STOP_MODE));
+        }
+        // STM32F411: Table 18 of RM0383 Rev 3.
+        context = "stm32f411re" => {
+            use embassy_stm32::pac::pwr::vals::Pdds;
+
+            // The RM calls this register `PWR_CR`.
+            embassy_stm32::pac::PWR.cr1().modify(|w| w.set_pdds(Pdds::STOP_MODE));
+        }
+        // STM32F76: Table 20 of RM0410 Rev 5.
+        context = "stm32f767zi" => {
+            use embassy_stm32::pac::pwr::vals::Pdds;
+
+            embassy_stm32::pac::PWR.cr1().modify(|w| w.set_pdds(Pdds::STOP_MODE));
+        }
+        // STM32H753: Table 39 and Table 46 of RM0433.
+        context = "stm32h753zi" => {
+            // FIXME.
+        }
+        // STM32H755: Table 40 and Table 47 of RM0399 Rev 4.
+        context = "stm32h755zi" => {
+            // FIXME.
+        }
+        // STM32L47: Table 30 of RM0351 Rev 10.
+        context = "stm32l475vg" => {
+            use embassy_stm32::pac::pwr::vals::Lpms;
+
+            embassy_stm32::pac::PWR.cr1().modify(|w| w.set_lpms(Lpms::STANDBY));
+        }
+        // STM32U0: Table 28 of RM0503 Rev 4.
+        any(context = "stm32u073kc", context = "stm32u083mc") => {
+            use embassy_stm32::pac::pwr::vals::Lpms;
+
+            embassy_stm32::pac::PWR.cr1().modify(|w| w.set_lpms(Lpms::STOP2));
+        }
+        // STM32U5: Table 104 of RM0503 Rev 6.
+        context = "stm32u585ai" => {
+            use embassy_stm32::pac::pwr::vals::Lpms;
+
+            // STOP3 only allow waking up from WKUP pins, so we use STOP2.
+            embassy_stm32::pac::PWR.cr1().modify(|w| w.set_lpms(Lpms::STOP2));
+        }
+        // STM32WB: Table 32 of RM0434 Rev 14.
+        context = "stm32wb55rg" => {
+            use embassy_stm32::pac::pwr::vals::Lpms;
+
+            embassy_stm32::pac::PWR.cr1().modify(|w| w.set_lpms(Lpms::STOP2));
+        }
+        // STM32WBA5: Table 92 of RM0493 Rev 7.
+        context = "stm32wba55cg" => {
+            use embassy_stm32::pac::pwr::vals::Lpms;
+
+            embassy_stm32::pac::PWR.cr1().modify(|w| w.set_lpms(Lpms::STOP1));
+        }
+        // STM32WBA6: Table 93 of RM0515 Rev 4.
+        context = "stm32wba65ri" => {
+            use embassy_stm32::pac::pwr::vals::Lpms;
+
+            // FIXME: use the STOP2 mode when `stm32-metapac` supports it.
+            embassy_stm32::pac::PWR.cr1().modify(|w| w.set_lpms(Lpms::STOP1));
+        }
+        // STM32WLE: Table 45 for RM0461 Rev 10.
+        context = "stm32wle5jc" => {
+            use embassy_stm32::pac::pwr::vals::Lpms;
+
+            embassy_stm32::pac::PWR.cr1().modify(|w| w.set_lpms(Lpms::STOP2));
+        }
+        _ => const { panic!("unsupported MCU") },
+    }
 }
 
 #[doc(hidden)]
