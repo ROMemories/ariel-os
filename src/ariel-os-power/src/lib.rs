@@ -10,17 +10,20 @@ use ariel_os_hal::{gpio::Pull, hal::power::WakeupInterrupts};
 pub use ariel_os_embassy_common::power::GpioWakeupTriggerEvent;
 pub use reset::*;
 
-/// FIXME
+/// Defines a GPIO event to trigger a wake-up from [stop mode](enter_stop_mode).
 pub struct GpioStopWakeupTrigger<
     'a,
     T: ariel_os_hal::hal::IntoPeripheral<'a, P>,
     P: ariel_os_hal::hal::power::Pin,
 > {
-    /// FIXME
+    /// GPIO pin on which the event is expected.
+    /// On certain MCUs, it is possible that not all GPIOs be usable as a wake-up trigger, even
+    /// though this is not typically the case for waking up from stop mode.
     pub gpio: T,
-    /// FIXME
+    // FIXME: check whether pull resistors are available in stop mode on all MCUs.
+    /// Pull setting to use for the GPIO.
     pub pull: ariel_os_hal::gpio::Pull,
-    /// FIXME
+    /// GPIO event upon which to trigger a wake-up.
     pub event: GpioWakeupTriggerEvent,
     _phantom: core::marker::PhantomData<&'a P>,
 }
