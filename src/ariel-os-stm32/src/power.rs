@@ -192,6 +192,7 @@ fn configure_exti(
             GpioWakeupTriggerEvent::High => (true, false),
         };
 
+        // Based on <https://github.com/embassy-rs/embassy/blob/3e8d8fec15286eb25b8bba7d103c8fc279544551/embassy-stm32/src/exti.rs#L235-L251>.
         critical_section::with(|_| {
             let pin = pin_number as usize;
             exticr_regs()
