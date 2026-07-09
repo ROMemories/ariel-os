@@ -5,7 +5,7 @@
 
 mod reset;
 
-pub use ariel_os_embassy_common::power::GpioWakeupTrigger;
+pub use ariel_os_embassy_common::power::GpioWakeupTriggerEvent;
 pub use reset::*;
 
 use ariel_os_hal::hal::power::WakeupInterrupts;
@@ -19,7 +19,7 @@ pub struct StopWakeupInterrupts<
 > {
     /// Whether to allow waking up on external interrupts (these may be limited to a specific set
     /// of pins).
-    pub gpio: Option<(T, ariel_os_hal::gpio::Pull, GpioWakeupTrigger)>,
+    pub gpio: Option<(T, ariel_os_hal::gpio::Pull, GpioWakeupTriggerEvent)>,
     pub(crate) _phantom: core::marker::PhantomData<&'a P>,
 }
 

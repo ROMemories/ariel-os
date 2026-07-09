@@ -39,7 +39,7 @@ async fn main(mut p: Peripherals) {
 
         let mut wakeup = ariel_os::power::StopWakeupInterrupts::default();
         let pin = p.pin.reborrow();
-        wakeup.gpio = Some((pin, Pull::Up, ariel_os::power::GpioWakeupTrigger::Low));
+        wakeup.gpio = Some((pin, Pull::Up, ariel_os::power::GpioWakeupTriggerEvent::Low));
         ariel_os::power::enter_stop_mode(wakeup);
     }
 }

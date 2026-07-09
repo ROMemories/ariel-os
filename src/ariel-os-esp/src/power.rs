@@ -2,7 +2,7 @@
 
 #![allow(unsafe_code)]
 
-use ariel_os_embassy_common::power::GpioWakeupTrigger;
+use ariel_os_embassy_common::power::GpioWakeupTriggerEvent;
 
 pub use esp_hal::gpio::InputPin as Pin;
 
@@ -16,12 +16,16 @@ pub struct WakeupInterrupts {
 
 #[doc(hidden)]
 pub fn enter_stop_mode<'a, T: crate::IntoPeripheral<'a, P>, P: esp_hal::gpio::InputPin>(
-    gpio_wakeup: Option<(T, ariel_os_embassy_common::gpio::Pull, GpioWakeupTrigger)>,
+    gpio_wakeup: Option<(
+        T,
+        ariel_os_embassy_common::gpio::Pull,
+        GpioWakeupTriggerEvent,
+    )>,
 ) {
     let input = gpio_wakeup.map(|w| {
         let event = match w.2 {
-            GpioWakeupTrigger::Low => esp_hal::gpio::WakeEvent::LowLevel,
-            GpioWakeupTrigger::High => esp_hal::gpio::WakeEvent::HighLevel,
+            GpioWakeupTriggerEvent::Low => esp_hal::gpio::WakeEvent::LowLevel,
+            GpioWakeupTriggerEvent::High => esp_hal::gpio::WakeEvent::HighLevel,
         };
 
         let config =

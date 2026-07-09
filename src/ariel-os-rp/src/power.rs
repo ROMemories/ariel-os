@@ -1,6 +1,6 @@
 //! Provides power management functionality.
 
-use ariel_os_embassy_common::power::GpioWakeupTrigger;
+use ariel_os_embassy_common::power::GpioWakeupTriggerEvent;
 
 pub use embassy_rp::gpio::{DormantWakeConfig, Pin};
 
@@ -10,7 +10,11 @@ pub struct WakeupInterrupts {}
 
 #[doc(hidden)]
 pub fn enter_stop_mode<'a, T: crate::IntoPeripheral<'a, P>, P: embassy_rp::gpio::Pin>(
-    gpio_wakeup: Option<(T, ariel_os_embassy_common::gpio::Pull, GpioWakeupTrigger)>,
+    gpio_wakeup: Option<(
+        T,
+        ariel_os_embassy_common::gpio::Pull,
+        GpioWakeupTriggerEvent,
+    )>,
 ) {
     if let Some(w) = gpio_wakeup {
         let mut input = embassy_rp::gpio::Input::new(
@@ -20,11 +24,11 @@ pub fn enter_stop_mode<'a, T: crate::IntoPeripheral<'a, P>, P: embassy_rp::gpio:
 
         // TODO: support edges.
         let trigger = match w.2 {
-            GpioWakeupTrigger::Low => DormantWakeConfig {
+            GpioWakeupTriggerEvent::Low => DormantWakeConfig {
                 level_low: true,
                 ..Default::default()
             },
-            GpioWakeupTrigger::High => DormantWakeConfig {
+            GpioWakeupTriggerEvent::High => DormantWakeConfig {
                 level_high: true,
                 ..Default::default()
             },

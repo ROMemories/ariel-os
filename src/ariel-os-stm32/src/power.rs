@@ -2,7 +2,7 @@
 
 #![expect(unsafe_code)]
 
-use ariel_os_embassy_common::power::GpioWakeupTrigger;
+use ariel_os_embassy_common::power::GpioWakeupTriggerEvent;
 
 // TODO: might want to use `ExtiPin` instead, but requires the `exti` Cargo feature
 // pub type StopWakeupPin = embassy_stm32::gpio::Pin;
@@ -21,7 +21,11 @@ pub struct WakeupInterrupts {
 
 #[doc(hidden)]
 pub fn enter_stop_mode<'a, T: crate::IntoPeripheral<'a, P>, P: embassy_stm32::gpio::Pin>(
-    gpio_wakeup: Option<(T, ariel_os_embassy_common::gpio::Pull, GpioWakeupTrigger)>,
+    gpio_wakeup: Option<(
+        T,
+        ariel_os_embassy_common::gpio::Pull,
+        GpioWakeupTriggerEvent,
+    )>,
 ) {
     // NOTE: a critical section is used for atomicity.
     critical_section::with(|_| {
@@ -151,8 +155,8 @@ pub fn enter_stop_mode<'a, T: crate::IntoPeripheral<'a, P>, P: embassy_stm32::gp
     if let Some(gpio_wakeup_trigger) = gpio_wakeup_trigger {
         // FIXME: these should be on edges, not states.
         let (rising, falling) = match gpio_wakeup_trigger {
-            GpioWakeupTrigger::Low => (false, true),
-            GpioWakeupTrigger::High => (true, false),
+            GpioWakeupTriggerEvent::Low => (false, true),
+            GpioWakeupTriggerEvent::High => (true, false),
         };
 
         // TODO: refactor to avoid unwrapping.
@@ -207,8 +211,8 @@ pub fn enter_stop_mode<'a, T: crate::IntoPeripheral<'a, P>, P: embassy_stm32::gp
 
                 // FIXME: these should be on edges, not states.
                 lines = match gpio_wakeup_trigger {
-                    GpioWakeupTrigger::Low => EXTI.fpr(0).read(),
-                    GpioWakeupTrigger::High => EXTI.rpr(0).read(),
+                    GpioWakeupTriggerEvent::Low => EXTI.fpr(0).read(),
+                    GpioWakeupTriggerEvent::High => EXTI.rpr(0).read(),
                 };
 
                 if lines.line(pin.into()) {
