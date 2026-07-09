@@ -44,48 +44,12 @@ pub fn enter_stop_mode<'a, T: crate::IntoPeripheral<'a, P>, P: StopWakeupPin>(
         (crate::gpio::input::new(p, w.1, false), port, pin)
     });
 
-    use embassy_stm32::pac::EXTI;
-
-    fn cpu_regs() -> embassy_stm32::pac::exti::Exti {
-        EXTI
-    }
-
-    fn exticr_regs() -> embassy_stm32::pac::exti::Exti {
-        EXTI
-    }
-
-    if let Some(gpio_wakeup_trigger_event) = gpio_wakeup_trigger_event {
-        // FIXME: these should be on edges, not states.
-        let (rising, falling) = match gpio_wakeup_trigger_event {
-            GpioWakeupTriggerEvent::Low => (false, true),
-            GpioWakeupTriggerEvent::High => (true, false),
-        };
-
-        // TODO: refactor to avoid unwrapping.
-        let port = input.as_ref().unwrap().1;
-        let pin = input.as_ref().unwrap().2;
-
-        critical_section::with(|_| {
-            let pin = pin as usize;
-            exticr_regs()
-                .exticr(pin / 4)
-                .modify(|w| w.set_exti(pin % 4, port));
-            EXTI.rtsr(0).modify(|w| w.set_line(pin, rising));
-            EXTI.ftsr(0).modify(|w| w.set_line(pin, falling));
-
-            // Clear pending events.
-            {
-                EXTI.rpr(0).write(|w| w.set_line(pin, true));
-                EXTI.fpr(0).write(|w| w.set_line(pin, true));
-            }
-
-            // Enabling *event* generation is necessary to wake-up from WFE.
-            cpu_regs().emr(0).modify(|w| w.set_line(pin, true));
-            // Enabling *interrupt* generation is necessary so that the interrupt flags are set, so
-            // we can check which event woke us up after WFE completes.
-            cpu_regs().imr(0).modify(|w| w.set_line(pin, true));
-        });
-    }
+    // TODO: refactor to avoid unwrapping.
+    configure_exti(
+        input.as_ref().unwrap().1,
+        input.as_ref().unwrap().2,
+        gpio_wakeup_trigger_event,
+    );
 
     embassy_stm32::pac::RCC
         .cfgr()
@@ -104,6 +68,8 @@ pub fn enter_stop_mode<'a, T: crate::IntoPeripheral<'a, P>, P: StopWakeupPin>(
     // This is done *after* the critical section so that ISRs potentially registered still have
     // access to the flags.
     {
+        use embassy_stm32::pac::EXTI;
+
         let bits = lines.0 & 0x0000_ffff;
         EXTI.rpr(0)
             .write_value(embassy_stm32::pac::exti::regs::Lines(bits));
@@ -213,6 +179,51 @@ fn set_stop_mode(_cs: critical_section::CriticalSection<'_>) {
             embassy_stm32::pac::PWR.cr1().modify(|w| w.set_lpms(Lpms::STOP2));
         }
         _ => const { panic!("unsupported MCU") },
+    }
+}
+
+fn configure_exti(
+    port_number: embassy_stm32::gpio::PinNumber, // Embassy uses `PinNumber` as port number.
+    pin_number: embassy_stm32::gpio::PinNumber,
+    gpio_wakeup_trigger_event: Option<GpioWakeupTriggerEvent>,
+) {
+    use embassy_stm32::pac::EXTI;
+
+    fn cpu_regs() -> embassy_stm32::pac::exti::Exti {
+        EXTI
+    }
+
+    fn exticr_regs() -> embassy_stm32::pac::exti::Exti {
+        EXTI
+    }
+
+    if let Some(gpio_wakeup_trigger_event) = gpio_wakeup_trigger_event {
+        // FIXME: these should be on edges, not states.
+        let (rising, falling) = match gpio_wakeup_trigger_event {
+            GpioWakeupTriggerEvent::Low => (false, true),
+            GpioWakeupTriggerEvent::High => (true, false),
+        };
+
+        critical_section::with(|_| {
+            let pin = pin_number as usize;
+            exticr_regs()
+                .exticr(pin / 4)
+                .modify(|w| w.set_exti(pin % 4, port_number));
+            EXTI.rtsr(0).modify(|w| w.set_line(pin, rising));
+            EXTI.ftsr(0).modify(|w| w.set_line(pin, falling));
+
+            // Clear pending events.
+            {
+                EXTI.rpr(0).write(|w| w.set_line(pin, true));
+                EXTI.fpr(0).write(|w| w.set_line(pin, true));
+            }
+
+            // Enabling *event* generation is necessary to wake-up from WFE.
+            cpu_regs().emr(0).modify(|w| w.set_line(pin, true));
+            // Enabling *interrupt* generation is necessary so that the interrupt flags are set, so
+            // we can check which event woke us up after WFE completes.
+            cpu_regs().imr(0).modify(|w| w.set_line(pin, true));
+        });
     }
 }
 
