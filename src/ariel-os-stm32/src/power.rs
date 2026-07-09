@@ -131,7 +131,6 @@ pub fn enter_stop_mode<'a, T: crate::IntoPeripheral<'a, P>, P: StopWakeupPin>(
 
     let gpio_wakeup_trigger = gpio_wakeup.as_ref().map(|w| w.2);
 
-    // FIXME: set the proper pull value.
     let input = gpio_wakeup.map(|w| {
         let p = w.0.into_hal_peripheral();
         let port = p.port();
