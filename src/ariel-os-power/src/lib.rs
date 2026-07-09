@@ -41,9 +41,9 @@ impl<'a, T: ariel_os_hal::hal::IntoPeripheral<'a, P>, P: ariel_os_hal::hal::powe
     }
 }
 
-/// Interrupts allowed to trigger a wake-up from stop mode.
+/// Interrupts and events allowed to trigger a wake-up from stop mode.
 #[non_exhaustive]
-pub struct StopWakeupInterrupts<
+pub struct StopWakeupTriggers<
     'a,
     T: ariel_os_hal::hal::IntoPeripheral<'a, P>,
     P: ariel_os_hal::hal::power::Pin,
@@ -55,7 +55,7 @@ pub struct StopWakeupInterrupts<
 }
 
 impl<'a, T: ariel_os_hal::hal::IntoPeripheral<'a, P>, P: ariel_os_hal::hal::power::Pin> Default
-    for StopWakeupInterrupts<'a, T, P>
+    for StopWakeupTriggers<'a, T, P>
 {
     fn default() -> Self {
         Self {
@@ -89,13 +89,13 @@ pub fn enter_stop_mode<
     T: ariel_os_hal::hal::IntoPeripheral<'a, P>,
     P: ariel_os_hal::hal::power::Pin,
 >(
-    wakeup: StopWakeupInterrupts<'a, T, P>,
+    wakeup: StopWakeupTriggers<'a, T, P>,
 ) {
     match wakeup {
-        StopWakeupInterrupts {
+        StopWakeupTriggers {
             gpio: Some(gpio), ..
         } => ariel_os_hal::hal::power::enter_stop_mode(Some((gpio.gpio, gpio.pull, gpio.event))),
-        StopWakeupInterrupts { gpio: None, .. } => {
+        StopWakeupTriggers { gpio: None, .. } => {
             ariel_os_hal::hal::power::enter_stop_mode::<T, _>(None)
         }
     }

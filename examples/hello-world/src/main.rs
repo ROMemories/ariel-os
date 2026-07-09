@@ -37,7 +37,7 @@ async fn main(mut p: Peripherals) {
             ariel_os::time::Timer::after_millis(200).await;
         }
 
-        let mut wakeup = ariel_os::power::StopWakeupInterrupts::default();
+        let mut wakeup = ariel_os::power::StopWakeupTriggers::default();
         wakeup.gpio = Some(ariel_os::power::GpioStopWakeupTrigger::new(
             p.pin.reborrow(),
             Pull::Up,
