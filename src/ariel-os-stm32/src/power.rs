@@ -18,7 +18,7 @@ pub struct WakeupInterrupts {
 }
 
 #[doc(hidden)]
-pub fn enter_stop_mode<'a, T: crate::IntoPeripheral<'a, P>, P: embassy_stm32::gpio::Pin>(
+pub fn enter_stop_mode<'a, T: crate::IntoPeripheral<'a, P>, P: StopWakeupPin>(
     gpio_wakeup: Option<(
         T,
         ariel_os_embassy_common::gpio::Pull,
