@@ -98,9 +98,11 @@ pub fn enter<
     match wakeup {
         WakeupTriggers {
             gpio: Some(gpio), ..
-        } => ariel_os_hal::hal::power::enter_stop_mode(Some((gpio.gpio, gpio.pull, gpio.event))),
+        } => {
+            ariel_os_hal::hal::power::enter_stop_mode(Some((gpio.gpio, gpio.pull, gpio.event)));
+        }
         WakeupTriggers { gpio: None, .. } => {
-            ariel_os_hal::hal::power::enter_stop_mode::<T, _>(None)
+            ariel_os_hal::hal::power::enter_stop_mode::<T, _>(None);
         }
     }
 }
