@@ -34,7 +34,7 @@ pub fn enter_stop_mode<'a, T: crate::IntoPeripheral<'a, P>, P: StopWakeupPin>(
         p.SCB.set_sleepdeep();
     });
 
-    let gpio_wakeup_trigger = gpio_wakeup.as_ref().map(|w| w.2);
+    let gpio_wakeup_trigger_event = gpio_wakeup.as_ref().map(|w| w.2);
 
     let input = gpio_wakeup.map(|w| {
         let p = w.0.into_hal_peripheral();
@@ -54,9 +54,9 @@ pub fn enter_stop_mode<'a, T: crate::IntoPeripheral<'a, P>, P: StopWakeupPin>(
         EXTI
     }
 
-    if let Some(gpio_wakeup_trigger) = gpio_wakeup_trigger {
+    if let Some(gpio_wakeup_trigger_event) = gpio_wakeup_trigger_event {
         // FIXME: these should be on edges, not states.
-        let (rising, falling) = match gpio_wakeup_trigger {
+        let (rising, falling) = match gpio_wakeup_trigger_event {
             GpioWakeupTriggerEvent::Low => (false, true),
             GpioWakeupTriggerEvent::High => (true, false),
         };
@@ -97,32 +97,8 @@ pub fn enter_stop_mode<'a, T: crate::IntoPeripheral<'a, P>, P: StopWakeupPin>(
         p.SYST.disable_interrupt();
     });
 
-    let mut lines = embassy_stm32::pac::exti::regs::Lines(0);
-
-    critical_section::with(|_| {
-        loop {
-            // https://github.com/STMicroelectronics/stm32u0xx-hal-driver/blob/b2df6792633348d41cc549609a8611098c0e3798/Src/stm32u0xx_hal_pwr_ex.c#L431-L433
-            cortex_m::asm::sev();
-            cortex_m::asm::wfe();
-            cortex_m::asm::wfe();
-
-            // This is done inside the critical section to be sure no ISRs can reset the interrupt
-            // flags before we read them.
-            if let Some(gpio_wakeup_trigger) = gpio_wakeup_trigger {
-                let pin = input.as_ref().unwrap().2;
-
-                // FIXME: these should be on edges, not states.
-                lines = match gpio_wakeup_trigger {
-                    GpioWakeupTriggerEvent::Low => EXTI.fpr(0).read(),
-                    GpioWakeupTriggerEvent::High => EXTI.rpr(0).read(),
-                };
-
-                if lines.line(pin.into()) {
-                    break;
-                }
-            }
-        }
-    });
+    let pin_number = input.as_ref().unwrap().2;
+    let lines = wait_for_wakeup(pin_number, gpio_wakeup_trigger_event);
 
     // Clear the interrupt flags of GPIO lines.
     // This is done *after* the critical section so that ISRs potentially registered still have
@@ -238,6 +214,40 @@ fn set_stop_mode(_cs: critical_section::CriticalSection<'_>) {
         }
         _ => const { panic!("unsupported MCU") },
     }
+}
+
+fn wait_for_wakeup(
+    pin_number: embassy_stm32::gpio::PinNumber,
+    gpio_wakeup_trigger_event: Option<GpioWakeupTriggerEvent>,
+) -> embassy_stm32::pac::exti::regs::Lines {
+    use embassy_stm32::pac::EXTI;
+
+    let mut lines = embassy_stm32::pac::exti::regs::Lines(0);
+
+    critical_section::with(|_| {
+        loop {
+            // https://github.com/STMicroelectronics/stm32u0xx-hal-driver/blob/b2df6792633348d41cc549609a8611098c0e3798/Src/stm32u0xx_hal_pwr_ex.c#L431-L433
+            cortex_m::asm::sev();
+            cortex_m::asm::wfe();
+            cortex_m::asm::wfe();
+
+            // This is done inside the critical section to be sure no ISRs can reset the interrupt
+            // flags before we read them.
+            if let Some(gpio_wakeup_trigger_event) = gpio_wakeup_trigger_event {
+                // FIXME: these should be on edges, not states.
+                lines = match gpio_wakeup_trigger_event {
+                    GpioWakeupTriggerEvent::Low => EXTI.fpr(0).read(),
+                    GpioWakeupTriggerEvent::High => EXTI.rpr(0).read(),
+                };
+
+                if lines.line(pin_number.into()) {
+                    break;
+                }
+            }
+        }
+    });
+
+    lines
 }
 
 #[doc(hidden)]
