@@ -49,7 +49,7 @@ pub struct WakeupTriggers<
 > {
     /// External interrupts that may trigger a wake-up.
     pub gpio: Option<GpioWakeupTrigger<'a, T, P>>,
-    // TODO: an extra fields should later be added to allow waking up from an RTC event.
+    // TODO: an extra field should later be added to allow waking up from an RTC event.
     pub(crate) _phantom: core::marker::PhantomData<&'a P>,
 }
 
