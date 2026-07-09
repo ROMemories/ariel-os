@@ -82,6 +82,7 @@ pub fn enter_stop_mode<'a, T: crate::IntoPeripheral<'a, P>, P: StopWakeupPin>(
         p.SCB.clear_sleepdeep();
     });
 
+    // TODO: restart SysTick if we stop it.
     // FIXME: reconfigure clocks.
 }
 

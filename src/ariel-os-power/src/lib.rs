@@ -72,8 +72,13 @@ impl<'a, T: ariel_os_hal::hal::IntoPeripheral<'a, P>, P: ariel_os_hal::hal::powe
 ///
 /// In this mode, almost every clock of the microcontroller is off, but the RAM contents are
 /// retained.
-/// Unlike [`enter_standby_mode()`], waking up does not involve rebooting, and execution resumes
-/// normally after calling this function.
+// TODO: enable this doc comment fragment when landing `enter_standby_mode()`.
+// Unlike [`enter_standby_mode()`], waking up does not involve rebooting, and execution resumes
+// normally after calling this function.
+/// In addition, the state of GPIOs, including their pull setting, is maintained.
+///
+/// The entry into the low-power mode may be delayed by a few cycles, in particular because of
+/// outstanding memory writes.
 ///
 /// # Important note
 ///
