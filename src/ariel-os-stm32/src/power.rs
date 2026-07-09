@@ -5,9 +5,7 @@
 use ariel_os_embassy_common::power::GpioWakeupTriggerEvent;
 
 // TODO: might want to use `ExtiPin` instead, but requires the `exti` Cargo feature
-// pub type StopWakeupPin = embassy_stm32::gpio::Pin;
-
-pub use embassy_stm32::gpio::Pin;
+pub use embassy_stm32::gpio::Pin as StopWakeupPin;
 
 /// Interrupts allowed to trigger a wake-up from standby mode.
 #[derive(Debug, Default)]

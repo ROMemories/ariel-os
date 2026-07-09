@@ -1,6 +1,6 @@
 //! Provides power management functionality.
 
-pub trait Pin {}
+pub trait StopWakeupPin {}
 
 /// Interrupts to configure to trigger a wake-up from standby mode.
 #[derive(Debug, Default)]

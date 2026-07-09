@@ -4,7 +4,7 @@
 
 use ariel_os_embassy_common::power::GpioWakeupTriggerEvent;
 
-pub use esp_hal::gpio::InputPin as Pin;
+pub use esp_hal::gpio::InputPin as StopWakeupPin;
 
 /// Interrupts allowed to trigger a wake-up from standby mode.
 #[derive(Debug, Default)]

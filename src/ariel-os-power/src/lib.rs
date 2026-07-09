@@ -14,7 +14,7 @@ pub use reset::*;
 pub struct GpioStopWakeupTrigger<
     'a,
     T: ariel_os_hal::hal::IntoPeripheral<'a, P>,
-    P: ariel_os_hal::hal::power::Pin,
+    P: ariel_os_hal::hal::power::StopWakeupPin,
 > {
     /// GPIO pin on which the event is expected.
     /// On certain MCUs, it is possible that not all GPIOs be usable as a wake-up trigger, even
@@ -28,7 +28,7 @@ pub struct GpioStopWakeupTrigger<
     _phantom: core::marker::PhantomData<&'a P>,
 }
 
-impl<'a, T: ariel_os_hal::hal::IntoPeripheral<'a, P>, P: ariel_os_hal::hal::power::Pin>
+impl<'a, T: ariel_os_hal::hal::IntoPeripheral<'a, P>, P: ariel_os_hal::hal::power::StopWakeupPin>
     GpioStopWakeupTrigger<'a, T, P>
 {
     /// Creates a  to define on which event to wake up from
@@ -49,7 +49,7 @@ impl<'a, T: ariel_os_hal::hal::IntoPeripheral<'a, P>, P: ariel_os_hal::hal::powe
 pub struct StopWakeupTriggers<
     'a,
     T: ariel_os_hal::hal::IntoPeripheral<'a, P>,
-    P: ariel_os_hal::hal::power::Pin,
+    P: ariel_os_hal::hal::power::StopWakeupPin,
 > {
     /// Whether to allow waking up on external interrupts (these may be limited to a specific set
     /// of pins).
@@ -57,8 +57,8 @@ pub struct StopWakeupTriggers<
     pub(crate) _phantom: core::marker::PhantomData<&'a P>,
 }
 
-impl<'a, T: ariel_os_hal::hal::IntoPeripheral<'a, P>, P: ariel_os_hal::hal::power::Pin> Default
-    for StopWakeupTriggers<'a, T, P>
+impl<'a, T: ariel_os_hal::hal::IntoPeripheral<'a, P>, P: ariel_os_hal::hal::power::StopWakeupPin>
+    Default for StopWakeupTriggers<'a, T, P>
 {
     fn default() -> Self {
         Self {
@@ -90,7 +90,7 @@ impl<'a, T: ariel_os_hal::hal::IntoPeripheral<'a, P>, P: ariel_os_hal::hal::powe
 pub fn enter_stop_mode<
     'a,
     T: ariel_os_hal::hal::IntoPeripheral<'a, P>,
-    P: ariel_os_hal::hal::power::Pin,
+    P: ariel_os_hal::hal::power::StopWakeupPin,
 >(
     wakeup: StopWakeupTriggers<'a, T, P>,
 ) {

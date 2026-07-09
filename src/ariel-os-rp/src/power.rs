@@ -2,7 +2,7 @@
 
 use ariel_os_embassy_common::power::GpioWakeupTriggerEvent;
 
-pub use embassy_rp::gpio::{DormantWakeConfig, Pin};
+pub use embassy_rp::gpio::{DormantWakeConfig, Pin as StopWakeupPin};
 
 /// Interrupts allowed to trigger a wake-up from standby mode.
 #[derive(Debug, Default)]
