@@ -14,7 +14,6 @@ pub struct GpioWakeupTrigger<
     /// On certain MCUs, it is possible that not all GPIOs be usable as a wake-up trigger, even
     /// though this is not typically the case for waking up from stop mode.
     pub gpio: T,
-    // FIXME: check whether pull resistors are available in stop mode on all MCUs.
     /// Pull setting to use for the GPIO.
     pub pull: ariel_os_hal::gpio::Pull,
     /// GPIO event upon which to trigger a wake-up.
