@@ -64,18 +64,9 @@ pub fn enter_stop_mode<'a, T: crate::IntoPeripheral<'a, P>, P: StopWakeupPin>(
     let pin_number = input.as_ref().unwrap().2;
     let lines = wait_for_wakeup(pin_number, gpio_wakeup_trigger_event);
 
-    // Clear the interrupt flags of GPIO lines.
     // This is done *after* the critical section so that ISRs potentially registered still have
     // access to the flags.
-    {
-        use embassy_stm32::pac::EXTI;
-
-        let bits = lines.0 & 0x0000_ffff;
-        EXTI.rpr(0)
-            .write_value(embassy_stm32::pac::exti::regs::Lines(bits));
-        EXTI.fpr(0)
-            .write_value(embassy_stm32::pac::exti::regs::Lines(bits));
-    }
+    clear_exti_gpio_pending_flags(lines);
 
     critical_section::with(|_| {
         let mut p = unsafe { cortex_m::Peripherals::steal() };
@@ -260,6 +251,17 @@ fn wait_for_wakeup(
     });
 
     lines
+}
+
+/// Clears the interrupt flags of GPIO lines.
+fn clear_exti_gpio_pending_flags(lines: embassy_stm32::pac::exti::regs::Lines) {
+    use embassy_stm32::pac::EXTI;
+
+    let bits = lines.0 & 0x0000_ffff;
+    EXTI.rpr(0)
+        .write_value(embassy_stm32::pac::exti::regs::Lines(bits));
+    EXTI.fpr(0)
+        .write_value(embassy_stm32::pac::exti::regs::Lines(bits));
 }
 
 #[doc(hidden)]
