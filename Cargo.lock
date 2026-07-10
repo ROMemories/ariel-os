@@ -6029,6 +6029,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "stop-mode-ext-interrupt"
+version = "0.0.0"
+dependencies = [
+ "ariel-os",
+ "ariel-os-boards",
+]
+
+[[package]]
 name = "string_cache"
 version = "0.8.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
