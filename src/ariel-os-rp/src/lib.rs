@@ -5,6 +5,7 @@
 #![deny(missing_docs)]
 
 pub mod gpio;
+pub mod power;
 
 #[doc(hidden)]
 pub mod peripheral {
