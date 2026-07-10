@@ -21,6 +21,7 @@ mod semaphore;
 mod wait_queue;
 
 pub mod gpio;
+pub mod power;
 
 #[cfg(feature = "ble-esp")]
 #[doc(hidden)]
