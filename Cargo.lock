@@ -667,6 +667,8 @@ dependencies = [
  "ariel-os-random",
  "ariel-os-stm32-mapping",
  "ariel-os-utils",
+ "cortex-m",
+ "critical-section",
  "defmt 1.1.0",
  "embassy-embedded-hal",
  "embassy-executor",

@@ -8,6 +8,7 @@
 mod rcc;
 
 pub mod gpio;
+pub mod power;
 
 #[doc(hidden)]
 pub mod peripheral {
