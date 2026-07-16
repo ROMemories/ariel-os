@@ -106,7 +106,7 @@ pub fn init() -> OptionalPeripherals {
 }
 
 fn board_config(config: &mut Config) {
-    config.rcc = rcc::config();
+    config.rcc = rcc::CONFIG;
 }
 
 fn enable_flash_cache() {

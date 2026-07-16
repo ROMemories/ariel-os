@@ -1,4 +1,8 @@
-pub fn config() -> embassy_stm32::rcc::Config {
+// NOTE: Storing the configuration as a constant apparently helps reduce the binary size when used
+// multiple times in the application.
+pub const CONFIG: embassy_stm32::rcc::Config = config();
+
+const fn config() -> embassy_stm32::rcc::Config {
     cfg_select! {
         feature = "rcc-config-override" => {
             unsafe extern "Rust" {
@@ -11,9 +15,9 @@ pub fn config() -> embassy_stm32::rcc::Config {
 }
 
 #[cfg_attr(feature = "rcc-config-override", expect(dead_code))]
-fn default() -> embassy_stm32::rcc::Config {
+const fn default() -> embassy_stm32::rcc::Config {
     #[allow(unused_mut, reason = "conditional compilation")]
-    let mut rcc = embassy_stm32::rcc::Config::default();
+    let mut rcc = embassy_stm32::rcc::Config::new();
 
     #[cfg(context = "st-b-l475e-iot01a")]
     {
