@@ -1,0 +1,5 @@
+apps:
+  - name: example-coap-sensor-reading
+    selects:
+      - coap-server
+      - ?coap-server-config-storage

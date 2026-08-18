@@ -3072,6 +3072,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "example-coap-sensor-reading"
+version = "0.0.0"
+dependencies = [
+ "ariel-os",
+ "ariel-os-boards",
+ "ariel-os-sensor-aht20",
+ "ariel-os-sensor-lis2du12",
+ "ariel-os-sensor-lps22df",
+ "ariel-os-sensor-nrf91-gnss",
+ "ariel-os-sensor-stts22h",
+ "coap-handler",
+ "coap-handler-implementations",
+ "coap-message",
+ "coap-message-demos",
+ "coap-message-utils",
+ "embassy-sync 0.7.2",
+ "once_cell",
+]
+
+[[package]]
 name = "example-coap-server"
 version = "0.0.0"
 dependencies = [

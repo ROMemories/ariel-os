@@ -10,6 +10,7 @@ subdirs:
   - ble-scanner
   - blinky
   - coap-client
+  - coap-sensor-reading
   - coap-server
   - device-metadata
   - gpio

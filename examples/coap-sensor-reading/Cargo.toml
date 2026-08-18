@@ -1,0 +1,28 @@
+[package]
+name = "example-coap-sensor-reading"
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[dependencies]
+ariel-os = { path = "../../src/ariel-os", features = [
+  "i2c",
+  "sensors",
+  "time",
+] }
+ariel-os-boards = { path = "../../src/ariel-os-boards" }
+ariel-os-sensor-aht20 = { workspace = true }
+ariel-os-sensor-lis2du12 = { workspace = true }
+ariel-os-sensor-lps22df = { workspace = true }
+ariel-os-sensor-nrf91-gnss = { workspace = true, optional = true }
+ariel-os-sensor-stts22h = { workspace = true }
+coap-handler = "0.2.0"
+coap-handler-implementations = "0.6.1"
+coap-message = "0.3.2"
+coap-message-demos = { version = "0.5.0", default-features = false }
+coap-message-utils = "0.3.9"
+embassy-sync = { workspace = true }
+once_cell = { workspace = true }
+
+[lints]
+workspace = true

@@ -1,0 +1,46 @@
+# CoAP sensor reading
+
+## About
+
+This application exposes the readings of an attached sensor using a CoAP CBOR-enabled endpoint.
+
+The server offers a single resource, `/sensors/temp/reading`, which returns the reading.
+
+The default policy allows access to the resource,
+but clients can cryptographically verify that they are talking to the right server using its public key.
+Both the policy and the key are currently hard-coded;
+making the former configurable and the latter dynamic is work in progress.
+
+## Running
+
+* Run on any board with networking, eg. `laze build -b particle-xenon run`.
+* [Set up networking](https://ariel-os.github.io/ariel-os/dev/docs/book/networking.html).
+* Run `aiocoap-client`
+  to list the resources of the device:
+
+  ```sh
+  $ pipx install 'aiocoap[oscore,prettyprint]'
+  $ aiocoap-client coap://10.42.0.61/.well-known/core --credentials client.diag
+  # application/link-format content was re-formatted
+  </hello>
+  ```
+
+  If you prefer not to install the CoAP client, you can
+  replace any call to `aiocoap-client` with `pipx run --spec 'aiocoap[oscore,prettyprint]' aiocoap-client` instead.
+
+  The output tells you there is a `/hello` resource, so read that next:
+
+  ```sh
+  $ aiocoap-client coap://10.42.0.61/hello --credentials client.diag
+  Hello from Ariel OS
+  ```
+
+  The argument `--credentials client.diag` tells the client to establish a secure connection;
+  that file describes the server's public key, and that the client can use a random key.
+  Without the argument, the requests come through just as well,
+  but the client has no assurance on the server's identity.
+
+## Further references
+
+There is a [chapter in the book](https://ariel-os.github.io/ariel-os/dev/docs/book/tooling/coap.html)
+that describes more concepts and background.
