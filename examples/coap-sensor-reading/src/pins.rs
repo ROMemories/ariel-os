@@ -40,12 +40,12 @@ ariel_os::hal::define_peripherals!(Peripherals {
     i2c_scl: P0_08,
 });
 
-#[cfg(context = "rpi-pico")]
+#[cfg(any(context = "rpi-pico", context = "rpi-pico-w"))]
 pub type SensorI2c = i2c::controller::I2C0;
-#[cfg(context = "rpi-pico")]
+#[cfg(any(context = "rpi-pico", context = "rpi-pico-w"))]
 ariel_os::hal::define_peripherals!(Peripherals {
-    i2c_sda: PIN_12,
-    i2c_scl: PIN_13,
+    i2c_sda: PIN_16,
+    i2c_scl: PIN_17,
 });
 
 #[cfg(context = "st-steval-mkboxpro")]

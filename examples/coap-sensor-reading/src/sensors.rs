@@ -14,7 +14,7 @@ pub async fn init() {
     #[cfg(feature = "nrf-modem")]
     nrf91::init().await;
 
-    #[cfg(any(context = "unihiker-k10"))]
+    #[cfg(any(context = "rpi-pico-w", context = "unihiker-k10"))]
     aht20::init().await;
 }
 
@@ -152,7 +152,7 @@ mod nrf91 {
     }
 }
 
-#[cfg(context = "unihiker-k10")]
+#[cfg(any(context = "rpi-pico-w", context = "unihiker-k10"))]
 mod aht20 {
     use ariel_os::i2c::controller::I2cDevice;
 
@@ -181,5 +181,5 @@ mod aht20 {
 }
 
 #[allow(unused, reason = "should be directly accessible without going through the registry")]
-#[cfg(context = "unihiker-k10")]
+#[cfg(any(context = "rpi-pico-w", context = "unihiker-k10"))]
 pub use aht20::AHT20_I2C;
