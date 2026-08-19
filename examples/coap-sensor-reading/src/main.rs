@@ -26,28 +26,30 @@ async fn main(peripherals: pins::Peripherals) {
     i2c_bus::init(peripherals);
     sensors::init().await;
 
-    let handler = coap_handler_implementations::new_dispatcher().at_with_attributes(
-        &["sensors", "temp", "reading"],
-        &[
-            Attribute::Title("Temperature Sensor Reading"), // From RFC5988 + RFC6690.
-            Attribute::Interface("sensor"),                 // From RFC6690.
-            Attribute::ResourceType("temperature-c"),       // From RFC6690.
-        ],
-        TypeHandler::new_minicbor_2(coap_handler_implementations::with_get(
-            SensorReadingRenderer::new(),
-        )),
-    );
+    let handler = coap_handler_implementations::new_dispatcher()
+        .at_with_attributes(
+            &["sensors", "temp"],
+            &[
+                Attribute::Title("Temperature Sensor"), // From RFC5988 + RFC6690.
+            ],
+            TypeHandler::new_minicbor_2(coap_handler_implementations::with_get(SensorInfoRenderer)),
+        )
+        .at_with_attributes(
+            &["sensors", "temp", "reading"],
+            &[
+                Attribute::Title("Temperature Sensor Reading"), // From RFC5988 + RFC6690.
+                Attribute::Interface("sensor"),                 // From RFC6690.
+                Attribute::ResourceType("temperature-c"),       // From RFC6690.
+            ],
+            TypeHandler::new_minicbor_2(coap_handler_implementations::with_get(
+                SensorReadingRenderer,
+            )),
+        );
 
     ariel_os::coap::coap_run(handler).await;
 }
 
-struct SensorReadingRenderer {}
-
-impl SensorReadingRenderer {
-    fn new() -> Self {
-        Self {}
-    }
-}
+struct SensorReadingRenderer;
 
 impl GetRenderable for SensorReadingRenderer {
     type Get = f32; // TODO
@@ -78,11 +80,7 @@ impl GetRenderable for SensorReadingRenderer {
 #[ariel_os::task(autostart)]
 async fn sensor_loop() {
     loop {
-        let Some(sensor) = ariel_os::sensors::REGISTRY.sensors().find(|s| {
-            s.categories()
-                .iter()
-                .any(|c| [Category::Temperature, Category::RelativeHumidityTemperature].contains(c))
-        }) else {
+        let Some(sensor) = get_temp_sensor() else {
             info!("There aren't any registered temperature sensors");
             break;
         };
@@ -115,4 +113,80 @@ async fn sensor_loop() {
         }
         Timer::after_secs(2).await; // TODO: increase this.
     }
+}
+
+struct SensorInfoRenderer;
+
+impl GetRenderable for SensorInfoRenderer {
+    type Get = SensorInfo;
+
+    fn get(&mut self) -> Result<Self::Get, coap_message_utils::Error> {
+        let Some(sensor) = get_temp_sensor() else {
+            return Err(coap_message_utils::Error::service_unavailable());
+        };
+
+        Ok(SensorInfo {
+            label: sensor.label(),
+            display_name: sensor.display_name(),
+            part_number: sensor.part_number(),
+            version: sensor.version(),
+        })
+    }
+}
+
+#[derive(Debug, Clone)]
+struct SensorInfo {
+    label: Option<&'static str>, // TODO: consider using this as an `rt` CoRE Link Attribute as well.
+    display_name: Option<&'static str>,
+    part_number: Option<&'static str>,
+    version: u8,
+}
+
+impl<C> minicbor::Encode<C> for SensorInfo {
+    fn encode<W: minicbor::encode::Write>(
+        &self,
+        e: &mut minicbor::encode::Encoder<W>,
+        _ctx: &mut C,
+    ) -> Result<(), minicbor::encode::Error<W::Error>> {
+        // Number of fields to encode.
+        e.map(4)?;
+
+        e.str("lb")?;
+
+        if let Some(label) = self.label {
+            e.str(label)?;
+        } else {
+            e.null()?;
+        }
+
+        e.str("dn")?;
+
+        if let Some(display_name) = self.display_name {
+            e.str(display_name)?;
+        } else {
+            e.null()?;
+        }
+
+        e.str("pn")?;
+
+        if let Some(part_number) = self.part_number {
+            e.str(part_number)?;
+        } else {
+            e.null()?;
+        }
+
+        e.str("ver")?;
+
+        e.u8(self.version)?;
+
+        Ok(())
+    }
+}
+
+fn get_temp_sensor() -> Option<&'static dyn ariel_os::sensors::Sensor> {
+    ariel_os::sensors::REGISTRY.sensors().find(|s| {
+        s.categories()
+            .iter()
+            .any(|c| [Category::Temperature, Category::RelativeHumidityTemperature].contains(c))
+    })
 }

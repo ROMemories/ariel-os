@@ -3088,6 +3088,7 @@ dependencies = [
  "coap-message-demos",
  "coap-message-utils",
  "embassy-sync 0.7.2",
+ "minicbor",
  "once_cell",
 ]
 
