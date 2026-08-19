@@ -43,14 +43,14 @@ pub(crate) async fn coap_run_udp(mut handler: impl coap_handler::Handler) -> ! {
         &mut tx_buffer,
     );
 
-    info!("Starting up CoAP server");
+    debug!("Starting up CoAP server");
 
     let local_any = SocketAddr::new(Ipv6Addr::UNSPECIFIED.into(), 5683);
     let mut unconnected = udp_nal::UnconnectedUdp::bind_multiple(socket, local_any)
         .await
         .unwrap();
 
-    info!("Server is ready.");
+    debug!("Server is ready.");
 
     let coap = COAP.init_with(embedded_nal_coap::CoAPShared::new);
     let (client, server) = coap.split();
