@@ -50,7 +50,7 @@ impl SensorReadingRenderer {
 }
 
 impl GetRenderable for SensorReadingRenderer {
-    type Get = i32; // TODO
+    type Get = f32; // TODO
 
     fn get(&mut self) -> Result<Self::Get, coap_message_utils::Error> {
         let Some((reading_channel, sample)) = SENSOR_READING.try_take() else {
@@ -61,6 +61,14 @@ impl GetRenderable for SensorReadingRenderer {
         let Ok(value) = sample.value() else {
             // FIXME: likely not the right response.
             return Err(coap_message_utils::Error::service_unavailable());
+        };
+
+        let channel_scaling = i32::from(reading_channel.scaling());
+        let factor = 10i32.pow(channel_scaling.unsigned_abs()) as f32;
+        let value = if channel_scaling < 0 {
+            value as f32 / factor
+        } else {
+            value as f32 * factor
         };
 
         Ok(value)
