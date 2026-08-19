@@ -51,9 +51,9 @@ async fn connection(mut controller: WifiController<'static>) {
         debug!("About to connect...");
 
         match controller.connect_async().await {
-            Ok(_) => info!("Wifi connected!"),
-            Err(e) => {
-                info!("Failed to connect to Wi-Fi: {:?}", e);
+            Ok(_) => info!("Wi-Fi connected!"),
+            Err(err) => {
+                info!("Failed to connect to Wi-Fi: {:?}", err);
                 Timer::after(Duration::from_millis(5000)).await
             }
         }

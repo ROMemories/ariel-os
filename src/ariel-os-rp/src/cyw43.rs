@@ -35,11 +35,11 @@ pub async fn join(mut control: cyw43::Control<'static>) {
             .await
         {
             Ok(_) => {
-                info!("Wifi connected!");
+                info!("Wi-Fi connected!");
                 break;
             }
             Err(err) => {
-                info!(" Wifi join failed with status={}", err.status);
+                info!("Failed to connect to Wi-Fi: status={:?}", err.status);
             }
         }
     }
