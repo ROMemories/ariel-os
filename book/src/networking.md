@@ -90,7 +90,7 @@ The configuration must be customized with the following environment variables:
 | `CONFIG_NET_IPV6_STATIC_GATEWAY_ADDRESS` | *No default, but mandatory* |
 
 There is experimental support for IPv6 configuration through SLAAC,
-which can be enabled using the `network-config-ipv6-slaac` [laze module].
+which can be enabled using the `network-config-ipv6-slaac` [laze module][laze-modules-book].
 It is experimental due to shortcomings of the implementation (around DNS and privacy),
 and lack of documentation.
 Once the [associated issues](https://github.com/ariel-os/ariel-os/issues/2135) are resolved,
