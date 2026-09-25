@@ -109,6 +109,7 @@
 - [Getting Started](./getting-started.md)
 - [Build System](./build-system.md)
 - [Building an Application](./application.md)
+- [Structured Board Descriptions](./structured-board-descriptions.md)
 - [Flashing & Debugging](./flashing-debugging.md)
 - [Logging](./logging.md)
 - [Debug Console](./debug-console.md)
