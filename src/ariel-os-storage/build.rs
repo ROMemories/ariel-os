@@ -20,6 +20,11 @@ fn main() {
         (4 * KIBIBYTES, 2 * KIBIBYTES)
     } else if is_in_current_contexts(&["nrf52", "nrf5340-app", "nrf91", "rp", "stm32wb55rg"]) {
         (8 * KIBIBYTES, 4 * KIBIBYTES)
+    } else if is_in_current_contexts(&["rp"]) {
+        (
+            ariel_os_utils::u32_from_env!("CHIP_NVM_SIZE_BYTES", "flash size"),
+            4 * KIBIBYTES,
+        )
     } else if is_in_current_contexts(&["stm32u585ai", "stm32wba65ri"]) {
         (16 * KIBIBYTES, 8 * KIBIBYTES)
     } else if is_in_current_contexts(&["stm32h755zi", "stm32h753zi"]) {

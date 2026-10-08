@@ -173,22 +173,30 @@ builders:
   - has_ble_cyw43
   - has_usb_device_port
   - has_wifi_cyw43
+  env:
+    CHIP_NVM_SIZE_BYTES: $(2048 * 1024)
 - name: rpi-pico
   parent: rp2040
   provides:
   - has_leds
   - has_usb_device_port
+  env:
+    CHIP_NVM_SIZE_BYTES: $(2048 * 1024)
 - name: rpi-pico2-w
-  parent: rp235xa
+  parent: rp2350a
   provides:
   - has_ble_cyw43
   - has_usb_device_port
   - has_wifi_cyw43
+  env:
+    CHIP_NVM_SIZE_BYTES: $(2048 * 1024)
 - name: rpi-pico2
-  parent: rp235xa
+  parent: rp2350a
   provides:
   - has_leds
   - has_usb_device_port
+  env:
+    CHIP_NVM_SIZE_BYTES: $(2048 * 1024)
 - name: seeedstudio-lora-e5-mini
   parent: stm32wle5jc
   provides:

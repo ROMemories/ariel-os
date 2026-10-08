@@ -44,7 +44,7 @@ ariel:
     - nrf9151
     - nrf9160
     - rp2040
-    - rp235xa
+    - rp2350a
     - stm32c031c6
     - stm32f303cb
     - stm32f303re

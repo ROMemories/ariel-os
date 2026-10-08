@@ -623,6 +623,7 @@ version = "0.6.0"
 dependencies = [
  "ariel-os-hal",
  "ariel-os-log",
+ "ariel-os-utils",
  "arrayvec",
  "embassy-sync 0.7.2",
  "embassy-time",
