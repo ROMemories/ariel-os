@@ -60,6 +60,7 @@ builders:
   parent: esp32-c6-wroom-1
   provides:
   - has_buttons
+  - has_host_facing_uart
   - has_usb_cdc_acm_port
 - name: espressif-esp32-devkitc
   parent: esp-wroom-32
@@ -79,6 +80,7 @@ builders:
   parent: esp32-s3-wroom-1
   provides:
   - has_buttons
+  - has_host_facing_uart
   - has_usb_cdc_acm_port
   - has_usb_device_port
 - name: espressif-esp8684-devkitc-02
@@ -90,6 +92,7 @@ builders:
   parent: esp32s3fx8
   provides:
   - has_buttons
+  - has_host_facing_uart
   - has_i2c_bus
   - has_leds
 - name: makerdiary-nrf52840-mdk-usb-dongle
