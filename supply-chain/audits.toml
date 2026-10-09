@@ -346,10 +346,22 @@ who = "Nils Ponsard <nils.ponsard@inria.fr>"
 criteria = "safe-to-deploy"
 delta = "0.3.31 -> 0.3.32"
 
+[[audits.futures-macro]]
+who = "ROMemories <152802150+ROMemories@users.noreply.github.com>"
+criteria = "safe-to-deploy"
+delta = "0.3.32 -> 0.3.34"
+notes = "The only change is the bump of `syn` to v3."
+
 [[audits.futures-sink]]
 who = "Nils Ponsard <nils.ponsard@inria.fr>"
 criteria = "safe-to-deploy"
 delta = "0.3.31 -> 0.3.32"
+
+[[audits.futures-sink]]
+who = "ROMemories <152802150+ROMemories@users.noreply.github.com>"
+criteria = "safe-to-deploy"
+delta = "0.3.32 -> 0.3.34"
+notes = "No change at all in this release."
 
 [[audits.futures-task]]
 who = "Nils Ponsard <nils.ponsard@inria.fr>"
@@ -570,6 +582,12 @@ who = "chrysn <chrysn@fsfe.org>"
 criteria = "safe-to-deploy"
 delta = "0.1.2 -> 0.1.3"
 notes = "Changes affect only a dependency version, whose safety is out of scope (vetted independently), and will not affect the operation of this crate."
+
+[[audits.serde_derive]]
+who = "ROMemories <152802150+ROMemories@users.noreply.github.com>"
+criteria = "safe-to-deploy"
+delta = "1.0.228 -> 1.0.229"
+notes = "`syn` has been bumped to v3, and the required refactors made to accomodate the changes."
 
 [[audits.slab]]
 who = "chrysn <chrysn@fsfe.org>"
