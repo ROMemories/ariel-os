@@ -31,6 +31,9 @@ audit-as-crates-io = true
 [policy.cyw43-pio]
 audit-as-crates-io = true
 
+[policy.embassy-embedded-hal]
+audit-as-crates-io = true
+
 [policy.embassy-hal-internal]
 audit-as-crates-io = true
 
