@@ -36,34 +36,51 @@ Each file corresponds to a physical board.
 Boards having multiple MCUs, or MCUs with multiple compilation targets, still require only a single file, but multiple `targets` entries are used to describe the different compilation targets.
 When adding support for a new board, it is usually best to copy and adapt an existing one instead of starting from scratch.
 
-### Schema and Guidelines for SBD Constructs
+### Schema and Guidelines for SBD Items
 
 The SBD schema is defined and documented by the [`sbd-gen-schema` package][sbd-gen-schema-docsrs].
-When writing an SBD file to be added in tree, the following guidelines should be followed for each key:
+The following sections provide guidelines for each item class, to follow when writing an SBD file to be added in tree.
 
-- `chip`: The board's chip, needs to correspond to an existing laze context listed in `boards/ariel-chips.yaml`.
-- `leds`: The LEDs present on the board, that can be controlled by the MCU.
-  Currently, each color channel of a multicolor LED is modeled as an individual LED.
-  Addressable LEDs are not part of this key.
-- `buttons`: Push-buttons present on the board.
-  Push-buttons are typically monostable tactile switches.
-- `switches`: Switches present on the board.
-  Push-buttons qualify as switches, but it is generally preferable to add them as `buttons`.
-- `i2c`: I2C buses present on the board.
-    To qualify, there should be at least either:
+#### `chip`
 
-    - I2C nodes on the board,
-    - A pair of pull-up resistors strong enough for I2C operation on the board (even if the lines are only exposed on connectors without other nodes on the board),
-    - A connector whose pins are dedicated to I2C (e.g., Grove, STEMMA QT, Qwiic, Arduino Modulino, mikroBUS),
-    - A well-known connector/header/pinout that conventionally includes I2C pins (e.g., Arduino headers, Seeed Studio XIAO pinout).
+The board's chip, needs to correspond to an existing laze context listed in `boards/ariel-chips.yaml`.
 
-    Some aliases should use the following conventions:
+#### `leds`
 
-    - `ArduinoI2c`: The I2C bus is exposed on Arduino headers.
-    - `QwiicI2c`: The I2C bus is exposed on a Qwiic connector.
-- `uarts`: UART RX/TX present on the board.
-  Currently only host-facing UARTs should be added.
-  Host-facing UARTs are UARTs exposed through a USB ⟷ UART adapter present on the board (or an interface MCU or equivalent acting as such adapter).
+The LEDs present on the board, that can be controlled by the MCU.
+Currently, each color channel of a multicolor LED is modeled as an individual LED.
+Addressable LEDs are not part of this item class.
+
+#### `buttons`
+
+Push-buttons present on the board.
+Push-buttons are typically monostable tactile switches.
+
+#### `switches`
+
+Switches present on the board.
+Push-buttons qualify as switches, but it is generally preferable to add them as `buttons`.
+
+#### `i2c`
+
+I2C buses present on the board.
+To qualify, there should be at least either:
+
+- I2C nodes on the board,
+- A pair of pull-up resistors strong enough for I2C operation on the board (even if the lines are only exposed on connectors without other nodes on the board),
+- A connector whose pins are dedicated to I2C (e.g., Grove, STEMMA QT, Qwiic, Arduino Modulino, mikroBUS),
+- A well-known connector/header/pinout that conventionally includes I2C pins (e.g., Arduino headers, Seeed Studio XIAO pinout).
+
+Some aliases should use the following conventions:
+
+- `ArduinoI2c`: The I2C bus is exposed on Arduino headers.
+- `QwiicI2c`: The I2C bus is exposed on a Qwiic connector.
+
+#### `uarts`
+
+UART RX/TX present on the board.
+Currently only host-facing UARTs should be added.
+Host-facing UARTs are UARTs exposed through a USB ⟷ UART adapter present on the board (or an interface MCU or equivalent acting as such adapter).
 
 ### Extra Steps for Some MCU Families
 
