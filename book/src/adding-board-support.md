@@ -41,27 +41,43 @@ When adding support for a new board, it is usually best to copy and adapt an exi
 The SBD schema is defined and documented by the [`sbd-gen-schema` package][sbd-gen-schema-docsrs].
 The following sections provide guidelines for each item class, to follow when writing an SBD file to be added in tree.
 
-#### `chip`
+#### General Guidelines
+
+##### Item Names and Aliases
+
+Many SBD items result in generated identifiers that follow naming schemes similar to `itemX` or `Items` (depending on whether the identifier is intended for a field or a type respectively), where `X` is a 0-based index corresponding to the item's position in the sequence of items of that type.
+
+On top of these automatically generated identifiers, aliases can be manually specified in the SBD file, that will result in additional identifiers for these items.
+Such aliases should be added for all items that support them: aliases should follow the silkscreen labels, the schematic symbol annotations, and the labels on the board enclosure (if any).
+For example, a button labeled "SW1" on the schematic and "BOOT" on the silkscreen would have both of these as aliases.
+Some classes of items can also specify additional aliases that they require.
+
+These aliases are used to easily refer to specific items in applications, to provide identifiers that do not depend on their ordering in the SBD file, and to allow application portability between similar boards (by attaching additional semantics to individual items).
+The case of these alias identifiers is preserved.
+
+#### SBD Item Classes
+
+##### `chip`
 
 The board's chip, needs to correspond to an existing laze context listed in `boards/ariel-chips.yaml`.
 
-#### `leds`
+##### `leds`
 
 The LEDs present on the board, that can be controlled by the MCU.
 Currently, each color channel of a multicolor LED is modeled as an individual LED.
 Addressable LEDs are not part of this item class.
 
-#### `buttons`
+##### `buttons`
 
 Push-buttons present on the board.
 Push-buttons are typically monostable tactile switches.
 
-#### `switches`
+##### `switches`
 
 Switches present on the board.
 Push-buttons qualify as switches, but it is generally preferable to add them as `buttons`.
 
-#### `i2c`
+##### `i2c`
 
 I2C buses present on the board.
 To qualify, there should be at least either:
@@ -76,7 +92,7 @@ Some aliases should use the following conventions:
 - `ArduinoI2c`: The I2C bus is exposed on Arduino headers.
 - `QwiicI2c`: The I2C bus is exposed on a Qwiic connector.
 
-#### `uarts`
+##### `uarts`
 
 UART RX/TX present on the board.
 Currently only host-facing UARTs should be added.
