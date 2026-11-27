@@ -29,10 +29,14 @@ Feel free to report anything that is unclear or missing!
 
 ## Creating an SBD file
 
+### Boards and SBD Files
+
 Ariel OS uses [SBD files][sbd-book] to describe boards.
 Each file corresponds to a physical board.
 Boards having multiple MCUs, or MCUs with multiple compilation targets, still require only a single file, but multiple `targets` entries are used to describe the different compilation targets.
 When adding support for a new board, it is usually best to copy and adapt an existing one instead of starting from scratch.
+
+### Schema and Guidelines for SBD Constructs
 
 The SBD schema is defined and documented by the [`sbd-gen-schema` package][sbd-gen-schema-docsrs].
 When writing an SBD file to be added in tree, the following guidelines should be followed for each key:
@@ -61,18 +65,20 @@ When writing an SBD file to be added in tree, the following guidelines should be
   Currently only host-facing UARTs should be added.
   Host-facing UARTs are UARTs exposed through a USB ⟷ UART adapter present on the board (or an interface MCU or equivalent acting as such adapter).
 
+### Extra Steps for Some MCU Families
+
+#### `stm32`
+
+- STM32 chips do not have a dedicated SWI, so you need to choose one. Select any unused interrupt, typically that of the WWDG, and set the `targets.<board_name>.ariel.swi` field in the SBD file.
+
+### Regenerating the Board Package
+
 With the SBD file in place, regenerate the `ariel-os-boards` crate.
 To do that, install [`sbd-gen`][sbd] with `cargo install sbd-gen`, then run the following command from the `ariel os` repository root:
 
 ```sh
 sbd-gen generate-ariel boards -o src/ariel-os-boards --mode update
 ```
-
-### Extra Steps for Some MCU Families
-
-#### `stm32`
-
-- STM32 chips do not have a dedicated SWI, so you need to choose one. Select any unused interrupt, typically that of the WWDG, and set the `targets.<board_name>.ariel.swi` field in the SBD file.
 
 [sbd]: https://github.com/ariel-os/sbd
 [sbd-gen-schema-docsrs]: https://docs.rs/sbd-gen-schema/latest/sbd_gen_schema/
